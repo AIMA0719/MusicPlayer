@@ -9,8 +9,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="?attr/fullscreenBackgroundColor"
-        android:theme="@style/ThemeOverlay.MusicPlayer.FullscreenContainer"
+        android:background="@color/clr_13b5ff"
         tools:context=".Activity.SplashActivity">
 
         <TextView
