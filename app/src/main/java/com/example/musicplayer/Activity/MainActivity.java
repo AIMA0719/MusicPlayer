@@ -20,13 +20,12 @@ public class MainActivity extends AppCompatActivity {
         binding = MusicPlayerMainActivityBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        hideActionBar();
         ContextManager.setMainContext(this);
         ContextManager.setMainActivity(this);
-
+        hideActionBar();
     }
 
-    private void hideActionBar() {
+    public void hideActionBar() {
         ActionBar actionBar = getSupportActionBar();
 
         if(actionBar != null){
@@ -74,6 +73,6 @@ public class MainActivity extends AppCompatActivity {
 
         this.doubleBackToExitPressedOnce = true;
         new ToastManager(this).showAnimatedToast("앱을 종료하려면 다시 한 번 눌러 주세요");
-        new Handler().postDelayed(() -> doubleBackToExitPressedOnce = false, 1000);
+        new Handler().postDelayed(() -> doubleBackToExitPressedOnce = false, 3000);
     }
 }

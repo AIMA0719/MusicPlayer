@@ -16,19 +16,21 @@
         <activity
             android:name=".Activity.SplashActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
-            android:exported="false"
+            android:exported="true"
             android:label="@string/title_activity_splash"
-            android:theme="@style/Theme.MusicPlayer.Fullscreen" />
+            android:theme="@style/Theme.MusicPlayer.Fullscreen" >
 
-        <activity
-            android:name=".Activity.MainActivity"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".Activity.MainActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:exported="false">
 
             <meta-data
                 android:name="android.app.lib_name"

@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.musicplayer.databinding.ActivitySplashBinding;
@@ -27,11 +28,16 @@ public class SplashActivity extends AppCompatActivity {
         mHideHandler = new Handler(Objects.requireNonNull(Looper.myLooper()));
         setContentView(binding.getRoot());
 
-        new Handler().postDelayed(splashRunnable,SPLASH_DELAY);
+        ActionBar actionBar = getSupportActionBar();
+        if(actionBar != null){
+            actionBar.hide();
+        }
+
+        new Handler().postDelayed(splashRunnable, SPLASH_DELAY);
     }
 
     Runnable splashRunnable = () -> {
-        Intent intent = new Intent(SplashActivity.this, MainActivity.class);
+        Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
         finish();
     };
