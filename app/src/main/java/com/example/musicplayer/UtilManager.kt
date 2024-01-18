@@ -1,74 +1,63 @@
-package com.example.musicplayer;
+package com.example.musicplayer
 
-import android.content.Context;
-import android.content.res.Resources;
-import android.util.DisplayMetrics;
-import android.util.Log;
-import android.view.ViewConfiguration;
+import android.content.Context
+import android.content.res.Resources
+import android.util.DisplayMetrics
+import android.util.Log
+import android.view.ViewConfiguration
 
-public class UtilManager {
-    private static DisplayMetrics mMetrics;
-    private static int mMinimumFlingVelocity = 50;
-    private static int mMaximumFlingVelocity = 8000;
-    public final static double DEG2RAD = (Math.PI / 180.0);
-    public final static float FDEG2RAD = ((float) Math.PI / 180.f);
+object UtilManager {
+    private var mMetrics: DisplayMetrics? = null
+    private var mMinimumFlingVelocity = 50
+    private var mMaximumFlingVelocity = 8000
+    const val DEG2RAD = Math.PI / 180.0
+    const val FDEG2RAD = Math.PI.toFloat() / 180f
 
-    @SuppressWarnings("unused")
-    public final static double DOUBLE_EPSILON = Double.longBitsToDouble(1);
+    @Suppress("unused")
+    val DOUBLE_EPSILON = java.lang.Double.longBitsToDouble(1)
 
-    @SuppressWarnings("unused")
-    public final static float FLOAT_EPSILON = Float.intBitsToFloat(1);
-
-    @SuppressWarnings("deprecation")
-    public static void init(Context context) {
-
-        try{
+    @Suppress("unused")
+    val FLOAT_EPSILON = java.lang.Float.intBitsToFloat(1)
+    @Suppress("deprecation")
+    fun init(context: Context?) {
+        try {
             if (context == null) {
                 // noinspection deprecation
-                mMinimumFlingVelocity = ViewConfiguration.getMinimumFlingVelocity();
+                mMinimumFlingVelocity = ViewConfiguration.getMinimumFlingVelocity()
                 // noinspection deprecation
-                mMaximumFlingVelocity = ViewConfiguration.getMaximumFlingVelocity();
-
-                Log.e("MPChartLib-Utils"
-                        , "Utils.init(...) PROVIDED CONTEXT OBJECT IS NULL");
-
+                mMaximumFlingVelocity = ViewConfiguration.getMaximumFlingVelocity()
+                Log.e("MPChartLib-Utils", "Utils.init(...) PROVIDED CONTEXT OBJECT IS NULL")
             } else {
-                ViewConfiguration viewConfiguration = ViewConfiguration.get(context);
-                mMinimumFlingVelocity = viewConfiguration.getScaledMinimumFlingVelocity();
-                mMaximumFlingVelocity = viewConfiguration.getScaledMaximumFlingVelocity();
-
-                Resources res = context.getResources();
-                mMetrics = res.getDisplayMetrics();
+                val viewConfiguration = ViewConfiguration.get(context)
+                mMinimumFlingVelocity = viewConfiguration.scaledMinimumFlingVelocity
+                mMaximumFlingVelocity = viewConfiguration.scaledMaximumFlingVelocity
+                val res = context.resources
+                mMetrics = res.displayMetrics
             }
-        }catch (Exception e){
-            e.printStackTrace();
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
-
     }
 
-    @Deprecated
-    public static void init(Resources res) {
-
-        mMetrics = res.getDisplayMetrics();
+    @Deprecated("")
+    fun init(res: Resources) {
+        mMetrics = res.displayMetrics
 
         // noinspection deprecation
-        mMinimumFlingVelocity = ViewConfiguration.getMinimumFlingVelocity();
+        mMinimumFlingVelocity = ViewConfiguration.getMinimumFlingVelocity()
         // noinspection deprecation
-        mMaximumFlingVelocity = ViewConfiguration.getMaximumFlingVelocity();
+        mMaximumFlingVelocity = ViewConfiguration.getMaximumFlingVelocity()
     }
 
-
-    public static float convertDpToPixel(float dp) {
-
+    @JvmStatic
+    fun convertDpToPixel(dp: Float): Float {
         if (mMetrics == null) {
-
             Log.e("MPChartLib-Utils",
                     "Utils NOT INITIALIZED. You need to call Utils.init(...) at least once before" +
                             " calling Utils.convertDpToPixel(...). Otherwise conversion does not " +
-                            "take place.");
-            return dp;
+                            "take place.")
+            return dp
         }
-
-        return dp * mMetrics.density;
+        return dp * mMetrics!!.density
     }
 }

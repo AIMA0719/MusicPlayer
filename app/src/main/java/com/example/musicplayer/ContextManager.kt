@@ -1,26 +1,11 @@
-package com.example.musicplayer;
+package com.example.musicplayer
 
-import android.content.Context;
+import android.content.Context
+import com.example.musicplayer.Activity.MainActivity
 
-import com.example.musicplayer.Activity.MainActivity;
-
-public class ContextManager {
-    public static Context mainContext;
-    public static MainActivity mainActivity;
-
-    public static Context getMainContext() {
-        return mainContext;
-    }
-
-    public static MainActivity getMainActivity() {
-        return mainActivity;
-    }
-
-    public static void setMainActivity(MainActivity mainActivity) {
-        ContextManager.mainActivity = mainActivity;
-    }
-
-    public static void setMainContext(Context mainContext) {
-        ContextManager.mainContext = mainContext;
-    }
+object ContextManager {
+    @JvmField
+    var mainContext: Context? = null
+    @JvmField
+    var mainActivity: MainActivity? = null
 }

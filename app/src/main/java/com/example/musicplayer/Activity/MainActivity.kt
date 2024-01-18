@@ -1,78 +1,61 @@
-package com.example.musicplayer.Activity;
+package com.example.musicplayer.Activity
 
-import android.os.Bundle;
-import android.os.Handler;
+import android.os.Bundle
+import android.os.Handler
+import androidx.appcompat.app.AppCompatActivity
+import com.example.musicplayer.ContextManager
+import com.example.musicplayer.ToastManager
+import com.example.musicplayer.databinding.MusicPlayerMainActivityBinding
 
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
-
-import com.example.musicplayer.ContextManager;
-import com.example.musicplayer.ToastManager;
-import com.example.musicplayer.databinding.MusicPlayerMainActivityBinding;
-
-public class MainActivity extends AppCompatActivity {
-    public MusicPlayerMainActivityBinding binding;
-    public boolean doubleBackToExitPressedOnce = false;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        binding = MusicPlayerMainActivityBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
-
-        ContextManager.setMainContext(this);
-        ContextManager.setMainActivity(this);
-        hideActionBar();
+class MainActivity : AppCompatActivity() {
+    var binding: MusicPlayerMainActivityBinding? = null
+    var doubleBackToExitPressedOnce = false
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = MusicPlayerMainActivityBinding.inflate(layoutInflater)
+        setContentView(binding!!.root)
+        ContextManager.mainContext = this
+        ContextManager.mainActivity = this
+        hideActionBar()
     }
 
-    public void hideActionBar() {
-        ActionBar actionBar = getSupportActionBar();
+    fun hideActionBar() {
+        val actionBar = supportActionBar
+        actionBar?.hide()
+    }
 
-        if(actionBar != null){
-            actionBar.hide();
+    override fun onStart() {
+        super.onStart()
+    }
+
+    override fun onResume() {
+        super.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+    }
+
+    override fun onStop() {
+        super.onStop()
+    }
+
+    override fun onRestart() {
+        super.onRestart()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+    }
+
+    override fun onBackPressed() {
+        if (doubleBackToExitPressedOnce) {
+            super.onBackPressed()
+            finish()
+            return
         }
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-    }
-
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
-
-    @Override
-    public void onBackPressed() {
-        if(doubleBackToExitPressedOnce){
-            super.onBackPressed();
-            finish();
-            return;
-        }
-
-        this.doubleBackToExitPressedOnce = true;
-        new ToastManager(this).showAnimatedToast("앱을 종료하려면 다시 한 번 눌러 주세요");
-        new Handler().postDelayed(() -> doubleBackToExitPressedOnce = false, 3000);
+        doubleBackToExitPressedOnce = true
+        ToastManager(this).showAnimatedToast("앱을 종료하려면 다시 한 번 눌러 주세요")
+        Handler().postDelayed({ doubleBackToExitPressedOnce = false }, 3000)
     }
 }

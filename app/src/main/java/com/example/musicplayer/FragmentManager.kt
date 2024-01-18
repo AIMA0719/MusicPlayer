@@ -1,5 +1,3 @@
-package com.example.musicplayer;
+package com.example.musicplayer
 
-public class FragmentManager {
-
-}
+class FragmentManager
