@@ -8,8 +8,9 @@ import com.example.musicplayer.ToastManager
 import com.example.musicplayer.databinding.MusicPlayerMainActivityBinding
 
 class MainActivity : AppCompatActivity() {
-    var binding: MusicPlayerMainActivityBinding? = null
-    var doubleBackToExitPressedOnce = false
+    private var binding: MusicPlayerMainActivityBinding? = null
+    private var doubleBackToExitPressedOnce = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = MusicPlayerMainActivityBinding.inflate(layoutInflater)
@@ -19,7 +20,7 @@ class MainActivity : AppCompatActivity() {
         hideActionBar()
     }
 
-    fun hideActionBar() {
+    private fun hideActionBar() {
         val actionBar = supportActionBar
         actionBar?.hide()
     }
