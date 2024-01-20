@@ -1,4 +1,4 @@
-package com.example.musicplayer
+package com.example.musicplayer.Manager
 
 import android.content.Context
 import android.content.res.Resources

@@ -1,4 +1,4 @@
-package com.example.musicplayer
+package com.example.musicplayer.Manager
 
 import android.app.Activity
 import android.content.Context
@@ -14,6 +14,7 @@ import android.widget.FrameLayout
 import android.widget.PopupWindow
 import android.widget.TextView
 import android.widget.Toast
+import com.example.musicplayer.R
 
 class ToastManager(var context: Context?) : Toast(context) {
     private var currentToastLayout: FrameLayout? = null

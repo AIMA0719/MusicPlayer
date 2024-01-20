@@ -1,11 +1,11 @@
-package com.example.musicplayer
+package com.example.musicplayer.Manager
 
 import android.content.Context
 import com.example.musicplayer.Activity.MainActivity
 
 object ContextManager {
     @JvmField
-    var mainContext: Context? = null
+    public var mainContext: Context? = null
     @JvmField
-    var mainActivity: MainActivity? = null
+    public var mainActivity: MainActivity? = null
 }
