@@ -5,26 +5,37 @@ import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
 import com.example.musicplayer.Manager.ContextManager
 import com.example.musicplayer.Manager.FragmentMoveManager
+import com.example.musicplayer.Manager.PermissionManager
 import com.example.musicplayer.Manager.ToastManager
 import com.example.musicplayer.MusicListFragment
 import com.example.musicplayer.databinding.MusicPlayerMainActivityBinding
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(){
     private var binding: MusicPlayerMainActivityBinding? = null
     private var doubleBackToExitPressedOnce = false
     private var fragmentTag: String = ""
 
     private lateinit var fragmentMoveManager: FragmentMoveManager
+    private lateinit var permissionManager: PermissionManager
+
+
 
     override fun onCreate(savedInstanceState: Bundle?)  {
         super.onCreate(savedInstanceState)
         binding = MusicPlayerMainActivityBinding.inflate(layoutInflater)
         setContentView(binding!!.root)
+
+        setBaseSetting();
+        setFragmentTag("MainFragment")
+        hideActionBar()
+        permissionManager.checkPermission()
+
+    }
+    private fun setBaseSetting() {
         ContextManager.mainContext = this
         ContextManager.mainActivity = this
         fragmentMoveManager = FragmentMoveManager()
-
-        hideActionBar()
+        permissionManager = PermissionManager(this)
     }
 
     private fun hideActionBar() {
@@ -71,7 +82,7 @@ class MainActivity : AppCompatActivity() {
     override fun onBackPressed() {
         when(getFragmentTag()){
             "MusicListFragment" -> {
-                fragmentMoveManager.popFragment()
+                fragmentMoveManager.popFragment("MainFragment")
             }
 
             "MainFragment" -> {
@@ -85,9 +96,6 @@ class MainActivity : AppCompatActivity() {
                 Handler().postDelayed({ doubleBackToExitPressedOnce = false }, 3000)
             }
         }
-
-        when(this.supportFragmentManager.backStackEntryCount){
-            0 -> setFragmentTag("MainFragment")
-        }
     }
+
 }

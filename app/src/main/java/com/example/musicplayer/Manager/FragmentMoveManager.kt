@@ -18,9 +18,13 @@ class FragmentMoveManager() {
     }
 
     // 현재 맨 위에 있는 Fragment pop
-    fun popFragment() {
+    fun popFragment(nextFragment:String?) {
         if(fragmentManager != null && fragmentManager.backStackEntryCount > 0) {
             fragmentManager.popBackStack()
+        }
+
+        if(nextFragment != null){
+            ContextManager.mainActivity?.setFragmentTag(nextFragment)
         }
     }
 
