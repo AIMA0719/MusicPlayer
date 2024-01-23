@@ -3,6 +3,7 @@ package com.example.musicplayer.Manager
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.example.musicplayer.R
+import com.example.musicplayer.StatusBarViewController
 
 class FragmentMoveManager() {
     private val fragmentManager: FragmentManager? = ContextManager.mainActivity?.supportFragmentManager
@@ -25,6 +26,7 @@ class FragmentMoveManager() {
 
         if(nextFragment != null){
             ContextManager.mainActivity?.setFragmentTag(nextFragment)
+            ContextManager.mainActivity?.let { StatusBarViewController(it).setStatusBarView(nextFragment) }
         }
     }
 

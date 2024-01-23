@@ -1,14 +1,19 @@
 package com.example.musicplayer.Manager
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
+import android.content.pm.PackageManager
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.gun0912.tedpermission.PermissionListener
 import com.gun0912.tedpermission.normal.TedPermission
 
-class PermissionManager (context: Context) {
-    var thisContext : Context = context
+class PermissionManager(private val activity: Activity) {
 
-    var permissionlistener : PermissionListener = object : PermissionListener {
+    private val PERMISSION_REQUEST_CODE = 123
+
+    private var permissionlistener : PermissionListener = object : PermissionListener {
         override fun onPermissionGranted() {
             // 권한 허가시 실행 할 내용
         }
@@ -20,19 +25,37 @@ class PermissionManager (context: Context) {
 
     // 권한 체크하는 메소드
     fun checkPermission(){
-        TedPermission.create()
-            .setPermissionListener(permissionlistener)
-            .setRationaleMessage("앱의 기능을 사용하기 위해서는 권한이 필요합니다.")
-            .setDeniedMessage("[설정] > [권한] 에서 권한을 허용할 수 있습니다.")
-            .setDeniedCloseButtonText("닫기")
-            .setGotoSettingButtonText("설정")
-            .setRationaleTitle("HELLO")
-            .setPermissions(
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.INTERNET,
-                Manifest.permission.CALL_PHONE)
-            .check()
+        if (checkPermissions()) {
+            permissionlistener.onPermissionGranted()
+        } else {
+            requestPermissions()
+        }
     }
 
+    private fun checkPermissions(): Boolean {
+        val permissions = arrayOf(
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.CAMERA
+        )
+
+        for (permission in permissions) {
+            if (ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
+                return false
+            }
+        }
+        return true
+    }
+
+    private fun requestPermissions() {
+        val permissions = arrayOf(
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.CAMERA
+        )
+
+        ActivityCompat.requestPermissions(activity, permissions, PERMISSION_REQUEST_CODE)
+    }
 }

@@ -11,9 +11,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.musicplayer.Manager.ContextManager
 import com.example.musicplayer.placeholder.PlaceholderContent
 
-/**
- * A fragment representing a list of Items.
- */
 class MusicListFragment : Fragment() {
 
     private var columnCount = 1
@@ -32,7 +29,6 @@ class MusicListFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_music_list_list, container, false)
 
-        // Set the adapter
         if (view is RecyclerView) {
             with(view) {
                 layoutManager = when {
@@ -48,14 +44,12 @@ class MusicListFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         ContextManager.mainActivity?.setFragmentTag("MusicListFragment")
+        ContextManager.mainActivity?.let { StatusBarViewController(it).setStatusBarView("MusicListFragment") }
     }
 
     companion object {
 
-        // TODO: Customize parameter argument names
         const val ARG_COLUMN_COUNT = "column-count"
-
-        // TODO: Customize parameter initialization
         @JvmStatic
         fun newInstance(columnCount: Int) =
             MusicListFragment().apply {

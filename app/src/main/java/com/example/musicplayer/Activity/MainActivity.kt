@@ -8,17 +8,15 @@ import com.example.musicplayer.Manager.FragmentMoveManager
 import com.example.musicplayer.Manager.PermissionManager
 import com.example.musicplayer.Manager.ToastManager
 import com.example.musicplayer.MusicListFragment
+import com.example.musicplayer.StatusBarViewController
 import com.example.musicplayer.databinding.MusicPlayerMainActivityBinding
 
 class MainActivity : AppCompatActivity(){
-    private var binding: MusicPlayerMainActivityBinding? = null
-    private var doubleBackToExitPressedOnce = false
+    var binding: MusicPlayerMainActivityBinding? = null
+    var doubleBackToExitPressedOnce = false
     private var fragmentTag: String = ""
 
     private lateinit var fragmentMoveManager: FragmentMoveManager
-    private lateinit var permissionManager: PermissionManager
-
-
 
     override fun onCreate(savedInstanceState: Bundle?)  {
         super.onCreate(savedInstanceState)
@@ -28,14 +26,12 @@ class MainActivity : AppCompatActivity(){
         setBaseSetting();
         setFragmentTag("MainFragment")
         hideActionBar()
-        permissionManager.checkPermission()
-
+        PermissionManager(this).checkPermission()
     }
     private fun setBaseSetting() {
         ContextManager.mainContext = this
         ContextManager.mainActivity = this
         fragmentMoveManager = FragmentMoveManager()
-        permissionManager = PermissionManager(this)
     }
 
     private fun hideActionBar() {
@@ -43,13 +39,9 @@ class MainActivity : AppCompatActivity(){
         actionBar?.hide()
     }
 
-    override fun onStart() {
-        super.onStart()
-    }
-
     override fun onResume() {
         super.onResume()
-
+        StatusBarViewController(this).setStatusBarView(getFragmentTag())
         binding?.flMainLayout?.setOnClickListener({
             fragmentMoveManager.addFragment(MusicListFragment.newInstance(1))
         })
