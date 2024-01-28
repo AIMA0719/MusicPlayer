@@ -1,5 +1,6 @@
 package com.example.musicplayer.Manager
 
+import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.example.musicplayer.R
@@ -10,7 +11,10 @@ class FragmentMoveManager() {
 
     // 현재 화면 에서 new Fragment add
     fun addFragment(fragment: Fragment) {
-        if(fragmentManager != null){
+        val fragmentManager = ContextManager.mainActivity?.supportFragmentManager // assuming this is an AppCompatActivity
+
+        // Check if the fragment manager and layout are not null
+        if (fragmentManager != null && ContextManager.mainActivity?.findViewById<View>(R.id.fl_main_layout) != null) {
             val transaction = fragmentManager.beginTransaction()
             transaction.add(R.id.fl_main_layout, fragment)
             transaction.addToBackStack(null)

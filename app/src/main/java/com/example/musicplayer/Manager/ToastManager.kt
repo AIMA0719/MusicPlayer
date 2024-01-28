@@ -24,7 +24,7 @@ class ToastManager(var context: Context?) : Toast(context) {
             if (context is Activity) {
                 val activity = context as Activity
 
-                if (!activity.isFinishing) {
+                if (!activity.isFinishing && !activity.isDestroyed) {
                     // 토스트 레이아웃을 생성
                     val layout = LayoutInflater.from(context).inflate(R.layout.custom_toast, null)
 

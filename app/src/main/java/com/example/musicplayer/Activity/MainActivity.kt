@@ -80,6 +80,7 @@ class MainActivity : AppCompatActivity(){
             "MainFragment" -> {
                 if (doubleBackToExitPressedOnce) {
                     super.onBackPressed()
+                    ToastManager(this).removeAnimationToast()
                     finish()
                     return
                 }

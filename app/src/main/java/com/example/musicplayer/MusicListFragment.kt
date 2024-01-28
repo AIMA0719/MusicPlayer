@@ -9,7 +9,6 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.musicplayer.Manager.ContextManager
-import com.example.musicplayer.placeholder.PlaceholderContent
 
 class MusicListFragment : Fragment() {
 
@@ -35,7 +34,7 @@ class MusicListFragment : Fragment() {
                     columnCount <= 1 -> LinearLayoutManager(context)
                     else -> GridLayoutManager(context, columnCount)
                 }
-                adapter = MyItemRecyclerViewAdapter(PlaceholderContent.ITEMS)
+                adapter = MyItemRecyclerViewAdapter(context)
             }
         }
         return view

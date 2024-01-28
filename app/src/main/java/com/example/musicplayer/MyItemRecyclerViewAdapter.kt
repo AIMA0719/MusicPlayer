@@ -1,37 +1,87 @@
 package com.example.musicplayer
 
-import androidx.recyclerview.widget.RecyclerView
+import android.content.Context
+import android.media.MediaPlayer
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.TextView
-
-import com.example.musicplayer.placeholder.PlaceholderContent.PlaceholderItem
+import androidx.recyclerview.widget.RecyclerView
+import com.example.musicplayer.Manager.MusicLoaderManager
+import com.example.musicplayer.Manager.UriUtils
 import com.example.musicplayer.databinding.FragmentMusicListBinding
+import com.example.musicplayer.placeholder.PlaceholderContent
+import java.io.IOException
 
-class MyItemRecyclerViewAdapter(private val values: List<PlaceholderItem>) : RecyclerView.Adapter<MyItemRecyclerViewAdapter.ViewHolder>() {
+class MyItemRecyclerViewAdapter(context: Context) :
+    RecyclerView.Adapter<MyItemRecyclerViewAdapter.ViewHolder>() {
+
+    private val values: List<PlaceholderContent.PlaceholderItem> = MusicLoaderManager.loadMusic(context)
+    private var mediaPlayer: MediaPlayer? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return ViewHolder(
-            FragmentMusicListBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        )
+        val binding = FragmentMusicListBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return ViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = values[position]
-        holder.idView.text = item.id
-        holder.contentView.text = item.content
+        holder.bind(item)
     }
 
     override fun getItemCount(): Int = values.size
 
-    inner class ViewHolder(binding: FragmentMusicListBinding) :
+    inner class ViewHolder(private val binding: FragmentMusicListBinding) :
         RecyclerView.ViewHolder(binding.root) {
         val idView: TextView = binding.itemNumber
         val contentView: TextView = binding.content
+
+        init {
+            itemView.setOnClickListener {
+                val position = bindingAdapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    val item = values[position]
+                    playMusic(item)
+                }
+            }
+        }
+
+        fun bind(item: PlaceholderContent.PlaceholderItem) {
+            Dlog.e("item.id : "+ item.id)
+            Dlog.e("item.displayName : " + item.displayName)
+            idView.text = item.id
+            contentView.text = item.displayName
+        }
+
+        private fun playMusic(item: PlaceholderContent.PlaceholderItem) {
+            if (mediaPlayer == null) {
+                mediaPlayer = MediaPlayer()
+            } else {
+                mediaPlayer?.reset()
+            }
+
+            try {
+                val filePath = UriUtils.getMediaFilePath(itemView.context, item.id)
+                filePath?.let {
+                    mediaPlayer?.setDataSource(it)
+                    mediaPlayer?.prepare()
+                    mediaPlayer?.start()
+                }
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+
+            mediaPlayer?.setOnCompletionListener {
+                stopMusic()
+            }
+        }
+
+        private fun stopMusic() {
+            mediaPlayer?.stop()
+            mediaPlayer?.reset()
+        }
 
         override fun toString(): String {
             return super.toString() + " '" + contentView.text + "'"
         }
     }
-
 }
