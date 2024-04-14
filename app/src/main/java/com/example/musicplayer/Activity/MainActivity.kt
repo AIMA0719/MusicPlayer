@@ -3,11 +3,11 @@ package com.example.musicplayer.Activity
 import android.os.Bundle
 import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
+import com.example.musicplayer.Fragment.RiotDataFragment
 import com.example.musicplayer.Manager.ContextManager
 import com.example.musicplayer.Manager.FragmentMoveManager
 import com.example.musicplayer.Manager.PermissionManager
 import com.example.musicplayer.Manager.ToastManager
-import com.example.musicplayer.MusicListFragment
 import com.example.musicplayer.StatusBarViewController
 import com.example.musicplayer.databinding.MusicPlayerMainActivityBinding
 
@@ -42,9 +42,10 @@ class MainActivity : AppCompatActivity(){
     override fun onResume() {
         super.onResume()
         StatusBarViewController(this).setStatusBarView(getFragmentTag())
-        binding?.flMainLayout?.setOnClickListener({
-            fragmentMoveManager.addFragment(MusicListFragment.newInstance(1))
-        })
+        binding?.flMainLayout?.setOnClickListener {
+            //fragmentMoveManager.addFragment(MusicListFragment.newInstance(1))
+            fragmentMoveManager.addFragment(RiotDataFragment.newInstance())
+        }
     }
 
     override fun onPause() {

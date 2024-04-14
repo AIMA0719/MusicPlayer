@@ -8,5 +8,5 @@
     android:layout_height="match_parent"
     android:background="@color/clr_13b5ff"
     app:layoutManager="LinearLayoutManager"
-    tools:context=".MusicListFragment"
+    tools:context=".Fragment.MusicListFragment"
     tools:listitem="@layout/fragment_music_list" />

@@ -36,8 +36,7 @@ object PlaceholderContent {
     }
 
     data class PlaceholderItem(val id: String, val content: String, val details: String) {
-        val displayName: String
-            get() = File(content).name
+        val displayName: String get() = File(content).name
         override fun toString(): String = displayName
     }
 

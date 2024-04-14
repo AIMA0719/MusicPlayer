@@ -15,7 +15,7 @@ import java.io.IOException
 class MyItemRecyclerViewAdapter(context: Context) :
     RecyclerView.Adapter<MyItemRecyclerViewAdapter.ViewHolder>() {
 
-    private val values: List<PlaceholderContent.PlaceholderItem> = MusicLoaderManager.loadMusic(context)
+    private val musicList: List<PlaceholderContent.PlaceholderItem> = MusicLoaderManager.loadMusic(context)
     private var mediaPlayer: MediaPlayer? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -24,11 +24,11 @@ class MyItemRecyclerViewAdapter(context: Context) :
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val item = values[position]
+        val item = musicList[position]
         holder.bind(item)
     }
 
-    override fun getItemCount(): Int = values.size
+    override fun getItemCount(): Int = musicList.size
 
     inner class ViewHolder(private val binding: FragmentMusicListBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -39,7 +39,7 @@ class MyItemRecyclerViewAdapter(context: Context) :
             itemView.setOnClickListener {
                 val position = bindingAdapterPosition
                 if (position != RecyclerView.NO_POSITION) {
-                    val item = values[position]
+                    val item = musicList[position]
                     playMusic(item)
                 }
             }
