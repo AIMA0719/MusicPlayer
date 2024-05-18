@@ -18,6 +18,7 @@ import com.example.musicplayer.R
 
 class ToastManager(var context: Context?) : Toast(context) {
     private var currentToastLayout: FrameLayout? = null
+    private var popupWindow: PopupWindow? = null
 
     fun showAnimatedToast(message: String) {
         try {
@@ -33,38 +34,44 @@ class ToastManager(var context: Context?) : Toast(context) {
                     text.text = message
 
                     // 팝업 윈도우 생성
-                    val popupWindow = PopupWindow(
-                            layout,
-                            ViewGroup.LayoutParams.WRAP_CONTENT,
-                            ViewGroup.LayoutParams.WRAP_CONTENT
+                    popupWindow = PopupWindow(
+                        layout,
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
                     )
 
                     // 투명한 배경 설정
-                    popupWindow.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-                    popupWindow.isOutsideTouchable = true
-                    popupWindow.showAtLocation(activity.window.decorView, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, 100)
+                    popupWindow!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                    popupWindow!!.isOutsideTouchable = true
+                    popupWindow!!.showAtLocation(activity.window.decorView, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, 100)
 
                     // 아래에서 위로 올라오는 애니메이션 적용
-                    val toastView = popupWindow.contentView
+                    val toastView = popupWindow!!.contentView
                     toastView?.translationY = 500f
 
                     toastView?.animate()
-                            ?.translationYBy(-500f)
-                            ?.withEndAction {
-                                // 3초 후에 추가적인 애니메이션 적용
-                                Handler(Looper.getMainLooper()).postDelayed({
-                                    // 애니메이션이 완료된 후 팝업 닫기
-                                    toastView.animate()
-                                            ?.translationY(500f)
-                                            ?.withEndAction { popupWindow.dismiss() }
-                                            ?.start()
-                                }, 2000)
-                            }
-                            ?.start()
+                        ?.translationYBy(-500f)
+                        ?.withEndAction {
+                            // 3초 후에 추가적인 애니메이션 적용
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                // 애니메이션이 완료된 후 팝업 닫기
+                                toastView.animate()
+                                    ?.translationY(500f)
+                                    ?.withEndAction { popupWindow!!.dismiss() }
+                                    ?.start()
+                            }, 2000)
+                        }
+                        ?.start()
                 }
             }
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    fun closeToast() {
+        if (popupWindow != null && popupWindow!!.isShowing) {
+            popupWindow!!.dismiss()
         }
     }
 

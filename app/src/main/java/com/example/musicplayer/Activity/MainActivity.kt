@@ -3,7 +3,7 @@ package com.example.musicplayer.Activity
 import android.os.Bundle
 import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
-import com.example.musicplayer.Fragment.RiotDataFragment
+import com.example.musicplayer.Fragment.MusicListFragment
 import com.example.musicplayer.Manager.ContextManager
 import com.example.musicplayer.Manager.FragmentMoveManager
 import com.example.musicplayer.Manager.PermissionManager
@@ -17,6 +17,7 @@ class MainActivity : AppCompatActivity(){
     private var fragmentTag: String = ""
 
     private lateinit var fragmentMoveManager: FragmentMoveManager
+    private lateinit var toastManager: ToastManager
 
     override fun onCreate(savedInstanceState: Bundle?)  {
         super.onCreate(savedInstanceState)
@@ -32,6 +33,7 @@ class MainActivity : AppCompatActivity(){
         ContextManager.mainContext = this
         ContextManager.mainActivity = this
         fragmentMoveManager = FragmentMoveManager()
+        toastManager = ToastManager(this)
     }
 
     private fun hideActionBar() {
@@ -43,8 +45,7 @@ class MainActivity : AppCompatActivity(){
         super.onResume()
         StatusBarViewController(this).setStatusBarView(getFragmentTag())
         binding?.flMainLayout?.setOnClickListener {
-            //fragmentMoveManager.addFragment(MusicListFragment.newInstance(1))
-            fragmentMoveManager.addFragment(RiotDataFragment.newInstance())
+            fragmentMoveManager.addFragment(MusicListFragment.newInstance(1))
         }
     }
 
@@ -62,6 +63,7 @@ class MainActivity : AppCompatActivity(){
 
     override fun onDestroy() {
         super.onDestroy()
+        toastManager.closeToast()
     }
 
     public fun setFragmentTag(fragmentTag:String){
@@ -81,12 +83,12 @@ class MainActivity : AppCompatActivity(){
             "MainFragment" -> {
                 if (doubleBackToExitPressedOnce) {
                     super.onBackPressed()
-                    ToastManager(this).removeAnimationToast()
+                    toastManager.removeAnimationToast()
                     finish()
                     return
                 }
                 doubleBackToExitPressedOnce = true
-                ToastManager(this).showAnimatedToast("앱을 종료하려면 다시 한 번 눌러 주세요")
+                toastManager.showAnimatedToast("앱을 종료하려면 다시 한 번 눌러 주세요")
                 Handler().postDelayed({ doubleBackToExitPressedOnce = false }, 3000)
             }
         }
