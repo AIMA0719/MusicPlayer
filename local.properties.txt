@@ -1,0 +1,1 @@
+sdk.dir=C:\\Users\\Infocar\\AppData\\Local\\Android\\Sdk
