@@ -5,51 +5,32 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.musicplayer.MyItemRecyclerViewAdapter
+import com.example.musicplayer.Adapter.MyItemRecyclerViewAdapter
 import com.example.musicplayer.R
 
 class MusicListFragment : Fragment() {
-
-    private var columnCount = 1
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        arguments?.let {
-            columnCount = it.getInt(ARG_COLUMN_COUNT)
-        }
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_music_list_list, container, false)
 
+        // `is` 는 java 의 instanceOf 랑 비슷한 것 같음
         if (view is RecyclerView) {
             with(view) {
-                layoutManager = when {
-                    columnCount <= 1 -> LinearLayoutManager(context)
-                    else -> GridLayoutManager(context, columnCount)
-                }
+                // `with`는 특정 객체의 속성이나 메서드를 간결하게 사용할 때 사용
+                layoutManager = LinearLayoutManager(context)
                 adapter = MyItemRecyclerViewAdapter(context)
             }
         }
-        return view
+        return view // 생성된 뷰를 반환
     }
 
     companion object {
-
-        const val ARG_COLUMN_COUNT = "column-count"
+        // 정적 메서드로 Fragment 인스턴스를 생성
         @JvmStatic
-        fun newInstance(columnCount: Int) =
-            MusicListFragment().apply {
-                arguments = Bundle().apply {
-                    putInt(ARG_COLUMN_COUNT, columnCount)
-                }
-            }
+        fun newInstance() = MusicListFragment().apply {}
     }
 }

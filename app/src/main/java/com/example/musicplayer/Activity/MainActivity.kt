@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
     private fun setUserInterFace() {
         // todo 일단 화면 클릭 하면 뮤직 리스트로 이동
         binding.flMainLayout.setOnClickListener {
-            viewModel.addFragment(MusicListFragment.newInstance(1))
+            viewModel.addFragment(MusicListFragment.newInstance())
         }
     }
 

@@ -1,4 +1,4 @@
-package com.example.musicplayer
+package com.example.musicplayer.Adapter
 
 import android.content.Context
 import android.media.MediaPlayer
@@ -30,7 +30,7 @@ class MyItemRecyclerViewAdapter(context: Context) :
 
     override fun getItemCount(): Int = musicList.size
 
-    inner class ViewHolder(private val binding: FragmentMusicListBinding) :
+    inner class ViewHolder(binding: FragmentMusicListBinding) :
         RecyclerView.ViewHolder(binding.root) {
         val idView: TextView = binding.itemNumber
         val contentView: TextView = binding.content
@@ -46,8 +46,6 @@ class MyItemRecyclerViewAdapter(context: Context) :
         }
 
         fun bind(item: PlaceholderContent.PlaceholderItem) {
-            Dlog.e("item.id : "+ item.id)
-            Dlog.e("item.displayName : " + item.displayName)
             idView.text = item.id
             contentView.text = item.displayName
         }

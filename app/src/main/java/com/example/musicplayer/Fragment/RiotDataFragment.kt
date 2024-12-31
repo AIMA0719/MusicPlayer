@@ -5,10 +5,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.example.musicplayer.Dlog
+import com.example.musicplayer.Manager.LogManager
 import com.example.musicplayer.PostResult
-import com.example.musicplayer.RetrofitClient
-import com.example.musicplayer.RetrofitService
+import com.example.musicplayer.Server.RetrofitClient
+import com.example.musicplayer.Server.RetrofitService
 import com.example.musicplayer.databinding.FragmentRiotDataBinding
 import retrofit2.Call
 import retrofit2.Callback
@@ -39,7 +39,7 @@ class RiotDataFragment : Fragment() {
                     if (response.isSuccessful) {
                         // 요청이 성공한 경우 처리
                         val postResult: PostResult? = response.body()
-                        Dlog.e(postResult.toString())
+                        LogManager.e(postResult.toString())
                         // TODO: 받아온 데이터 처리
                     } else {
                         // 요청이 실패한 경우 처리

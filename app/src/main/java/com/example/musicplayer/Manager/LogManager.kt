@@ -1,10 +1,11 @@
-package com.example.musicplayer
+package com.example.musicplayer.Manager
 
 import android.util.Log
+import com.gun0912.tedpermission.BuildConfig
 import java.io.PrintWriter
 import java.io.StringWriter
 
-object Dlog {
+object LogManager {
     private const val TAG = "MusicPlayer"
     private const val MAX_LENGTH = 4000
 
