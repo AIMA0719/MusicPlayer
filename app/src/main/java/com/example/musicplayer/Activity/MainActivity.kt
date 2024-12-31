@@ -1,97 +1,71 @@
 package com.example.musicplayer.Activity
 
 import android.os.Bundle
-import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import com.example.musicplayer.Fragment.MusicListFragment
 import com.example.musicplayer.Manager.ContextManager
-import com.example.musicplayer.Manager.FragmentMoveManager
 import com.example.musicplayer.Manager.PermissionManager
 import com.example.musicplayer.Manager.ToastManager
-import com.example.musicplayer.StatusBarViewController
 import com.example.musicplayer.databinding.MusicPlayerMainActivityBinding
+import com.example.musicplayer.viewmodel.MainViewModel
 
-class MainActivity : AppCompatActivity(){
-    var binding: MusicPlayerMainActivityBinding? = null
-    var doubleBackToExitPressedOnce = false
-    private var fragmentTag: String = ""
-
-    private lateinit var fragmentMoveManager: FragmentMoveManager
+class MainActivity : AppCompatActivity() {
+    lateinit var binding: MusicPlayerMainActivityBinding
     private lateinit var toastManager: ToastManager
 
-    override fun onCreate(savedInstanceState: Bundle?)  {
+    private lateinit var viewModel: MainViewModel
+
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = MusicPlayerMainActivityBinding.inflate(layoutInflater)
-        setContentView(binding!!.root)
+        setContentView(binding.root)
+        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
 
-        setBaseSetting();
-        setFragmentTag("MainFragment")
+        setBaseSetting()
         hideActionBar()
+        observeViewModel()
         PermissionManager(this).checkPermission()
+
+        // Fragment 변경 이벤트 처리
+        binding.flMainLayout.setOnClickListener {
+            viewModel.addFragment(MusicListFragment.newInstance(1))
+        }
     }
+
     private fun setBaseSetting() {
         ContextManager.mainContext = this
         ContextManager.mainActivity = this
-        fragmentMoveManager = FragmentMoveManager()
         toastManager = ToastManager(this)
     }
 
     private fun hideActionBar() {
-        val actionBar = supportActionBar
-        actionBar?.hide()
+        supportActionBar?.hide()
     }
 
-    override fun onResume() {
-        super.onResume()
-        StatusBarViewController(this).setStatusBarView(getFragmentTag())
-        binding?.flMainLayout?.setOnClickListener {
-            fragmentMoveManager.addFragment(MusicListFragment.newInstance(1))
+    private fun observeViewModel() {
+        // 현재 Fragment 상태 변경 시 UI 업데이트
+        viewModel.currentFragment.observe(this) { fragmentTag ->
+            binding.tvStatusBarTitle.text = fragmentTag
         }
-    }
 
-    override fun onPause() {
-        super.onPause()
-    }
-
-    override fun onStop() {
-        super.onStop()
-    }
-
-    override fun onRestart() {
-        super.onRestart()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        toastManager.closeToast()
-    }
-
-    public fun setFragmentTag(fragmentTag:String){
-        this.fragmentTag = fragmentTag;
-    }
-
-    public fun getFragmentTag(): String {
-        return this.fragmentTag
+        // Toast 메시지 처리
+        viewModel.toastMessage.observe(this) { message ->
+            toastManager.showAnimatedToast(message)
+        }
     }
 
     override fun onBackPressed() {
-        when(getFragmentTag()){
-            "MusicListFragment" -> {
-                fragmentMoveManager.popFragment("MainFragment")
+        if (viewModel.isFragmentStackEmpty()) {
+            if (viewModel.isDoubleBackToExit()) {
+                super.onBackPressed()
+                toastManager.removeAnimationToast()
+                finish()
+                return
             }
-
-            "MainFragment" -> {
-                if (doubleBackToExitPressedOnce) {
-                    super.onBackPressed()
-                    toastManager.removeAnimationToast()
-                    finish()
-                    return
-                }
-                doubleBackToExitPressedOnce = true
-                toastManager.showAnimatedToast("앱을 종료하려면 다시 한 번 눌러 주세요")
-                Handler().postDelayed({ doubleBackToExitPressedOnce = false }, 3000)
-            }
+            viewModel.triggerDoubleBackToExit()
+        } else {
+            viewModel.popFragment()
         }
     }
-
 }

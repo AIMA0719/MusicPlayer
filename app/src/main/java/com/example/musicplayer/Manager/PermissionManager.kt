@@ -2,12 +2,10 @@ package com.example.musicplayer.Manager
 
 import android.Manifest
 import android.app.Activity
-import android.content.Context
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.gun0912.tedpermission.PermissionListener
-import com.gun0912.tedpermission.normal.TedPermission
 
 class PermissionManager(private val activity: Activity) {
 
@@ -56,6 +54,8 @@ class PermissionManager(private val activity: Activity) {
             Manifest.permission.CAMERA
         )
 
-        ActivityCompat.requestPermissions(activity, permissions, PERMISSION_REQUEST_CODE)
+        ActivityCompat.requestPermissions(activity, permissions,
+            PERMISSION_REQUEST_CODE
+        )
     }
 }

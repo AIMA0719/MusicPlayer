@@ -8,10 +8,8 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.musicplayer.Manager.ContextManager
 import com.example.musicplayer.MyItemRecyclerViewAdapter
 import com.example.musicplayer.R
-import com.example.musicplayer.StatusBarViewController
 
 class MusicListFragment : Fragment() {
 
@@ -41,12 +39,6 @@ class MusicListFragment : Fragment() {
             }
         }
         return view
-    }
-
-    override fun onResume() {
-        super.onResume()
-        ContextManager.mainActivity?.setFragmentTag("MusicListFragment")
-        ContextManager.mainActivity?.let { StatusBarViewController(it).setStatusBarView("MusicListFragment") }
     }
 
     companion object {
