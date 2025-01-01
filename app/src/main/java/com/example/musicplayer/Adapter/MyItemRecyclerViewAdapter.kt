@@ -9,13 +9,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.musicplayer.Manager.MusicLoaderManager
 import com.example.musicplayer.Manager.UriUtils
 import com.example.musicplayer.databinding.FragmentMusicListBinding
-import com.example.musicplayer.placeholder.PlaceholderContent
+import com.example.musicplayer.ListObjects.MusicItem
 import java.io.IOException
 
 class MyItemRecyclerViewAdapter(context: Context) :
     RecyclerView.Adapter<MyItemRecyclerViewAdapter.ViewHolder>() {
 
-    private val musicList: List<PlaceholderContent.PlaceholderItem> = MusicLoaderManager.loadMusic(context)
+    private val musicList: List<MusicItem.MusicItem> = MusicLoaderManager.loadMusic(context)
     private var mediaPlayer: MediaPlayer? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -45,12 +45,12 @@ class MyItemRecyclerViewAdapter(context: Context) :
             }
         }
 
-        fun bind(item: PlaceholderContent.PlaceholderItem) {
+        fun bind(item: MusicItem.MusicItem) {
             idView.text = item.id
             contentView.text = item.displayName
         }
 
-        private fun playMusic(item: PlaceholderContent.PlaceholderItem) {
+        private fun playMusic(item: MusicItem.MusicItem) {
             if (mediaPlayer == null) {
                 mediaPlayer = MediaPlayer()
             } else {

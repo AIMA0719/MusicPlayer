@@ -19,6 +19,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+
         binding = MusicPlayerMainActivityBinding.inflate(layoutInflater) // 객체 바인딩
         viewModel = ViewModelProvider(this)[MainViewModel::class.java] // 메인 뷰 모델
 
