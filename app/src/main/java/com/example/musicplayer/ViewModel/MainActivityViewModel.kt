@@ -9,7 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class MainViewModel : ViewModel() {
+class MainActivityViewModel : ViewModel() {
 
     private val _currentFragment = MutableLiveData<String>("MainFragment")
     val currentFragment: LiveData<String> get() = _currentFragment
