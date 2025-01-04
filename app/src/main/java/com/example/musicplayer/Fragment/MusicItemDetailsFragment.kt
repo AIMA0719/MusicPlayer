@@ -103,7 +103,7 @@ class MusicItemDetailsFragment : Fragment() {
         val recordedFilePath = recorderManager.getRecordedFilePath()
 
         if (recordedFilePath != null && File(recordedFilePath).exists()) {
-            val comparisonManager = ScoreCalculator(requireContext())
+            val comparisonManager = ScoreCalculator(requireContext(),50)
             lifecycleScope.launch {
                 val score = comparisonManager.compareAudioFiles(Uri.parse(musicItem?.id), recordedFilePath)
                 ToastManager.showAnimatedToast(requireContext(), "유사도 점수: $score")
