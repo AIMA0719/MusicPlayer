@@ -9,19 +9,21 @@ import com.example.musicplayer.Fragment.MusicListFragment
 import com.example.musicplayer.Manager.ContextManager
 import com.example.musicplayer.Manager.FragmentMoveManager
 import com.example.musicplayer.Manager.PermissionManager
+import com.example.musicplayer.Manager.ProgressDialogManager
+import com.example.musicplayer.Manager.ScoreDialogManager
 import com.example.musicplayer.Manager.ToastManager
 import com.example.musicplayer.databinding.MusicPlayerMainActivityBinding
 import com.example.musicplayer.viewmodel.MainActivityViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: MusicPlayerMainActivityBinding
-    private lateinit var toastManager: ToastManager
-
     lateinit var viewModel: MainActivityViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
 
         binding = MusicPlayerMainActivityBinding.inflate(layoutInflater) // 객체 바인딩
         viewModel = ViewModelProvider(this)[MainActivityViewModel::class.java] // 메인 뷰 모델
@@ -75,5 +77,14 @@ class MainActivity : AppCompatActivity() {
         viewModel.toastMessage.observe(this) { message ->
             ToastManager.showAnimatedToast(this,message)
         }
+    }
+
+    private val job = Job()
+    private val scope = CoroutineScope(Dispatchers.Main + job)
+    override fun onDestroy() {
+        super.onDestroy()
+        ProgressDialogManager.dismiss()
+        ScoreDialogManager.dismiss()
+        job.cancel()
     }
 }

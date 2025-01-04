@@ -19,6 +19,7 @@ import com.example.musicplayer.Manager.ScoreCalculator
 import com.example.musicplayer.Manager.ScoreDialogManager
 import com.example.musicplayer.Manager.ToastManager
 import com.example.musicplayer.databinding.FragmentMusicItemDetailsBinding
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -30,6 +31,7 @@ class MusicItemDetailsFragment : Fragment() {
         }
     }
 
+    private val job = Job()
     private lateinit var recorderManager: RecorderManager
     private val viewModel: MusicItemDetailsViewModel by viewModels()
     private var musicItem: MusicItem.MusicItem? = null
@@ -84,6 +86,7 @@ class MusicItemDetailsFragment : Fragment() {
 
     override fun onDestroy() {
         super.onDestroy()
+        job.cancel() // 모든 비동기 작업 취소
         timerHandler.removeCallbacksAndMessages(null)
         ProgressDialogManager.dismiss()
         ScoreDialogManager.dismiss()
@@ -108,7 +111,8 @@ class MusicItemDetailsFragment : Fragment() {
             ProgressDialogManager.show(requireContext())
             val comparisonManager = ScoreCalculator(requireContext(), 50)
             lifecycleScope.launch {
-                binding.titleTextView.visibility = View.GONE
+                binding.timerTextView.visibility = View.GONE
+                binding.timerTextView.text = ""
                 val score = comparisonManager.compareAudioFiles(Uri.parse(musicItem?.id), recordedFilePath)
                 ProgressDialogManager.dismiss() // Progress Dialog 닫기
                 ScoreDialogManager.show(requireContext(), score) // Score Dialog 표시
