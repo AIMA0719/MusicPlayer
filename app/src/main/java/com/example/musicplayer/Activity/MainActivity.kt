@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
             override fun handleOnBackPressed() {
                 if (viewModel.isFragmentStackEmpty()) {
                     if (viewModel.isDoubleBackToExit()) {
-                        toastManager.removeAnimationToast()
+                        ToastManager.closeToast()
                         finish()
                     } else {
                         viewModel.triggerDoubleBackToExit()
@@ -58,7 +58,6 @@ class MainActivity : AppCompatActivity() {
     private fun setBaseSetting() {
         ContextManager.mainContext = this
         ContextManager.mainActivity = this
-        toastManager = ToastManager(this)
     }
 
     private fun hideActionBar() {
@@ -73,7 +72,7 @@ class MainActivity : AppCompatActivity() {
 
         // Toast 메시지 처리
         viewModel.toastMessage.observe(this) { message ->
-            toastManager.showAnimatedToast(message)
+            ToastManager.showAnimatedToast(this,message)
         }
     }
 }

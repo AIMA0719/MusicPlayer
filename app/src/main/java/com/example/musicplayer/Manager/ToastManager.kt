@@ -1,5 +1,6 @@
 package com.example.musicplayer.Manager
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.graphics.Color
@@ -9,81 +10,69 @@ import android.os.Looper
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.view.WindowManager
-import android.widget.FrameLayout
 import android.widget.PopupWindow
 import android.widget.TextView
-import android.widget.Toast
 import com.example.musicplayer.R
+import java.util.Objects
 
-class ToastManager(var context: Context?) : Toast(context) {
-    private var currentToastLayout: FrameLayout? = null
-    private var popupWindow: PopupWindow? = null
+class ToastManager {
 
-    fun showAnimatedToast(message: String) {
-        try {
-            if (context is Activity) {
-                val activity = context as Activity
+    companion object {
+        private var popupWindow: PopupWindow? = null
 
-                if (!activity.isFinishing && !activity.isDestroyed) {
-                    // 토스트 레이아웃을 생성
-                    val layout = LayoutInflater.from(context).inflate(R.layout.custom_toast, null)
+        @SuppressLint("InflateParams")
+        fun showAnimatedToast(context: Context, message: Any) {
+            try {
+                if (context is Activity) {
+                    if (!context.isFinishing && !context.isDestroyed) {
+                        val layout = LayoutInflater.from(context).inflate(R.layout.custom_toast, null)
+                        val text: TextView = layout.findViewById(R.id.toast_text)
 
-                    // 텍스트 설정
-                    val text: TextView = layout.findViewById(R.id.toast_text)
-                    text.text = message
-
-                    // 팝업 윈도우 생성
-                    popupWindow = PopupWindow(
-                        layout,
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT
-                    )
-
-                    // 투명한 배경 설정
-                    popupWindow!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-                    popupWindow!!.isOutsideTouchable = true
-                    popupWindow!!.showAtLocation(activity.window.decorView, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, 100)
-
-                    // 아래에서 위로 올라오는 애니메이션 적용
-                    val toastView = popupWindow!!.contentView
-                    toastView?.translationY = 500f
-
-                    toastView?.animate()
-                        ?.translationYBy(-500f)
-                        ?.withEndAction {
-                            // 3초 후에 추가적인 애니메이션 적용
-                            Handler(Looper.getMainLooper()).postDelayed({
-                                // 애니메이션이 완료된 후 팝업 닫기
-                                toastView.animate()
-                                    ?.translationY(500f)
-                                    ?.withEndAction { popupWindow!!.dismiss() }
-                                    ?.start()
-                            }, 2000)
+                        val messageText = when(message){
+                            is String -> message
+                            is Int -> context.getString(message)
+                            else -> ""
                         }
-                        ?.start()
+                        text.text = messageText
+
+                        popupWindow = PopupWindow(
+                            layout,
+                            ViewGroup.LayoutParams.WRAP_CONTENT,
+                            ViewGroup.LayoutParams.WRAP_CONTENT
+                        )
+                        popupWindow!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                        popupWindow!!.isOutsideTouchable = true
+                        popupWindow!!.showAtLocation(
+                            context.window.decorView,
+                            Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL,
+                            0,
+                            100
+                        )
+
+                        val toastView = popupWindow!!.contentView
+                        toastView?.translationY = 500f
+                        toastView?.animate()
+                            ?.translationYBy(-500f)
+                            ?.withEndAction {
+                                Handler(Looper.getMainLooper()).postDelayed({
+                                    toastView.animate()
+                                        ?.translationY(500f)
+                                        ?.withEndAction { popupWindow!!.dismiss() }
+                                        ?.start()
+                                }, 2000)
+                            }
+                            ?.start()
+                    }
                 }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
         }
-    }
 
-    fun closeToast() {
-        if (popupWindow != null && popupWindow!!.isShowing) {
-            popupWindow!!.dismiss()
-        }
-    }
-
-    fun removeAnimationToast() {
-        try {
-            if (currentToastLayout?.parent != null) {
-                val wm = context?.getSystemService(Context.WINDOW_SERVICE) as WindowManager?
-                wm?.removeView(currentToastLayout)
-                currentToastLayout = null
+        fun closeToast() {
+            if (popupWindow != null && popupWindow!!.isShowing) {
+                popupWindow!!.dismiss()
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
         }
     }
 }

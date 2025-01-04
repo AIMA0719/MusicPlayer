@@ -1,22 +1,19 @@
 package com.example.musicplayer.Adapter
 
 import android.content.Context
-import android.media.MediaPlayer
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.example.musicplayer.Manager.MusicLoaderManager
-import com.example.musicplayer.Manager.UriUtils
-import com.example.musicplayer.databinding.FragmentMusicListBinding
+import com.example.musicplayer.Fragment.MusicItemDetailsFragment
 import com.example.musicplayer.ListObjects.MusicItem
-import java.io.IOException
+import com.example.musicplayer.Manager.FragmentMoveManager
+import com.example.musicplayer.Manager.MusicLoaderManager
+import com.example.musicplayer.databinding.FragmentMusicListBinding
 
 class MyItemRecyclerViewAdapter(context: Context) :
     RecyclerView.Adapter<MyItemRecyclerViewAdapter.ViewHolder>() {
-
     private val musicList: List<MusicItem.MusicItem> = MusicLoaderManager.loadMusic(context)
-    private var mediaPlayer: MediaPlayer? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = FragmentMusicListBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -40,7 +37,7 @@ class MyItemRecyclerViewAdapter(context: Context) :
                 val position = bindingAdapterPosition
                 if (position != RecyclerView.NO_POSITION) {
                     val item = musicList[position]
-                    playMusic(item)
+                    FragmentMoveManager.instance.pushFragment(MusicItemDetailsFragment.newInstance(item))
                 }
             }
         }
@@ -48,34 +45,6 @@ class MyItemRecyclerViewAdapter(context: Context) :
         fun bind(item: MusicItem.MusicItem) {
             idView.text = item.id
             contentView.text = item.displayName
-        }
-
-        private fun playMusic(item: MusicItem.MusicItem) {
-            if (mediaPlayer == null) {
-                mediaPlayer = MediaPlayer()
-            } else {
-                mediaPlayer?.reset()
-            }
-
-            try {
-                val filePath = UriUtils.getMediaFilePath(itemView.context, item.id)
-                filePath?.let {
-                    mediaPlayer?.setDataSource(it)
-                    mediaPlayer?.prepare()
-                    mediaPlayer?.start()
-                }
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
-
-            mediaPlayer?.setOnCompletionListener {
-                stopMusic()
-            }
-        }
-
-        private fun stopMusic() {
-            mediaPlayer?.stop()
-            mediaPlayer?.reset()
         }
 
         override fun toString(): String {
