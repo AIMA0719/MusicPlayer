@@ -22,6 +22,11 @@ class SplashActivity : AppCompatActivity() {
         mHideHandler.postDelayed(splashRunnable, SPLASH_DELAY.toLong())
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        mHideHandler.removeCallbacksAndMessages(null)
+    }
+
     private val splashRunnable = Runnable {
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)

@@ -13,7 +13,6 @@ import android.view.ViewGroup
 import android.widget.PopupWindow
 import android.widget.TextView
 import com.example.musicplayer.R
-import java.util.Objects
 
 class ToastManager {
 

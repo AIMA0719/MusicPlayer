@@ -20,6 +20,7 @@ import com.example.musicplayer.Manager.ScoreCalculator
 import com.example.musicplayer.Manager.ToastManager
 import com.example.musicplayer.R
 import kotlinx.coroutines.launch
+import java.io.File
 
 class MusicItemDetailsFragment : Fragment() {
 
@@ -83,6 +84,11 @@ class MusicItemDetailsFragment : Fragment() {
         return view
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        timerHandler.removeCallbacksAndMessages(null) // 핸들러 콜백 제거
+    }
+
     private fun startRecording() {
         recorderManager.startRecording()
         isRecording = true
@@ -95,14 +101,16 @@ class MusicItemDetailsFragment : Fragment() {
         isRecording = false
         timerHandler.removeCallbacks(timerRunnable)
         val recordedFilePath = recorderManager.getRecordedFilePath()
-        recordedFilePath?.let {
+
+        if (recordedFilePath != null && File(recordedFilePath).exists()) {
             val comparisonManager = ScoreCalculator(requireContext())
             lifecycleScope.launch {
                 val score = comparisonManager.compareAudioFiles(Uri.parse(musicItem?.id), recordedFilePath)
                 ToastManager.showAnimatedToast(requireContext(), "유사도 점수: $score")
             }
+        } else {
+            ToastManager.showAnimatedToast(requireContext(), "녹음 파일이 유효하지 않습니다.")
         }
-
     }
 
     @SuppressLint("DefaultLocale")
