@@ -6,7 +6,7 @@
     android:name="com.example.musicplayer.MusicListFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/clr_13b5ff"
+    android:background="@color/clr_ffffff"
     app:layoutManager="LinearLayoutManager"
     tools:context=".Fragment.MusicListFragment"
     tools:listitem="@layout/fragment_music_list" />

@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 
 class MainActivityViewModel : ViewModel() {
 
-    private val _currentFragment = MutableLiveData<String>("MainFragment")
+    val _currentFragment = MutableLiveData("MainFragment")
     val currentFragment: LiveData<String> get() = _currentFragment
 
     private val _toastMessage = MutableLiveData<String>()
@@ -34,15 +34,5 @@ class MainActivityViewModel : ViewModel() {
             delay(3000L)
             doubleBackToExit = false
         }
-    }
-
-    fun addFragment(fragment: androidx.fragment.app.Fragment) {
-        FragmentMoveManager.instance.pushFragment(fragment)
-        _currentFragment.value = fragment.javaClass.simpleName
-    }
-
-    fun popFragment() {
-        FragmentMoveManager.instance.popFragment()
-        _currentFragment.value = FragmentMoveManager.instance.getCurrentFragment() ?: "MainFragment"
     }
 }

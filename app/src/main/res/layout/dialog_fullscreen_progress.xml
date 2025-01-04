@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@android:color/transparent"
+    android:gravity="center">
+
+    <!-- 원형 프로그레스 바 -->
+    <com.mikhaellopez.circularprogressbar.CircularProgressBar
+        android:id="@+id/circularProgressBar"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_gravity="center"
+        app:cpb_progress="100"
+        app:cpb_start_angle="270"
+        app:cpb_progressbar_color="@color/clr_13b5ff"
+        app:cpb_progressbar_width="8dp"
+        app:cpb_indeterminate_mode="true" />
+</FrameLayout>

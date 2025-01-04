@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_gravity="center"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:background="@color/clr_13b5ff"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <!-- 점수를 표시할 텍스트뷰 -->
+        <TextView
+            android:id="@+id/tv_dialog_score"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:text="0 점"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal"
+            android:textColor="@android:color/black"/>
+
+        <!-- 메시지를 표시할 텍스트뷰 -->
+        <TextView
+            android:id="@+id/tv_dialog_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="결과 메시지"
+            android:textSize="18dp"
+            android:layout_marginTop="60dp"
+            android:layout_marginBottom="20dp"
+            android:layout_gravity="center_horizontal"
+            android:textColor="@color/clr_13b5ff"/>
+
+
+    </LinearLayout>
+
+</LinearLayout>

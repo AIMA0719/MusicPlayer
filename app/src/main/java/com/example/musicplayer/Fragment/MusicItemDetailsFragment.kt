@@ -9,16 +9,16 @@ import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.example.musicplayer.ListObjects.MusicItem
+import com.example.musicplayer.Manager.ProgressDialogManager
 import com.example.musicplayer.Manager.RecorderManager
 import com.example.musicplayer.Manager.ScoreCalculator
+import com.example.musicplayer.Manager.ScoreDialogManager
 import com.example.musicplayer.Manager.ToastManager
-import com.example.musicplayer.R
+import com.example.musicplayer.databinding.FragmentMusicItemDetailsBinding
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -37,6 +37,7 @@ class MusicItemDetailsFragment : Fragment() {
     private var startTime = 0L
     private lateinit var timerHandler: Handler
     private lateinit var timerRunnable: Runnable
+    private lateinit var binding: FragmentMusicItemDetailsBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,41 +54,41 @@ class MusicItemDetailsFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
-        val view = inflater.inflate(R.layout.fragment_music_item_details, container, false)
-        val titleTextView: TextView = view.findViewById(R.id.titleTextView)
-        val recordButton: Button = view.findViewById(R.id.recordButton)
-        val timerTextView: TextView = view.findViewById(R.id.timerTextView)
+        binding = FragmentMusicItemDetailsBinding.inflate(inflater, container, false)
 
         viewModel.musicItem.observe(viewLifecycleOwner) { item ->
-            titleTextView.text = item.displayName
+            binding.titleTextView.text = item.displayName
         }
 
         timerHandler = Handler(Looper.getMainLooper())
         timerRunnable = object : Runnable {
             override fun run() {
                 val elapsedTime = System.currentTimeMillis() - startTime
-                timerTextView.text = formatTime(elapsedTime)
+                binding.timerTextView.text = formatTime(elapsedTime)
                 timerHandler.postDelayed(this, 1000)
             }
         }
 
-        recordButton.setOnClickListener {
+        binding.recordButton.setOnClickListener {
             if (isRecording) {
                 stopRecording()
-                recordButton.text = "Start Recording"
+                binding.recordButton.text = "Start Recording"
             } else {
                 startRecording()
-                recordButton.text = "Stop Recording"
+                binding.recordButton.text = "Stop Recording"
             }
         }
 
-        return view
+        return binding.root
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        timerHandler.removeCallbacksAndMessages(null) // 핸들러 콜백 제거
+        timerHandler.removeCallbacksAndMessages(null)
+        ProgressDialogManager.dismiss()
+        ScoreDialogManager.dismiss()
     }
+
 
     private fun startRecording() {
         recorderManager.startRecording()
@@ -96,6 +97,7 @@ class MusicItemDetailsFragment : Fragment() {
         timerHandler.post(timerRunnable)
     }
 
+    @SuppressLint("SetTextI18n")
     private fun stopRecording() {
         recorderManager.stopRecording()
         isRecording = false
@@ -103,10 +105,13 @@ class MusicItemDetailsFragment : Fragment() {
         val recordedFilePath = recorderManager.getRecordedFilePath()
 
         if (recordedFilePath != null && File(recordedFilePath).exists()) {
-            val comparisonManager = ScoreCalculator(requireContext(),50)
+            ProgressDialogManager.show(requireContext())
+            val comparisonManager = ScoreCalculator(requireContext(), 50)
             lifecycleScope.launch {
+                binding.titleTextView.visibility = View.GONE
                 val score = comparisonManager.compareAudioFiles(Uri.parse(musicItem?.id), recordedFilePath)
-                ToastManager.showAnimatedToast(requireContext(), "유사도 점수: $score")
+                ProgressDialogManager.dismiss() // Progress Dialog 닫기
+                ScoreDialogManager.show(requireContext(), score) // Score Dialog 표시
             }
         } else {
             ToastManager.showAnimatedToast(requireContext(), "녹음 파일이 유효하지 않습니다.")

@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.musicplayer.Fragment.MainFragment
 import com.example.musicplayer.Fragment.MusicListFragment
 import com.example.musicplayer.Manager.ContextManager
+import com.example.musicplayer.Manager.FragmentMoveManager
 import com.example.musicplayer.Manager.PermissionManager
 import com.example.musicplayer.Manager.ToastManager
 import com.example.musicplayer.databinding.MusicPlayerMainActivityBinding
@@ -35,7 +36,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setMainFragment() {
-        viewModel.addFragment(MainFragment.newInstance())
+        FragmentMoveManager.instance.pushFragment(MainFragment.newInstance())
     }
 
     private fun setOnBackPressed() {
@@ -49,7 +50,7 @@ class MainActivity : AppCompatActivity() {
                         viewModel.triggerDoubleBackToExit()
                     }
                 } else {
-                    viewModel.popFragment()
+                    FragmentMoveManager.instance.popFragment()
                 }
             }
         })

@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import androidx.fragment.app.Fragment
 import com.example.musicplayer.Manager.ContextManager
+import com.example.musicplayer.Manager.FragmentMoveManager
 import com.example.musicplayer.R
 
 class MainFragment : Fragment() {
@@ -32,7 +33,7 @@ class MainFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         view.findViewById<Button>(R.id.tv_mainFragment_score).setOnClickListener {
-            ContextManager.mainActivity?.viewModel?.addFragment(MusicListFragment.newInstance())
+            FragmentMoveManager.instance.pushFragment(MusicListFragment.newInstance())
         }
     }
 

@@ -31,11 +31,18 @@ class FragmentMoveManager private constructor() {
                 R.anim.slide_out_left // 기존 Fragment가 나가는 애니메이션
             )
 
+            // 기존에 보이는 Fragment 숨기기
+            if (fragmentStack.isNotEmpty()) {
+                transaction.hide(fragmentStack.peek())
+            }
+
             transaction.add(R.id.fl_main_layout, fragment)
             transaction.addToBackStack(null)
             transaction.commitAllowingStateLoss()
 
             fragmentStack.push(fragment) // 스택에 추가
+
+            ContextManager.mainActivity?.viewModel?._currentFragment?.value = fragment.javaClass.simpleName
         }
     }
 
@@ -55,7 +62,13 @@ class FragmentMoveManager private constructor() {
             transaction.remove(fragmentStack.pop()) // 스택에서 제거한 Fragment 삭제
             transaction.commitAllowingStateLoss()
 
+            if (fragmentStack.isNotEmpty()) {
+                transaction.show(fragmentStack.peek()) // 이전 Fragment 다시 표시
+            }
+
             fragmentManager.popBackStack()
+
+            ContextManager.mainActivity?.viewModel?._currentFragment?.value = getCurrentFragment() ?: "MainFragment"
         }
     }
 
