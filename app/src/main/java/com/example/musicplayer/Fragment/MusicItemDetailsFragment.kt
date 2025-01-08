@@ -26,7 +26,7 @@ import java.io.File
 class MusicItemDetailsFragment : Fragment() {
 
     companion object {
-        fun newInstance(musicItem: MusicItem.MusicItem) = MusicItemDetailsFragment().apply {
+        fun newInstance(musicItem: MusicItem) = MusicItemDetailsFragment().apply {
             this.musicItem = musicItem
         }
     }
@@ -34,7 +34,7 @@ class MusicItemDetailsFragment : Fragment() {
     private val job = Job()
     private lateinit var recorderManager: RecorderManager
     private val viewModel: MusicItemDetailsViewModel by viewModels()
-    private var musicItem: MusicItem.MusicItem? = null
+    private var musicItem: MusicItem? = null
     private var isRecording = false
     private var startTime = 0L
     private lateinit var timerHandler: Handler
@@ -59,7 +59,7 @@ class MusicItemDetailsFragment : Fragment() {
         binding = FragmentMusicItemDetailsBinding.inflate(inflater, container, false)
 
         viewModel.musicItem.observe(viewLifecycleOwner) { item ->
-            binding.titleTextView.text = item.displayName
+            binding.titleTextView.text = item.toString()
         }
 
         timerHandler = Handler(Looper.getMainLooper())

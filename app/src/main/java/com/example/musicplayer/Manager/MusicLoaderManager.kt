@@ -2,16 +2,18 @@ package com.example.musicplayer.Manager
 
 import android.content.ContentUris
 import android.content.Context
+import android.os.Environment
 import android.provider.MediaStore
 import com.example.musicplayer.ListObjects.MusicItem
+import java.io.File
 
 // 음악 파일 정보를 로드하는 Manager 클래스
 object MusicLoaderManager {
 
     // 음악 파일을 로드하여 PlaceholderItem 리스트로 반환하는 함수
-    fun loadMusic(context: Context): List<MusicItem.MusicItem> {
+    fun loadMusic(context: Context): List<MusicItem> {
         // 음악 정보를 저장할 리스트 초기화
-        val musicList = mutableListOf<MusicItem.MusicItem>()
+        val musicList = mutableListOf<MusicItem>()
 
         // 음악 파일 정보를 가져오기 위한 열(Column) 정의
         val projection = arrayOf(
@@ -20,17 +22,10 @@ object MusicLoaderManager {
             MediaStore.Audio.Media.DATA // 음악 파일의 경로
         )
 
-        // 검색 조건 정의 - 특정 확장자를 가진 음악 파일만 검색
-        val selection = "${MediaStore.Audio.Media.DATA} like ? OR " +
-                "${MediaStore.Audio.Media.DATA} like ? OR " +
-                "${MediaStore.Audio.Media.DATA} like ? OR " +
-                "${MediaStore.Audio.Media.DATA} like ? "
+        val selection = "${MediaStore.Audio.Media.MIME_TYPE} LIKE ?"
+        val selectionArgs = arrayOf("audio/%")
 
-        // 검색 조건에 전달할 확장자 배열
-        val selectionArgs = arrayOf("%mp3%", "%m4a%", "%flac%", "%wav%")
-
-        // 검색 결과를 정렬할 기준
-        val sortOrder = "${MediaStore.Audio.Media.DISPLAY_NAME} ASC"
+        val sortOrder = "${MediaStore.Audio.Media.DATE_ADDED} DESC"
 
         // ContentResolver를 사용하여 미디어 파일 쿼리 실행
         context.contentResolver.query(
@@ -59,7 +54,8 @@ object MusicLoaderManager {
 
                 // PlaceholderItem 객체 생성 후 리스트에 추가
                 musicList.add(
-                    MusicItem.MusicItem(
+                    MusicItem(
+                        id.toString(),
                         contentUri.toString(), // URI를 문자열로 저장
                         name, // 음악 파일 이름 저장
                         data // 음악 파일 경로 저장
@@ -70,5 +66,47 @@ object MusicLoaderManager {
 
         // 생성된 음악 리스트 반환
         return musicList
+    }
+
+    fun loadAllAudioFiles(context: Context): List<MusicItem> {
+        val audioFiles = mutableListOf<MusicItem>()
+
+        // 내장 저장소 디렉터리 경로 가져오기
+        val internalStorageDir = context.filesDir // 앱 내장 디렉터리
+        val externalStorageDir = Environment.getExternalStorageDirectory() // 외부 내장 디렉터리
+
+        // 디렉터리 탐색하여 파일 찾기
+        internalStorageDir?.let { searchFilesRecursively(it, audioFiles) }
+        externalStorageDir?.let { searchFilesRecursively(it, audioFiles) }
+
+        return audioFiles
+    }
+
+    // 재귀적으로 디렉터리를 탐색하며 파일을 추가하는 함수
+    private fun searchFilesRecursively(dir: File, audioFiles: MutableList<MusicItem>) {
+        if (dir.isDirectory) {
+            dir.listFiles()?.forEach { file ->
+                if (file.isDirectory) {
+                    // 디렉터리면 재귀 호출
+                    searchFilesRecursively(file, audioFiles)
+                } else if (isAudioFile(file)) {
+                    // 음성 파일이면 MusicItem 객체로 리스트에 추가
+                    audioFiles.add(
+                        MusicItem(
+                            id = file.name,           // 파일 이름을 고유 ID로 사용
+                            uri = file.toURI().toString(), // 파일 URI
+                            filePath = file.absolutePath, // 파일 절대 경로
+                            fileName = file.name      // 파일 이름
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    // 파일 확장자가 음성 파일인지 확인하는 함수
+    private fun isAudioFile(file: File): Boolean {
+        val audioExtensions = listOf("mp3", "wav", "m4a", "amr", "flac")
+        return audioExtensions.any { file.extension.equals(it, ignoreCase = true) }
     }
 }

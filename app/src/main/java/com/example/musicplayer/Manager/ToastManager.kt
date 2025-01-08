@@ -45,7 +45,7 @@ class ToastManager {
                             context.window.decorView,
                             Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL,
                             0,
-                            100
+                            150
                         )
 
                         val toastView = popupWindow!!.contentView

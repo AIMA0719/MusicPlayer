@@ -5,10 +5,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.cachedIn
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.musicplayer.Adapter.MyItemRecyclerViewAdapter
+import com.example.musicplayer.MusicPagingSource
 import com.example.musicplayer.R
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class MusicListFragment : Fragment() {
     override fun onCreateView(
@@ -17,20 +24,29 @@ class MusicListFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_music_list_list, container, false)
 
-        // `is` 는 java 의 instanceOf 랑 비슷한 것 같음
         if (view is RecyclerView) {
             with(view) {
-                // `with`는 특정 객체의 속성이나 메서드를 간결하게 사용할 때 사용
                 layoutManager = LinearLayoutManager(context)
-                adapter = MyItemRecyclerViewAdapter(context)
+                val adapter = MyItemRecyclerViewAdapter()
+                this.adapter = adapter
+
+                // PagingData 설정
+                lifecycleScope.launch {
+                    Pager(
+                        config = PagingConfig(pageSize = 20, enablePlaceholders = false),
+                        pagingSourceFactory = { MusicPagingSource(requireContext()) }
+                    ).flow.cachedIn(lifecycleScope).collectLatest { pagingData ->
+                        adapter.submitData(pagingData)
+                    }
+                }
             }
         }
-        return view // 생성된 뷰를 반환
+        return view
     }
 
     companion object {
-        // 정적 메서드로 Fragment 인스턴스를 생성
         @JvmStatic
-        fun newInstance() = MusicListFragment().apply {}
+        fun newInstance() = MusicListFragment().apply {  }
     }
 }
+

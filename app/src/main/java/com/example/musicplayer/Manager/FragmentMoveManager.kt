@@ -22,6 +22,11 @@ class FragmentMoveManager private constructor() {
     fun pushFragment(fragment: Fragment) {
         val fragmentManager = getFragmentManager()
 
+        // 중복된 프래그먼트 연속 추가 방지
+        if (fragmentStack.isNotEmpty() && fragmentStack.peek().javaClass == fragment.javaClass) {
+            return // 이전과 동일한 프래그먼트라면 추가하지 않음
+        }
+
         if (fragmentManager != null && ContextManager.mainActivity?.findViewById<View>(R.id.fl_main_layout) != null) {
             val transaction = fragmentManager.beginTransaction()
 
@@ -44,6 +49,8 @@ class FragmentMoveManager private constructor() {
 
             ContextManager.mainActivity?.viewModel?._currentFragment?.value = fragment.javaClass.simpleName
         }
+
+        ToastManager.closeToast()
     }
 
     // Fragment를 제거하고 스택에서 pop
@@ -70,22 +77,8 @@ class FragmentMoveManager private constructor() {
 
             ContextManager.mainActivity?.viewModel?._currentFragment?.value = getCurrentFragment() ?: "MainFragment"
         }
-    }
 
-    // 스택의 모든 Fragment 제거
-    fun clearStack() {
-        val fragmentManager = getFragmentManager()
-
-        while (fragmentStack.isNotEmpty()) {
-            fragmentStack.pop()
-        }
-
-        fragmentManager?.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
-    }
-
-    // 현재 스택 상태를 확인하는 함수
-    fun getStackState(): List<Fragment> {
-        return fragmentStack.toList()
+        ToastManager.closeToast()
     }
 
     fun getCurrentFragment(): String? {
