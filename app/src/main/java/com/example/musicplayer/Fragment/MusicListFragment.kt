@@ -5,19 +5,23 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.cachedIn
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.musicplayer.Adapter.MyItemRecyclerViewAdapter
-import com.example.musicplayer.MusicPagingSource
 import com.example.musicplayer.R
+import com.example.musicplayer.ViewModel.MusicViewModel
+import com.example.musicplayer.ViewModel.MusicViewModelFactory
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class MusicListFragment : Fragment() {
+
+    private val musicViewModel: MusicViewModel by viewModels {
+        MusicViewModelFactory(requireContext())
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -30,12 +34,8 @@ class MusicListFragment : Fragment() {
                 val adapter = MyItemRecyclerViewAdapter()
                 this.adapter = adapter
 
-                // PagingData 설정
                 lifecycleScope.launch {
-                    Pager(
-                        config = PagingConfig(pageSize = 20, enablePlaceholders = false),
-                        pagingSourceFactory = { MusicPagingSource(requireContext()) }
-                    ).flow.cachedIn(lifecycleScope).collectLatest { pagingData ->
+                    musicViewModel.musicFlow.collectLatest { pagingData ->
                         adapter.submitData(pagingData)
                     }
                 }
@@ -46,7 +46,6 @@ class MusicListFragment : Fragment() {
 
     companion object {
         @JvmStatic
-        fun newInstance() = MusicListFragment().apply {  }
+        fun newInstance() = MusicListFragment().apply { }
     }
 }
-
