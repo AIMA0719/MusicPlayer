@@ -11,7 +11,7 @@ class MusicPagingSource(private val context: Context) : PagingSource<Int, MusicI
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MusicItem> {
         val currentPage = params.key ?: 0
         val pageSize = params.loadSize
-        val allAudioFiles = MusicLoaderManager.loadAllAudioFiles(context)
+        val allAudioFiles = MusicLoaderManager.getRecordList()
         ToastManager.showAnimatedToast(context,"allAudioFiles.size : " + allAudioFiles.size)
         val pagedData = allAudioFiles.drop(currentPage * pageSize).take(pageSize)
 
