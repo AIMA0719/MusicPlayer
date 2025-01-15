@@ -5,14 +5,12 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.example.musicplayer.ListObjects.MusicItem
 import com.example.musicplayer.Manager.MusicLoaderManager
-import com.example.musicplayer.Manager.ToastManager
 
 class MusicPagingSource(private val context: Context) : PagingSource<Int, MusicItem>() {
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MusicItem> {
         val currentPage = params.key ?: 0
         val pageSize = params.loadSize
-        val allAudioFiles = MusicLoaderManager.getRecordList()
-        ToastManager.showAnimatedToast(context,"allAudioFiles.size : " + allAudioFiles.size)
+        val allAudioFiles = MusicLoaderManager.loadAudioList(context)
         val pagedData = allAudioFiles.drop(currentPage * pageSize).take(pageSize)
 
         return LoadResult.Page(

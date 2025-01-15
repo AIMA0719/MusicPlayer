@@ -1,5 +1,6 @@
 package com.example.musicplayer.Activity
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -44,13 +45,17 @@ class MainActivity : AppCompatActivity() {
         permissionManager.checkPermission()
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
+    // 권한 요청 결과 처리
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         permissionManager.onRequestPermissionsResult(requestCode, grantResults)
+    }
+
+    // 파일 관리 권한 요청 결과 처리 (Android 11 이상)
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        permissionManager.onActivityResult(requestCode)
     }
 
     private fun setMainFragment() {

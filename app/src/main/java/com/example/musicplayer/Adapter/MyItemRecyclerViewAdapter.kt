@@ -1,5 +1,6 @@
 package com.example.musicplayer.Adapter
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.TextView
@@ -24,8 +25,8 @@ class MyItemRecyclerViewAdapter : PagingDataAdapter<MusicItem, MyItemRecyclerVie
 
     inner class ViewHolder(binding: FragmentMusicListBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        val idView: TextView = binding.itemNumber
-        val contentView: TextView = binding.content
+        val idView: TextView = binding.fileName
+        val contentView: TextView = binding.fileUri
 
         init {
             itemView.setOnClickListener {
@@ -38,10 +39,10 @@ class MyItemRecyclerViewAdapter : PagingDataAdapter<MusicItem, MyItemRecyclerVie
             }
         }
 
+        @SuppressLint("SetTextI18n")
         fun bind(item: MusicItem) {
-            idView.text = item.id
-            LogManager.d("item.id : " + item.id)
-            contentView.text = item.toString()
+            idView.text = "파일명 : " + item.fileName
+            contentView.text = "파일 uri : $item"
         }
     }
 }

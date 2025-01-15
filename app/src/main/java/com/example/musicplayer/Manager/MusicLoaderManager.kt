@@ -2,83 +2,43 @@ package com.example.musicplayer.Manager
 
 import android.content.ContentUris
 import android.content.Context
-import android.media.MediaScannerConnection
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
-import androidx.annotation.RequiresApi
 import com.example.musicplayer.ListObjects.MusicItem
 import java.io.File
 
 object MusicLoaderManager {
 
-    fun getRecordList(): List<MusicItem> {
-        val filepath = Environment.getExternalStorageDirectory()
-        val path = filepath.path // /storage/emulated/0
-        val folderName = "Recordings"
-
-        val directory = File("$path/$folderName")
-        val files = directory.listFiles()?.sortedByDescending { it.lastModified() } ?: emptyList()
-
-        val musicList = mutableListOf<MusicItem>()
-        for (file in files) {
-            musicList.add(MusicItem(
-                id = file.name,
-                uri = file.toURI().toString(),
-                fileName = file.name,
-                filePath = file.absolutePath
-            ))
-        }
-
-        return musicList
-    }
-
-
-    // 모든 음성 파일을 가져오는 함수 (내부 저장소 + 외부 저장소)
-    fun loadAllAudioFiles(context: Context): List<MusicItem> {
-        scanAudioFiles(context)  // 파일 강제 스캔
-        val audioFiles = mutableListOf<MusicItem>()
-
-        // 외부 저장소의 음성 파일 가져오기
-        audioFiles.addAll(loadAudioFilesFromMediaStore(context))
-
-        // 내부 저장소의 음성 파일 가져오기 (앱 전용 디렉터리 탐색)
-        val internalStorageDir = context.filesDir
-        searchAudioFilesRecursively(internalStorageDir, audioFiles)
-
-        return audioFiles
-    }
-
-
-    // MediaStore를 통해 외부 저장소에서 오디오 파일을 가져오는 함수
-    private fun loadAudioFilesFromMediaStore(context: Context): List<MusicItem> {
+    fun loadAudioList(context: Context): List<MusicItem> {
         val musicList = mutableListOf<MusicItem>()
 
+        // 1. 외부 저장소에서 mp4, wav, mp3, m4a 파일 가져오기 (MediaStore)
         val projection = arrayOf(
             MediaStore.Audio.Media._ID,
             MediaStore.Audio.Media.DISPLAY_NAME,
-            MediaStore.Audio.Media.DATA
+            MediaStore.Audio.Media.MIME_TYPE
         )
+
+        val selection = "${MediaStore.Audio.Media.MIME_TYPE} IN (?, ?, ?, ?)"
+        val selectionArgs = arrayOf("audio/mp4", "audio/wav", "audio/mpeg", "audio/x-m4a")
 
         val sortOrder = "${MediaStore.Audio.Media.DATE_ADDED} DESC"
 
         context.contentResolver.query(
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
             projection,
-            null,
-            null,
+            selection,
+            selectionArgs,
             sortOrder
         )?.use { cursor ->
             val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
             val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
-            val dataColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
 
-            Log.d("MusicLoader", "Total audio files found: ${cursor.count}")
             while (cursor.moveToNext()) {
                 val id = cursor.getLong(idColumn)
                 val name = cursor.getString(nameColumn)
-                val data = cursor.getString(dataColumn)
 
                 val contentUri = ContentUris.withAppendedId(
                     MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
@@ -90,12 +50,18 @@ object MusicLoaderManager {
                         id = id.toString(),
                         uri = contentUri.toString(),
                         fileName = name,
-                        filePath = data
+                        filePath = contentUri.toString()
                     )
                 )
             }
         }
 
+        /*// 2. 내부 저장소에서 mp4, wav, mp3, m4a 파일 가져오기
+        val internalStorageDir = Environment.getExternalStorageDirectory()
+        searchAudioFilesRecursively(internalStorageDir, musicList)*/
+
+        // 총 파일 개수 출력
+        Log.d("MusicLoaderManager", "Total audio files found: ${musicList.size}")
         return musicList
     }
 
@@ -119,23 +85,9 @@ object MusicLoaderManager {
         }
     }
 
-    // 파일 확장자가 오디오 파일인지 확인하는 함수
+    // 파일 확장자가 mp4, wav, mp3, m4a인지 확인하는 함수
     private fun isAudioFile(file: File): Boolean {
-        val audioExtensions = listOf("mp3", "wav", "m4a", "amr", "aac", "ogg", "flac")
+        val audioExtensions = listOf("mp4", "wav", "mp3", "m4a")
         return audioExtensions.any { file.extension.equals(it, ignoreCase = true) }
-    }
-
-    // 특정 디렉터리를 미디어 스캐너로 강제 스캔하는 함수
-    fun scanAudioFiles(context: Context) {
-        val audioDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC)
-        val files = audioDir.listFiles() ?: return
-
-        val filePaths = files.filter { it.isFile && isAudioFile(it) }
-            .map { it.absolutePath }
-            .toTypedArray()
-
-        MediaScannerConnection.scanFile(context, filePaths, null) { path, uri ->
-            Log.d("MediaScanner", "Scanned: $path -> Uri: $uri")
-        }
     }
 }

@@ -118,6 +118,8 @@ class MusicItemDetailsFragment : Fragment() {
                 ScoreDialogManager.show(requireContext(), score) // Score Dialog 표시
             }
         } else {
+            binding.timerTextView.visibility = View.GONE
+            binding.timerTextView.text = ""
             ToastManager.showAnimatedToast(requireContext(), "녹음 파일이 유효하지 않습니다.")
         }
     }

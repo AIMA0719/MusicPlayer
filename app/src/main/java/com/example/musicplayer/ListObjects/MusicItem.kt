@@ -10,5 +10,5 @@ data class MusicItem(
     val fileName: String   // 파일 이름
 ) {
     // MusicItem의 문자열 표현을 파일 이름으로 반환
-    override fun toString(): String = fileName
+    override fun toString(): String = uri
 }
