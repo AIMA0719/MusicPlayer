@@ -1,8 +1,9 @@
 package com.example.musicplayer.Activity
 
-import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.example.musicplayer.Fragment.MainFragment
@@ -14,7 +15,6 @@ import com.example.musicplayer.Manager.ScoreDialogManager
 import com.example.musicplayer.Manager.ToastManager
 import com.example.musicplayer.databinding.MusicPlayerMainActivityBinding
 import com.example.musicplayer.viewmodel.MainActivityViewModel
-import com.gun0912.tedpermission.PermissionListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -23,7 +23,14 @@ import kotlinx.coroutines.cancel
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: MusicPlayerMainActivityBinding
     lateinit var viewModel: MainActivityViewModel
+
     private lateinit var permissionManager: PermissionManager
+
+    private val permissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { result ->
+        permissionManager.handlePermissionResult(result)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,27 +42,22 @@ class MainActivity : AppCompatActivity() {
         setBaseSetting() // 메인 context 및 메인 activity 캐싱
         hideActionBar() // 액션 바 숨기기
         observeViewModel() // 화면 이동 및 토스트 메시지 처리
-        permissionCheck() // 권한 체크
         setOnBackPressed() // 페이지 별 뒤로 가기 처리
         setMainFragment() // 메인 화면 설정
+
+        permissionManager = PermissionManager(
+            activity = this,
+            permissionLauncher = permissionLauncher,
+            onAllPermissionsGranted = {
+                // 모든 권한 허용된 경우의 처리
+                Toast.makeText(this, "모든 권한이 허용되었습니다", Toast.LENGTH_SHORT).show()
+            }
+        )
     }
 
-    private fun permissionCheck() {
-        permissionManager = PermissionManager(this)
-        permissionManager.checkPermission()
-    }
-
-    // 권한 요청 결과 처리
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        permissionManager.onRequestPermissionsResult(requestCode, grantResults)
-    }
-
-    // 파일 관리 권한 요청 결과 처리 (Android 11 이상)
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        permissionManager.onActivityResult(requestCode)
+    override fun onResume() {
+        super.onResume()
+        permissionManager.checkAndRequestPermissions()
     }
 
     private fun setMainFragment() {
