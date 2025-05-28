@@ -6,15 +6,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.fragment.app.Fragment
-import com.example.musicplayer.Manager.ContextManager
 import com.example.musicplayer.Manager.FragmentMoveManager
 import com.example.musicplayer.R
+import com.example.musicplayer.fragment.MusicListFragment
 
 class MainFragment : Fragment() {
 
     companion object {
         @JvmStatic
-        fun newInstance() = MainFragment().apply {  }
+        fun newInstance() = MainFragment()
     }
 
     override fun onCreateView(

@@ -9,7 +9,6 @@ import be.tarsos.dsp.io.UniversalAudioInputStream
 import be.tarsos.dsp.pitch.PitchDetectionHandler
 import be.tarsos.dsp.pitch.PitchProcessor
 import be.tarsos.dsp.pitch.PitchProcessor.PitchEstimationAlgorithm
-import com.arthenica.mobileffmpeg.FFmpeg
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -76,12 +75,12 @@ class ScoreCalculator(
      * @param recordedFilePath 사용자 녹음 파일의 경로
      * @return 유사도 기반의 점수 (0 ~ 100)
      */
-    suspend fun compareAudioFiles(referenceUri: Uri, recordedFilePath: String): Int {
+    suspend fun compareAudioFiles(recordedFilePath: String): Int {
         return withContext(Dispatchers.IO) {
             try {
                 // 1. 참조 오디오와 녹음 파일을 WAV 형식으로 변환
-                val referenceWavPath = convertToWav(referenceUri)
-                val recordedWavPath = convertToWav(File(recordedFilePath).toUri())
+                val referenceWavPath = convertToWav()
+                val recordedWavPath = convertToWav()
 
                 // 2. 변환된 WAV 파일에서 피치 데이터 추출
                 val referencePitches = extractPitchData(referenceWavPath)
@@ -113,16 +112,8 @@ class ScoreCalculator(
      * @param uri 변환할 오디오 파일의 Uri
      * @return 변환된 WAV 파일의 경로
      */
-    private fun convertToWav(uri: Uri): String {
-        val inputFilePath = UriUtils.copyUriToTempFile(uri, context) // 임시 파일에 복사
-        val wavPath = "${context.cacheDir}/converted_${System.currentTimeMillis()}.wav" // 출력 파일 경로 설정
-        val command = "-i $inputFilePath -ar 44100 -ac 1 -y $wavPath" // FFmpeg 명령어 구성
-
-        // FFmpeg 실행하여 변환 수행
-        val result = FFmpeg.execute(command)
-        if (result != 0) {
-            throw RuntimeException("Error converting audio to WAV: $result")
-        }
+    private fun convertToWav(): String {
+        val wavPath = "${context.cacheDir}/converted_${System.currentTimeMillis()}.wav"
         return wavPath
     }
 

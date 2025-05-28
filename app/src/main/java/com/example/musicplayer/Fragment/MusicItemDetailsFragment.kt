@@ -2,7 +2,6 @@ package com.example.musicplayer.Fragment
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -18,6 +17,7 @@ import com.example.musicplayer.Manager.RecorderManager
 import com.example.musicplayer.Manager.ScoreCalculator
 import com.example.musicplayer.Manager.ScoreDialogManager
 import com.example.musicplayer.Manager.ToastManager
+import com.example.musicplayer.ViewModel.MusicItemDetailsViewModel
 import com.example.musicplayer.databinding.FragmentMusicItemDetailsBinding
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -113,7 +113,7 @@ class MusicItemDetailsFragment : Fragment() {
             lifecycleScope.launch {
                 binding.timerTextView.visibility = View.GONE
                 binding.timerTextView.text = ""
-                val score = comparisonManager.compareAudioFiles(Uri.parse(musicItem?.id), recordedFilePath)
+                val score = comparisonManager.compareAudioFiles(recordedFilePath)
                 ProgressDialogManager.dismiss() // Progress Dialog 닫기
                 ScoreDialogManager.show(requireContext(), score) // Score Dialog 표시
             }

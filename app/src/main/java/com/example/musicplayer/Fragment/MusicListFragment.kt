@@ -1,51 +1,72 @@
-package com.example.musicplayer.Fragment
+package com.example.musicplayer.fragment
 
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.example.musicplayer.Adapter.MyItemRecyclerViewAdapter
-import com.example.musicplayer.R
-import com.example.musicplayer.ViewModel.MusicViewModel
-import com.example.musicplayer.ViewModel.MusicViewModelFactory
+import androidx.lifecycle.repeatOnLifecycle
+import com.example.musicplayer.Adapter.MusicListAdapter
+import com.example.musicplayer.Manager.FragmentMoveManager
+import com.example.musicplayer.data.MusicListIntent
+import com.example.musicplayer.databinding.FragmentMusicListBinding
+import com.example.musicplayer.factory.MusicListViewModelFactory
+import com.example.musicplayer.viewmodel.MusicListViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class MusicListFragment : Fragment() {
 
-    private val musicViewModel: MusicViewModel by viewModels {
-        MusicViewModelFactory(requireContext())
+    private val viewModel: MusicListViewModel by lazy {
+        val application = requireActivity().application
+        val factory = MusicListViewModelFactory(application)
+        ViewModelProvider(this, factory)[MusicListViewModel::class.java]
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        val view = inflater.inflate(R.layout.fragment_music_list_list, container, false)
+    private lateinit var binding: FragmentMusicListBinding
+    private lateinit var adapter: MusicListAdapter
+    private var mediaPlayer: MediaPlayer? = null
 
-        if (view is RecyclerView) {
-            with(view) {
-                layoutManager = LinearLayoutManager(context)
-                val adapter = MyItemRecyclerViewAdapter()
-                this.adapter = adapter
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        binding = FragmentMusicListBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
-                lifecycleScope.launch {
-                    musicViewModel.musicFlow.collectLatest { pagingData ->
-                        adapter.submitData(pagingData)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        adapter = MusicListAdapter { selected ->
+            viewModel.onIntent(MusicListIntent.AnalyzeOriginalMusic(selected))
+        }
+
+        binding.list.adapter = adapter
+
+        lifecycleScope.launch {
+            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.state.collectLatest { state ->
+                    if (state.originalPitch != null && state.selectedMusic != null && !state.isAnalyzing) {
+                        FragmentMoveManager.instance.pushFragment(
+                            SingingFragment.newInstance(
+                                state.selectedMusic,
+                                state.originalPitch.toFloatArray()
+                            )
+                        )
                     }
                 }
             }
         }
-        return view
+
+        viewModel.onIntent(MusicListIntent.LoadMusicFiles)
+    }
+
+    override fun onDestroyView() {
+        mediaPlayer?.release()
+        super.onDestroyView()
     }
 
     companion object {
-        @JvmStatic
-        fun newInstance() = MusicListFragment().apply { }
+        fun newInstance(): Fragment = MusicListFragment()
     }
 }
