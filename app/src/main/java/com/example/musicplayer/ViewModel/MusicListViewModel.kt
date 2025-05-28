@@ -8,13 +8,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.musicplayer.data.MusicFile
 import com.example.musicplayer.data.MusicListIntent
 import com.example.musicplayer.data.MusicListState
+import com.example.musicplayer.factory.MusicFileDispatcherFactory.analyzePitchFromInputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.io.File
 
 class MusicListViewModel(
     application: Application
@@ -45,14 +45,41 @@ class MusicListViewModel(
 
             val musicList = mutableListOf<MusicFile>()
             val uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+
             val projection = arrayOf(
                 MediaStore.Audio.Media._ID,
                 MediaStore.Audio.Media.TITLE,
                 MediaStore.Audio.Media.ARTIST,
-                MediaStore.Audio.Media.DURATION
+                MediaStore.Audio.Media.DURATION,
+                MediaStore.Audio.Media.MIME_TYPE
             )
-            val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
-            val cursor = context.contentResolver.query(uri, projection, selection, null, null)
+
+            // 음성 파일 확장자 종류 (mp3, m4a, wav 등)
+            val selection = buildString {
+                append("(")
+                append("${MediaStore.Audio.Media.MIME_TYPE} LIKE ?")
+                append(" OR ${MediaStore.Audio.Media.MIME_TYPE} LIKE ?")
+                append(" OR ${MediaStore.Audio.Media.MIME_TYPE} LIKE ?")
+                append(" OR ${MediaStore.Audio.Media.MIME_TYPE} LIKE ?")
+                append(" OR ${MediaStore.Audio.Media.MIME_TYPE} LIKE ?")
+                append(")")
+            }
+
+            val selectionArgs = arrayOf(
+                "audio/mpeg",     // .mp3
+                "audio/mp4",      // .mp4
+                "audio/x-m4a",    // .m4a
+                "audio/wav",      // .wav
+                "audio/3gpp"      // 일부 기기 녹음 파일 .3gp
+            )
+
+            val cursor = context.contentResolver.query(
+                uri,
+                projection,
+                selection,
+                selectionArgs,
+                "${MediaStore.Audio.Media.DATE_ADDED} DESC"
+            )
 
             cursor?.use {
                 val idCol = it.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
@@ -78,22 +105,30 @@ class MusicListViewModel(
     }
 
     private fun analyzeOriginalMusic(music: MusicFile) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             _state.update { it.copy(isAnalyzing = true) }
 
-            val pitch = analyzePitchFromWav(File(music.uri.path ?: ""))
+            val inputStream = context.contentResolver.openInputStream(music.uri)
+
+            val pitchList = inputStream?.let { input ->
+                analyzePitchFromInputStream(
+                    inputStream = input,
+                    durationInMillis = music.duration,
+                    onProgress = { progress ->
+                        _state.update { it.copy(analysisProgress = progress) }
+                    }
+                )
+            } ?: emptyList()
+
             _state.update {
                 it.copy(
                     selectedMusic = music,
-                    originalPitch = listOf(pitch) ,
-                    isAnalyzing = false
+                    originalPitch = pitchList,
+                    isAnalyzing = false,
+                    analysisProgress = 100
                 )
             }
         }
     }
 
-    private fun analyzePitchFromWav(file: File): Float {
-        // TODO: 원곡 pitch 분석 알고리즘 구현
-        return 440f // 임시값
-    }
 }

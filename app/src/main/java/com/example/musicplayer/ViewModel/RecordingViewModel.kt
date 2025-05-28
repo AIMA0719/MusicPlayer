@@ -2,6 +2,6 @@ package com.example.musicplayer.ViewModel
 
 import androidx.lifecycle.ViewModel
 
-class SingingViewModel : ViewModel() {
+class RecordingViewModel : ViewModel() {
     // TODO: Implement the ViewModel
 }

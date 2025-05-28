@@ -5,7 +5,9 @@ data class MusicListState(
     val selectedMusic: MusicFile? = null,
     val isLoading: Boolean = false,
     val isAnalyzing: Boolean = false,
-    val originalPitch: List<Float>? = null
+    val originalPitch: List<Float>? = null,
+    val analysisProgress: Int = 0 // 0~100
 )
+
 
 

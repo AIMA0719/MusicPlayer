@@ -1,5 +1,6 @@
 package com.example.musicplayer.fragment
 
+import android.annotation.SuppressLint
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -11,6 +12,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.musicplayer.Adapter.MusicListAdapter
+import com.example.musicplayer.Fragment.RecordingFragment
 import com.example.musicplayer.Manager.FragmentMoveManager
 import com.example.musicplayer.data.MusicListIntent
 import com.example.musicplayer.databinding.FragmentMusicListBinding
@@ -36,6 +38,7 @@ class MusicListFragment : Fragment() {
         return binding.root
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         adapter = MusicListAdapter { selected ->
             viewModel.onIntent(MusicListIntent.AnalyzeOriginalMusic(selected))
@@ -46,14 +49,24 @@ class MusicListFragment : Fragment() {
         lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.state.collectLatest { state ->
+                    if (state.isAnalyzing) {
+                        binding.loadingLayout.visibility = View.VISIBLE
+                        binding.loadingProgressBar.progress = state.analysisProgress
+                        binding.loadingText.text = "분석중입니다... ${state.analysisProgress}%"
+                    } else {
+                        binding.loadingLayout.visibility = View.GONE
+                    }
+
                     if (state.originalPitch != null && state.selectedMusic != null && !state.isAnalyzing) {
                         FragmentMoveManager.instance.pushFragment(
-                            SingingFragment.newInstance(
+                            RecordingFragment.newInstance(
                                 state.selectedMusic,
                                 state.originalPitch.toFloatArray()
                             )
                         )
                     }
+
+                    adapter.submitList(state.musicFiles)
                 }
             }
         }
