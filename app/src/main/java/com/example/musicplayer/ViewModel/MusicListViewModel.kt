@@ -9,12 +9,14 @@ import com.example.musicplayer.data.MusicFile
 import com.example.musicplayer.data.MusicListIntent
 import com.example.musicplayer.data.MusicListState
 import com.example.musicplayer.factory.MusicFileDispatcherFactory.analyzePitchFromInputStream
+import com.example.musicplayer.factory.MusicFileDispatcherFactory.analyzePitchFromWavInputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.FileInputStream
 
 class MusicListViewModel(
     application: Application
@@ -104,7 +106,7 @@ class MusicListViewModel(
         }
     }
 
-    private fun analyzeOriginalMusic(music: MusicFile) {
+    /*private fun analyzeOriginalMusic(music: MusicFile) {
         viewModelScope.launch {
             _state.update { it.copy(isAnalyzing = true) }
 
@@ -129,6 +131,36 @@ class MusicListViewModel(
                 )
             }
         }
+    }*/
+
+    private fun analyzeOriginalMusic(music: MusicFile) {
+        viewModelScope.launch {
+            _state.update { it.copy(isAnalyzing = true, analysisProgress = 0) }
+
+            val descriptor = context.contentResolver.openFileDescriptor(music.uri, "r")
+            val fileLength = descriptor?.statSize ?: 0L
+            val inputStream = descriptor?.fileDescriptor?.let { FileInputStream(it) }
+
+            val pitchList = inputStream?.let { input ->
+                analyzePitchFromWavInputStream(
+                    inputStream = input,
+                    fileLengthBytes = fileLength,
+                    onProgress = { progress ->
+                        _state.update { it.copy(analysisProgress = progress) }
+                    }
+                )
+            } ?: emptyList()
+
+            _state.update {
+                it.copy(
+                    selectedMusic = music,
+                    originalPitch = pitchList,
+                    isAnalyzing = false,
+                    analysisProgress = 100
+                )
+            }
+        }
     }
+
 
 }

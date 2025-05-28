@@ -1,6 +1,5 @@
 package com.example.musicplayer.factory
 
-import android.util.Log
 import be.tarsos.dsp.AudioDispatcher
 import be.tarsos.dsp.io.TarsosDSPAudioFormat
 import be.tarsos.dsp.io.TarsosDSPAudioInputStream
@@ -70,5 +69,67 @@ object MusicFileDispatcherFactory {
         onProgress(100) // 분석 완료
         pitchList
     }
+
+    suspend fun analyzePitchFromWavInputStream(
+        inputStream: InputStream,
+        fileLengthBytes: Long,
+        sampleRate: Int = 44100,
+        bufferSize: Int = 2048,
+        bufferOverlap: Int = 1024,
+        onProgress: (Int) -> Unit
+    ): List<Float> = withContext(Dispatchers.IO) {
+        val pitchList = mutableListOf<Float>()
+
+        val audioFormat = TarsosDSPAudioFormat(
+            sampleRate.toFloat(), 16, 1, true, false
+        )
+
+        val stream = BufferedInputStream(inputStream)
+        var totalBytesRead = 0L
+
+        val tarsosStream = object : TarsosDSPAudioInputStream {
+            override fun read(b: ByteArray, off: Int, len: Int): Int {
+                val bytesRead = stream.read(b, off, len)
+                if (bytesRead > 0) {
+                    totalBytesRead += bytesRead
+                    val progress = ((totalBytesRead.toDouble() / fileLengthBytes) * 100).toInt()
+                    onProgress(progress.coerceAtMost(99)) // 마지막 100은 run() 후 따로
+                }
+                return bytesRead
+            }
+
+            override fun skip(bytesToSkip: Long) {
+                stream.skip(bytesToSkip)
+            }
+
+            override fun close() {
+                stream.close()
+            }
+
+            override fun getFormat(): TarsosDSPAudioFormat = audioFormat
+            override fun getFrameLength(): Long = -1
+        }
+
+        val dispatcher = AudioDispatcher(tarsosStream, bufferSize, bufferOverlap)
+
+        val pitchProcessor = PitchProcessor(
+            PitchProcessor.PitchEstimationAlgorithm.YIN,
+            sampleRate.toFloat(),
+            bufferSize
+        ) { result, _ ->
+            if (result.pitch > 0) {
+                pitchList.add(result.pitch)
+            }
+        }
+
+        dispatcher.addAudioProcessor(pitchProcessor)
+
+        dispatcher.run()
+
+        onProgress(100) // 완료
+        pitchList
+    }
+
+
 }
 
