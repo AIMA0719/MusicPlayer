@@ -15,7 +15,7 @@ class RecordingViewModel : ViewModel() {
     val isRecording = MutableLiveData(false)
     val currentPitch = MutableLiveData<Float>()
     val pitchDifference = MutableLiveData<Float>()
-    val elapsedTime = MutableLiveData<Int>()
+    val elapsedTime = MutableLiveData<Long>()
     val score = MutableLiveData<Int>() // ✅ 최종 점수 LiveData 추가
 
     private var dispatcher: AudioDispatcher? = null
@@ -42,7 +42,7 @@ class RecordingViewModel : ViewModel() {
         timerHandler = Handler(Looper.getMainLooper())
         timerRunnable = object : Runnable {
             override fun run() {
-                val ms = (System.currentTimeMillis() - startTimeMillis).toInt()
+                val ms = (System.currentTimeMillis() - startTimeMillis)
                 elapsedTime.postValue(ms)
                 timerHandler?.postDelayed(this, 100)
             }

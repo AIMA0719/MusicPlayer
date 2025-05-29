@@ -6,16 +6,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import com.example.musicplayer.viewModel.RecordingViewModel
 import com.example.musicplayer.data.MusicFile
 import com.example.musicplayer.databinding.FragmentRecordingBinding
 import com.example.musicplayer.manager.LogManager
+import com.example.musicplayer.viewModel.RecordingViewModel
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
-import java.util.Arrays
 
 class RecordingFragment : Fragment() {
 
@@ -23,6 +23,7 @@ class RecordingFragment : Fragment() {
 
     private lateinit var music: MusicFile
     private lateinit var pitchArray: FloatArray
+    private var durationMillis: Long = 0
 
     private var _binding: FragmentRecordingBinding? = null
     private val binding get() = _binding!!
@@ -32,11 +33,12 @@ class RecordingFragment : Fragment() {
         arguments?.let {
             music = it.getParcelable("music")!!
             pitchArray = it.getFloatArray("pitchArray")!!
+            durationMillis = it.getLong("durationMillis", 0L)
             LogManager.e(listOf(pitchArray.toList()))
         }
     }
 
-    @SuppressLint("DefaultLocale")
+    @SuppressLint("DefaultLocale", "SetTextI18n")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?,
@@ -53,22 +55,26 @@ class RecordingFragment : Fragment() {
             }
         }
 
+        val durationMillis = arguments?.getLong("durationMillis") ?: 0L
+        val totalTimeFormatted = formatMillisToTime(durationMillis)
+        binding.timeDisplay.text = "00:00 / $totalTimeFormatted"
+
+
         binding.btnStopRecording.setOnClickListener {
             viewModel.stopRecording()
         }
 
-        viewModel.elapsedTime.observe(viewLifecycleOwner) { ms ->
-            val seconds = ms / 1000
-            val minutes = seconds / 60
-            val remainingSeconds = seconds % 60
-            binding.elapsedTime.text = String.format("%02d:%02d", minutes, remainingSeconds)
+        viewModel.elapsedTime.observe(viewLifecycleOwner) { elapsedMs ->
+            val elapsed = formatMillisToTime(elapsedMs)
+            val total = formatMillisToTime(durationMillis)
+            binding.timeDisplay.text = "$elapsed / $total"
         }
 
         // pitch 및 오차 실시간 UI 반영
         viewModel.currentPitch.observe(viewLifecycleOwner) { pitch ->
             val diff = viewModel.pitchDifference.value ?: 0f
             val elapsed = viewModel.elapsedTime.value ?: 0
-            val index = elapsed / 100
+            val index = (elapsed / 100).toInt()
             val origin = if (index in pitchArray.indices) pitchArray[index] else 0f
 
             binding.pitchDifference.text = "🎵 현재 pitch: %.2f Hz / 오차: %.2f Hz".format(pitch, diff)
@@ -151,7 +157,13 @@ class RecordingFragment : Fragment() {
         chart.invalidate()
     }
 
-
+    @SuppressLint("DefaultLocale")
+    private fun formatMillisToTime(millis: Long): String {
+        val totalSeconds = millis / 1000
+        val minutes = totalSeconds / 60
+        val seconds = totalSeconds % 60
+        return String.format("%02d:%02d", minutes, seconds)
+    }
 
     override fun onDestroy() {
         super.onDestroy()
@@ -160,14 +172,15 @@ class RecordingFragment : Fragment() {
     }
 
     companion object {
-        fun newInstance(music: MusicFile, pitchArray: FloatArray): RecordingFragment {
+        fun newInstance(music: MusicFile, originalPitch: FloatArray, durationMillis: Long): RecordingFragment {
             val fragment = RecordingFragment()
-            val args = Bundle().apply {
-                putParcelable("music", music)
-                putFloatArray("pitchArray", pitchArray) // ✅ 동일한 키로 통일
-            }
-            fragment.arguments = args
+            fragment.arguments = bundleOf(
+                "music" to music,
+                "pitchArray" to originalPitch,
+                "durationMillis" to durationMillis
+            )
             return fragment
         }
+
     }
 }

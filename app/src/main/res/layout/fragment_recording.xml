@@ -19,12 +19,12 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- 현재 시간 -->
+    <!-- 현재 시간 + 총 길이 -->
     <TextView
-        android:id="@+id/elapsedTime"
+        android:id="@+id/timeDisplay"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="00:00"
+        android:text="00:00 / 03:25"
         android:textColor="@color/black"
         android:textSize="18sp"
         android:textStyle="bold"
@@ -41,7 +41,7 @@
         android:src="@drawable/ic_microphone"
         android:contentDescription="마이크 아이콘"
         android:background="@drawable/ic_microphone_box"
-        app:layout_constraintTop_toBottomOf="@id/elapsedTime"
+        app:layout_constraintTop_toBottomOf="@id/timeDisplay"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="16dp" />

@@ -59,8 +59,9 @@ class MusicListFragment : Fragment() {
                     if (state.originalPitch != null && state.selectedMusic != null && !state.isAnalyzing) {
                         FragmentMoveManager.instance.pushFragment(
                             RecordingFragment.newInstance(
-                                state.selectedMusic,
-                                state.originalPitch.toFloatArray()
+                                music = state.selectedMusic,
+                                originalPitch = state.originalPitch.toFloatArray(),
+                                durationMillis = state.selectedMusic.duration
                             )
                         )
                     }
