@@ -11,6 +11,7 @@
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="android:textColorPrimary">@color/black</item>
         <!-- Customize your theme here. -->
     </style>
 
@@ -20,6 +21,7 @@
         <item name="android:windowActionBarOverlay">true</item>
         <item name="android:windowBackground">@null</item>
         <item name="android:windowFullscreen">true</item>
+        <item name="android:textColorPrimary">@color/black</item>
     </style>
 
     <style name="ThemeOverlay.MusicPlayer.FullscreenContainer" parent="">
@@ -33,11 +35,13 @@
         <item name="colorPrimary">@color/white</item>
         <item name="colorPrimaryDark">@color/black</item>
         <item name="colorAccent">@color/white</item>
+        <item name="android:textColorPrimary">@color/black</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+        <item name="android:textColorPrimary">@color/black</item>
     </style>
 
     <style name="Theme.MusicPlayer.Splash" parent="Theme.SplashScreen">

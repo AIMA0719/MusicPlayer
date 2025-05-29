@@ -1,7 +1,115 @@
 package com.example.musicplayer.viewModel
 
+import android.content.Context
+import android.os.Handler
+import android.os.Looper
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import be.tarsos.dsp.AudioDispatcher
+import be.tarsos.dsp.io.android.AudioDispatcherFactory
+import be.tarsos.dsp.pitch.PitchProcessor
+import kotlin.math.abs
 
 class RecordingViewModel : ViewModel() {
-    // TODO: Implement the ViewModel
+
+    val isRecording = MutableLiveData(false)
+    val currentPitch = MutableLiveData<Float>()
+    val pitchDifference = MutableLiveData<Float>()
+    val elapsedTime = MutableLiveData<Int>()
+    val score = MutableLiveData<Int>() // ✅ 최종 점수 LiveData 추가
+
+    private var dispatcher: AudioDispatcher? = null
+    private var pitchThread: Thread? = null
+    private var timerHandler: Handler? = null
+    private var timerRunnable: Runnable? = null
+
+    private var currentPitchArray: FloatArray = floatArrayOf()
+    private var startTimeMillis: Long = 0
+
+    // ✅ pitch 기록 리스트
+    private val pitchPairs = mutableListOf<Pair<Float, Float>>()
+
+    fun startRecording(pitchArray: FloatArray) {
+        if (isRecording.value == true) return
+
+        isRecording.postValue(true)
+        currentPitchArray = pitchArray
+        startTimeMillis = System.currentTimeMillis()
+        elapsedTime.postValue(0)
+        pitchPairs.clear() // ✅ 시작 전 기록 초기화
+
+        // 경과 시간 측정용 타이머
+        timerHandler = Handler(Looper.getMainLooper())
+        timerRunnable = object : Runnable {
+            override fun run() {
+                val ms = (System.currentTimeMillis() - startTimeMillis).toInt()
+                elapsedTime.postValue(ms)
+                timerHandler?.postDelayed(this, 100)
+            }
+        }
+        timerHandler?.postDelayed(timerRunnable!!, 100)
+
+        dispatcher = AudioDispatcherFactory.fromDefaultMicrophone(22050, 1024, 0)
+
+        val pitchProcessor = PitchProcessor(
+            PitchProcessor.PitchEstimationAlgorithm.YIN,
+            22050f,
+            1024
+        ) { result, _ ->
+            val userPitch = result.pitch
+            if (userPitch > 0) {
+                val ms = (System.currentTimeMillis() - startTimeMillis).toInt()
+                val index = ms / 100
+
+                if (index in currentPitchArray.indices) {
+                    val targetPitch = currentPitchArray[index]
+                    currentPitch.postValue(userPitch)
+                    pitchDifference.postValue(abs(userPitch - targetPitch))
+                    pitchPairs.add(targetPitch to userPitch) // ✅ pitch 기록 누적
+                }
+            }
+        }
+
+        dispatcher?.addAudioProcessor(pitchProcessor)
+        pitchThread = Thread(dispatcher, "Pitch Thread")
+        pitchThread?.start()
+    }
+
+    fun stopRecording() {
+        isRecording.postValue(false)
+        dispatcher?.stop()
+        dispatcher = null
+        pitchThread = null
+
+        timerHandler?.removeCallbacks(timerRunnable!!)
+        timerHandler = null
+        timerRunnable = null
+
+        calculateScore() // ✅ 녹음 종료 시 점수 계산
+    }
+
+    // ✅ 점수 계산 함수
+    private fun calculateScore() {
+        if (pitchPairs.isEmpty()) {
+            score.postValue(0)
+            return
+        }
+
+        val total = pitchPairs.size
+        val scoreSum = pitchPairs.sumOf { (target, user) ->
+            val diff = abs(user - target)
+            when {
+                diff < 10f -> 100.0
+                diff < 25f -> 80.0
+                diff < 50f -> 60.0
+                else -> 30.0
+            }
+        }
+
+        val finalScore = (scoreSum / total).toInt()
+        score.postValue(finalScore)
+    }
 }
+
+
+
