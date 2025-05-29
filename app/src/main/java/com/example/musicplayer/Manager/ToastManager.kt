@@ -20,7 +20,7 @@ class ToastManager {
         private var popupWindow: PopupWindow? = null
 
         @SuppressLint("InflateParams")
-        fun showAnimatedToast(context: Context, message: Any) {
+        fun show(context: Context, message: Any) {
             try {
                 if (context is Activity) {
                     if (!context.isFinishing && !context.isDestroyed) {

@@ -107,7 +107,7 @@ class MainActivity : AppCompatActivity() {
 
         // Toast 메시지 처리
         viewModel.toastMessage.observe(this) { message ->
-            ToastManager.showAnimatedToast(this,message)
+            ToastManager.show(this,message)
         }
     }
 

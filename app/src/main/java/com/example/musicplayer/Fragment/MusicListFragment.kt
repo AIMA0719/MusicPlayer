@@ -52,7 +52,7 @@ class MusicListFragment : Fragment() {
                     if (state.isAnalyzing) {
                         binding.loadingLayout.visibility = View.VISIBLE
                         binding.loadingProgressBar.progress = state.analysisProgress
-                        binding.loadingText.text = "분석중입니다... ${state.analysisProgress}%"
+                        binding.loadingText.text = "${state.analysisProgress}% 분석 중"
                     } else {
                         binding.loadingLayout.visibility = View.GONE
                     }

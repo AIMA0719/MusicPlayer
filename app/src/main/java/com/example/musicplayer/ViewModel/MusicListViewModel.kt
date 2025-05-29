@@ -2,13 +2,14 @@ package com.example.musicplayer.viewmodel
 
 import android.app.Application
 import android.content.ContentUris
+import android.content.Context
 import android.provider.MediaStore
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.musicplayer.Manager.LogManager
 import com.example.musicplayer.data.MusicFile
 import com.example.musicplayer.data.MusicListIntent
 import com.example.musicplayer.data.MusicListState
-import com.example.musicplayer.factory.MusicFileDispatcherFactory.analyzePitchFromInputStream
 import com.example.musicplayer.factory.MusicFileDispatcherFactory.analyzePitchFromWavInputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +23,7 @@ class MusicListViewModel(
     application: Application
 ) : AndroidViewModel(application) {
 
-    private val context = application.applicationContext
+    val context: Context by lazy { application.applicationContext }
 
     private val _state = MutableStateFlow(MusicListState())
     val state: StateFlow<MusicListState> = _state.asStateFlow()
@@ -56,32 +57,15 @@ class MusicListViewModel(
                 MediaStore.Audio.Media.MIME_TYPE
             )
 
-            // 음성 파일 확장자 종류 (mp3, m4a, wav 등)
-            val selection = buildString {
-                append("(")
-                append("${MediaStore.Audio.Media.MIME_TYPE} LIKE ?")
-                append(" OR ${MediaStore.Audio.Media.MIME_TYPE} LIKE ?")
-                append(" OR ${MediaStore.Audio.Media.MIME_TYPE} LIKE ?")
-                append(" OR ${MediaStore.Audio.Media.MIME_TYPE} LIKE ?")
-                append(" OR ${MediaStore.Audio.Media.MIME_TYPE} LIKE ?")
-                append(")")
-            }
-
-            val selectionArgs = arrayOf(
-                "audio/mpeg",     // .mp3
-                "audio/mp4",      // .mp4
-                "audio/x-m4a",    // .m4a
-                "audio/wav",      // .wav
-                "audio/3gpp"      // 일부 기기 녹음 파일 .3gp
-            )
-
             val cursor = context.contentResolver.query(
-                uri,
-                projection,
-                selection,
-                selectionArgs,
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                null,  // projection 전부
+                null,  // selection 없음
+                null,  // selectionArgs 없음
                 "${MediaStore.Audio.Media.DATE_ADDED} DESC"
             )
+
+            LogManager.e("전체 오디오 파일 수: ${cursor?.count}")
 
             cursor?.use {
                 val idCol = it.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
