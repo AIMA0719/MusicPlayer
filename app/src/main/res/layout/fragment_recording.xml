@@ -69,14 +69,4 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="16dp" />
 
-    <!-- 녹음 종료 버튼 -->
-    <Button
-        android:id="@+id/btnStopRecording"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="녹음 종료"
-        app:layout_constraintTop_toBottomOf="@id/pitchChart"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="24dp" />
 </androidx.constraintlayout.widget.ConstraintLayout>

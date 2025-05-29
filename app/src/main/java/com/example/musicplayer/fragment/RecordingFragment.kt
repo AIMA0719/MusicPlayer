@@ -59,11 +59,6 @@ class RecordingFragment : Fragment() {
         val totalTimeFormatted = formatMillisToTime(durationMillis)
         binding.timeDisplay.text = "00:00 / $totalTimeFormatted"
 
-
-        binding.btnStopRecording.setOnClickListener {
-            viewModel.stopRecording()
-        }
-
         viewModel.elapsedTime.observe(viewLifecycleOwner) { elapsedMs ->
             val elapsed = formatMillisToTime(elapsedMs)
             val total = formatMillisToTime(durationMillis)
@@ -99,26 +94,22 @@ class RecordingFragment : Fragment() {
         val userDataSet = data.getDataSetByIndex(0)
         val originDataSet = data.getDataSetByIndex(1)
 
-        val entryCount = userDataSet.entryCount
-        userDataSet.addEntry(Entry(entryCount.toFloat(), userPitch))
-        originDataSet.addEntry(Entry(entryCount.toFloat(), originalPitch))
+        val elapsedMs = viewModel.elapsedTime.value ?: 0L
+        val xSec = elapsedMs / 1000f // ✅ x축을 초 단위로 사용
 
-        // 오래된 값 제거
-        if (entryCount > 100) {
+        userDataSet.addEntry(Entry(xSec, userPitch))
+        originDataSet.addEntry(Entry(xSec, originalPitch))
+
+        // 오래된 값 제거: 100초 이상이면 제거
+        if (userDataSet.entryCount > 100) {
             userDataSet.removeFirst()
             originDataSet.removeFirst()
-
-            // x 값 재정렬
-            for (i in 0 until userDataSet.entryCount) {
-                userDataSet.getEntryForIndex(i).x = i.toFloat()
-                originDataSet.getEntryForIndex(i).x = i.toFloat()
-            }
         }
 
         data.notifyDataChanged()
         chart.notifyDataSetChanged()
-        chart.setVisibleXRangeMaximum(100f)
-        chart.moveViewToX(data.entryCount.toFloat())
+        chart.setVisibleXRangeMaximum(10f) // 최근 10초만 보이게
+        chart.moveViewToX(xSec)
         chart.invalidate()
     }
 

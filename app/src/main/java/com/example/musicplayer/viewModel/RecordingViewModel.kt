@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import be.tarsos.dsp.AudioDispatcher
 import be.tarsos.dsp.io.android.AudioDispatcherFactory
 import be.tarsos.dsp.pitch.PitchProcessor
+import com.example.musicplayer.manager.LogManager
 import kotlin.math.abs
 
 class RecordingViewModel : ViewModel() {
@@ -85,7 +86,13 @@ class RecordingViewModel : ViewModel() {
         timerHandler = null
         timerRunnable = null
 
+        elapsedTime.postValue(0)
+
         calculateScore() // ✅ 녹음 종료 시 점수 계산
+    }
+
+    fun initTime(){
+        elapsedTime.postValue(0)
     }
 
     // ✅ 점수 계산 함수
@@ -97,7 +104,9 @@ class RecordingViewModel : ViewModel() {
 
         val total = pitchPairs.size
         val scoreSum = pitchPairs.sumOf { (target, user) ->
+            LogManager.e("Target: $target, User: $user")
             val diff = abs(user - target)
+            LogManager.e("Diff: $diff")
             when {
                 diff < 10f -> 100.0
                 diff < 25f -> 80.0
@@ -107,6 +116,7 @@ class RecordingViewModel : ViewModel() {
         }
 
         val finalScore = (scoreSum / total).toInt()
+        LogManager.e("Total: $total, Score Sum: $scoreSum, Final Score: $finalScore")
         score.postValue(finalScore)
     }
 }
