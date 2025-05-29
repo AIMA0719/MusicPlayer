@@ -25,7 +25,7 @@ class MusicListAdapter(
     inner class MusicViewHolder(private val binding: FragmentMusicListItemBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(music: MusicFile) {
             binding.title.text = music.title
-            binding.artist.text = music.artist ?: "Unknown"
+            binding.artist.text = music.artist
             binding.root.setOnClickListener { onClick(music) }
         }
     }

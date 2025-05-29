@@ -1,10 +1,10 @@
 package com.example.musicplayer.Activity
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModelProvider
 import com.example.musicplayer.Fragment.MainFragment
 import com.example.musicplayer.Manager.ContextManager
@@ -26,6 +26,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var permissionManager: PermissionManager
 
+    private var startTime: Long = 0
+
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
@@ -33,6 +35,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
+
+        startTime = System.currentTimeMillis()
+
+        splashScreen.setKeepOnScreenCondition {
+            System.currentTimeMillis() - startTime < 2000
+        }
+
         super.onCreate(savedInstanceState)
 
         binding = MusicPlayerMainActivityBinding.inflate(layoutInflater) // 객체 바인딩
@@ -50,14 +60,8 @@ class MainActivity : AppCompatActivity() {
             permissionLauncher = permissionLauncher,
             onAllPermissionsGranted = {
                 // 모든 권한 허용된 경우의 처리
-                Toast.makeText(this, "모든 권한이 허용되었습니다", Toast.LENGTH_SHORT).show()
             }
         )
-    }
-
-    override fun onResume() {
-        super.onResume()
-        permissionManager.checkAndRequestPermissions()
     }
 
     private fun setMainFragment() {

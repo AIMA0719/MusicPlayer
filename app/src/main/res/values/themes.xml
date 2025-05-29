@@ -40,4 +40,14 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <style name="Theme.MusicPlayer.Splash" parent="Theme.SplashScreen">
+        <!-- 앱 아이콘 + 배경 색상 -->
+        <item name="windowSplashScreenBackground">@color/white</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/white</item>
+
+        <!-- 스플래시 종료 후 기본 테마로 전환 -->
+        <item name="postSplashScreenTheme">@style/Theme.MusicPlayer</item>
+    </style>
+
 </resources>
