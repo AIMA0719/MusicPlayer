@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
-import android.os.Environment
 import android.provider.Settings
 import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AlertDialog
@@ -17,37 +16,26 @@ class PermissionManager(
     private val permissionLauncher: ActivityResultLauncher<Array<String>>,
     private val onAllPermissionsGranted: () -> Unit
 ) {
+
     private val requiredPermissions: Array<String> = when {
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> arrayOf(
+            Manifest.permission.READ_MEDIA_AUDIO,
             Manifest.permission.READ_MEDIA_IMAGES,
-            Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.CAMERA
+            Manifest.permission.RECORD_AUDIO
         )
         else -> arrayOf(
             Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.CAMERA
+            Manifest.permission.RECORD_AUDIO
         )
     }
 
     private fun areAllPermissionsGranted(): Boolean {
         return requiredPermissions.all {
             ContextCompat.checkSelfPermission(activity, it) == PackageManager.PERMISSION_GRANTED
-        } && isStoragePermissionGrantedIfRequired()
-    }
-
-    private fun isStoragePermissionGrantedIfRequired(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            Environment.isExternalStorageManager()
-        } else true
+        }
     }
 
     fun checkAndRequestPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
-            requestManageExternalStoragePermission()
-            return
-        }
-
         if (areAllPermissionsGranted()) {
             onAllPermissionsGranted()
             return
@@ -78,27 +66,15 @@ class PermissionManager(
         }
     }
 
-    private fun requestManageExternalStoragePermission() {
-        try {
-            val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
-                    Uri.parse("package:${activity.packageName}"))
-            } else {
-                TODO("VERSION.SDK_INT < R")
-            }
-            activity.startActivity(intent)
-        } catch (e: Exception) {
-            LogManager.e(e.message)
-        }
-    }
-
     private fun showPermissionDeniedDialog() {
         val builder = AlertDialog.Builder(activity)
             .setTitle("권한 필요")
             .setMessage("이 앱의 기능을 사용하려면 권한이 필요합니다. 설정에서 권한을 허용해주세요.")
             .setPositiveButton("설정으로 이동") { _, _ ->
-                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                    Uri.parse("package:${activity.packageName}"))
+                val intent = Intent(
+                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    Uri.parse("package:${activity.packageName}")
+                )
                 activity.startActivity(intent)
             }
             .setNegativeButton("취소", null)
@@ -112,5 +88,4 @@ class PermissionManager(
                 ContextCompat.getColor(activity, android.R.color.black))
         }
     }
-
 }

@@ -64,6 +64,11 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    override fun onResume() {
+        super.onResume()
+        permissionManager.checkAndRequestPermissions()
+    }
+
     private fun setMainFragment() {
         FragmentMoveManager.instance.pushFragment(MainFragment.newInstance())
     }
