@@ -6,7 +6,7 @@ import android.content.Context
 import android.provider.MediaStore
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.musicplayer.Manager.LogManager
+import com.example.musicplayer.manager.LogManager
 import com.example.musicplayer.data.MusicFile
 import com.example.musicplayer.data.MusicListIntent
 import com.example.musicplayer.data.MusicListState

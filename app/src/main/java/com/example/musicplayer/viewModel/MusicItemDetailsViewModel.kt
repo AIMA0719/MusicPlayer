@@ -1,9 +1,9 @@
-package com.example.musicplayer.ViewModel
+package com.example.musicplayer.viewModel
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.musicplayer.ListObjects.MusicItem
+import com.example.musicplayer.listObjects.MusicItem
 
 class MusicItemDetailsViewModel : ViewModel() {
 

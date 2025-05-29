@@ -1,4 +1,4 @@
-package com.example.musicplayer.Adapter
+package com.example.musicplayer.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup

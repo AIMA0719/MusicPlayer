@@ -1,7 +1,7 @@
-package com.example.musicplayer.Manager
+package com.example.musicplayer.manager
 
 import android.content.Context
-import com.example.musicplayer.Activity.MainActivity
+import com.example.musicplayer.activity.MainActivity
 
 object ContextManager {
     @JvmField

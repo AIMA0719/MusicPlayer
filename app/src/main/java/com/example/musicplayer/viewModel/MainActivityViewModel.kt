@@ -3,8 +3,8 @@ package com.example.musicplayer.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.musicplayer.Fragment.MainFragment
-import com.example.musicplayer.Manager.FragmentMoveManager
+import com.example.musicplayer.fragment.MainFragment
+import com.example.musicplayer.manager.FragmentMoveManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay

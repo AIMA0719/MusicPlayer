@@ -11,9 +11,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.example.musicplayer.Adapter.MusicListAdapter
-import com.example.musicplayer.Fragment.RecordingFragment
-import com.example.musicplayer.Manager.FragmentMoveManager
+import com.example.musicplayer.adapter.MusicListAdapter
+import com.example.musicplayer.manager.FragmentMoveManager
 import com.example.musicplayer.data.MusicListIntent
 import com.example.musicplayer.databinding.FragmentMusicListBinding
 import com.example.musicplayer.factory.MusicListViewModelFactory

@@ -1,4 +1,4 @@
-package com.example.musicplayer.Fragment
+package com.example.musicplayer.fragment
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import com.example.musicplayer.ViewModel.RecordingViewModel
+import com.example.musicplayer.viewModel.RecordingViewModel
 import com.example.musicplayer.data.MusicFile
 import com.example.musicplayer.databinding.FragmentRecordingBinding
 

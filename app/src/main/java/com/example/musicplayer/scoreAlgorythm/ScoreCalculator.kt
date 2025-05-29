@@ -1,8 +1,6 @@
-package com.example.musicplayer.Manager
+package com.example.musicplayer.scoreAlgorythm
 
 import android.content.Context
-import android.net.Uri
-import androidx.core.net.toUri
 import be.tarsos.dsp.AudioDispatcher
 import be.tarsos.dsp.io.TarsosDSPAudioFormat
 import be.tarsos.dsp.io.UniversalAudioInputStream

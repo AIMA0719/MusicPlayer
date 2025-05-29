@@ -1,4 +1,4 @@
-package com.example.musicplayer.Fragment
+package com.example.musicplayer.fragment
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -6,9 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.fragment.app.Fragment
-import com.example.musicplayer.Manager.FragmentMoveManager
+import com.example.musicplayer.manager.FragmentMoveManager
 import com.example.musicplayer.R
-import com.example.musicplayer.fragment.MusicListFragment
 
 class MainFragment : Fragment() {
 

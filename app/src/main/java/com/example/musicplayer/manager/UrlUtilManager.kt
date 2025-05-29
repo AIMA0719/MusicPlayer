@@ -1,9 +1,7 @@
-package com.example.musicplayer.Manager
+package com.example.musicplayer.manager
 
-import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
-import android.os.Build
 import android.provider.MediaStore
 import java.io.File
 

@@ -1,4 +1,4 @@
-package com.example.musicplayer.Server
+package com.example.musicplayer.server
 
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor

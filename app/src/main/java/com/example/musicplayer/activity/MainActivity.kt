@@ -1,4 +1,4 @@
-package com.example.musicplayer.Activity
+package com.example.musicplayer.activity
 
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
@@ -6,19 +6,20 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModelProvider
-import com.example.musicplayer.Fragment.MainFragment
-import com.example.musicplayer.Manager.ContextManager
-import com.example.musicplayer.Manager.FragmentMoveManager
-import com.example.musicplayer.Manager.PermissionManager
-import com.example.musicplayer.Manager.ProgressDialogManager
-import com.example.musicplayer.Manager.ScoreDialogManager
-import com.example.musicplayer.Manager.ToastManager
+import com.example.musicplayer.fragment.MainFragment
+import com.example.musicplayer.manager.ContextManager
+import com.example.musicplayer.manager.FragmentMoveManager
+import com.example.musicplayer.manager.PermissionManager
+import com.example.musicplayer.manager.ProgressDialogManager
+import com.example.musicplayer.manager.ScoreDialogManager
+import com.example.musicplayer.manager.ToastManager
 import com.example.musicplayer.databinding.MusicPlayerMainActivityBinding
 import com.example.musicplayer.viewmodel.MainActivityViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
+import kotlin.system.exitProcess
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: MusicPlayerMainActivityBinding
@@ -79,7 +80,10 @@ class MainActivity : AppCompatActivity() {
                 if (viewModel.isFragmentStackEmpty()) {
                     if (viewModel.isDoubleBackToExit()) {
                         ToastManager.closeToast()
-                        finish()
+
+                        finishAffinity() // 모든 액티비티 종료
+                        android.os.Process.killProcess(android.os.Process.myPid()) // 현재 프로세스 종료
+                        exitProcess(0) // 안전하게 JVM 종료
                     } else {
                         viewModel.triggerDoubleBackToExit()
                     }

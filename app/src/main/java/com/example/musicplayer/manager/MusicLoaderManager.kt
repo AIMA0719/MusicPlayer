@@ -1,12 +1,10 @@
-package com.example.musicplayer.Manager
+package com.example.musicplayer.manager
 
 import android.content.ContentUris
 import android.content.Context
-import android.os.Build
-import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
-import com.example.musicplayer.ListObjects.MusicItem
+import com.example.musicplayer.listObjects.MusicItem
 import java.io.File
 
 object MusicLoaderManager {
