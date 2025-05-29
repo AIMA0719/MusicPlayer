@@ -49,16 +49,8 @@ class MusicListViewModel(
             val musicList = mutableListOf<MusicFile>()
             val uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
 
-            val projection = arrayOf(
-                MediaStore.Audio.Media._ID,
-                MediaStore.Audio.Media.TITLE,
-                MediaStore.Audio.Media.ARTIST,
-                MediaStore.Audio.Media.DURATION,
-                MediaStore.Audio.Media.MIME_TYPE
-            )
-
             val cursor = context.contentResolver.query(
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                uri,
                 null,  // projection 전부
                 null,  // selection 없음
                 null,  // selectionArgs 없음
@@ -122,12 +114,13 @@ class MusicListViewModel(
             _state.update { it.copy(isAnalyzing = true, analysisProgress = 0) }
 
             val descriptor = context.contentResolver.openFileDescriptor(music.uri, "r")
-            val fileLength = descriptor?.statSize ?: 0L
-            val inputStream = descriptor?.fileDescriptor?.let { FileInputStream(it) }
 
-            val pitchList = inputStream?.let { input ->
+            val pitchList = descriptor?.use { parcelFd ->
+                val fileLength = parcelFd.statSize
+                val inputStream = FileInputStream(parcelFd.fileDescriptor)
+
                 analyzePitchFromWavInputStream(
-                    inputStream = input,
+                    inputStream = inputStream,
                     fileLengthBytes = fileLength,
                     onProgress = { progress ->
                         _state.update { it.copy(analysisProgress = progress) }
