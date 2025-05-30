@@ -12,7 +12,6 @@ import androidx.fragment.app.viewModels
 import com.example.musicplayer.data.MusicFile
 import com.example.musicplayer.databinding.FragmentRecordingBinding
 import com.example.musicplayer.manager.LogManager
-import com.example.musicplayer.viewModel.RecordingViewModel
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
@@ -38,13 +37,14 @@ class RecordingFragment : Fragment() {
         }
     }
 
-    @SuppressLint("DefaultLocale", "SetTextI18n")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
         _binding = FragmentRecordingBinding.inflate(inflater, container, false)
-        initPitchChart()
+        val maxPitch = pitchArray.maxOrNull() ?: 1000f
+        initPitchChart(maxPitch) // 최대값 기반으로 차트 세팅
+        setObserver()
 
         // 마이크 아이콘 클릭 시 녹음 시작 / 중지
         binding.micImage.setOnClickListener {
@@ -55,25 +55,42 @@ class RecordingFragment : Fragment() {
             }
         }
 
+        return binding.root
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun setObserver() {
         val durationMillis = arguments?.getLong("durationMillis") ?: 0L
         val totalTimeFormatted = formatMillisToTime(durationMillis)
         binding.timeDisplay.text = "00:00 / $totalTimeFormatted"
 
         viewModel.elapsedTime.observe(viewLifecycleOwner) { elapsedMs ->
-            val elapsed = formatMillisToTime(elapsedMs)
+            val clampedElapsed = elapsedMs.coerceAtMost(durationMillis)
+            val elapsed = formatMillisToTime(clampedElapsed)
             val total = formatMillisToTime(durationMillis)
             binding.timeDisplay.text = "$elapsed / $total"
+
+            // 오리지널 피치 추가
+            val index = (elapsedMs / 100).toInt()
+            if (index in pitchArray.indices) {
+                val origin = pitchArray[index]
+                addOriginPitchEntry(origin, elapsedMs / 1000f)
+            }
+
+            // 녹음이 끝나면 자동으로 중지
+            if (elapsedMs >= durationMillis) {
+                viewModel.stopRecording()
+            }
         }
 
         // pitch 및 오차 실시간 UI 반영
         viewModel.currentPitch.observe(viewLifecycleOwner) { pitch ->
             val diff = viewModel.pitchDifference.value ?: 0f
             val elapsed = viewModel.elapsedTime.value ?: 0
-            val index = (elapsed / 100).toInt()
-            val origin = if (index in pitchArray.indices) pitchArray[index] else 0f
 
             binding.pitchDifference.text = "🎵 현재 pitch: %.2f Hz / 오차: %.2f Hz".format(pitch, diff)
-            addPitchEntry(pitch, origin) // ✅ 두 개의 pitch를 함께 전달
+
+            addUserPitchEntry(pitch, elapsed / 1000f)
         }
 
         viewModel.isRecording.observe(viewLifecycleOwner) { recording ->
@@ -84,36 +101,66 @@ class RecordingFragment : Fragment() {
             Toast.makeText(requireContext(), "점수: $score 점", Toast.LENGTH_LONG).show()
         }
 
-        return binding.root
+        viewModel.clearChartTrigger.observe(viewLifecycleOwner) {
+            val chart = binding.pitchChart
+            chart.data?.dataSets?.forEach { it.clear() }
+            chart.data?.notifyDataChanged()
+            chart.notifyDataSetChanged()
+            chart.invalidate()
+        }
     }
 
-    private fun addPitchEntry(userPitch: Float, originalPitch: Float) {
+    private fun addUserPitchEntry(userPitch: Float, xSec: Float) {
         val chart = binding.pitchChart
         val data = chart.data ?: return
+        val userDataSet = data.getDataSetByIndex(0)
+        userDataSet.addEntry(Entry(xSec, userPitch))
 
+        adjustYAxisIfNeeded(userPitch)
+        trimAndRefreshChart(data)
+    }
+
+    private fun addOriginPitchEntry(originalPitch: Float, xSec: Float) {
+        val chart = binding.pitchChart
+        val data = chart.data ?: return
+        val originDataSet = data.getDataSetByIndex(1)
+        originDataSet.addEntry(Entry(xSec, originalPitch))
+
+        adjustYAxisIfNeeded(originalPitch)
+        trimAndRefreshChart(data)
+    }
+
+    private fun adjustYAxisIfNeeded(newPitch: Float) {
+        val axis = binding.pitchChart.axisLeft
+        if (newPitch > axis.axisMaximum) {
+            val newMax = (newPitch * 1.1f).coerceAtLeast(100f)
+            axis.axisMaximum = newMax
+            binding.pitchChart.invalidate()
+        }
+    }
+
+    private fun trimAndRefreshChart(data: LineData) {
+        val chart = binding.pitchChart
         val userDataSet = data.getDataSetByIndex(0)
         val originDataSet = data.getDataSetByIndex(1)
 
-        val elapsedMs = viewModel.elapsedTime.value ?: 0L
-        val xSec = elapsedMs / 1000f // ✅ x축을 초 단위로 사용
-
-        userDataSet.addEntry(Entry(xSec, userPitch))
-        originDataSet.addEntry(Entry(xSec, originalPitch))
-
-        // 오래된 값 제거: 100초 이상이면 제거
-        if (userDataSet.entryCount > 100) {
-            userDataSet.removeFirst()
-            originDataSet.removeFirst()
-        }
+        // 오래된 데이터 삭제
+        if (userDataSet.entryCount > 100) userDataSet.removeFirst()
+        if (originDataSet.entryCount > 100) originDataSet.removeFirst()
 
         data.notifyDataChanged()
         chart.notifyDataSetChanged()
-        chart.setVisibleXRangeMaximum(10f) // 최근 10초만 보이게
-        chart.moveViewToX(xSec)
+        chart.setVisibleXRangeMaximum(10f)
+
+        if (userDataSet.entryCount > 0) {
+            val lastX = userDataSet.getEntryForIndex(userDataSet.entryCount - 1).x
+            chart.moveViewToX((lastX - 9f).coerceAtLeast(0f))
+        }
+
         chart.invalidate()
     }
 
-    private fun initPitchChart() {
+    private fun initPitchChart(maxPitch: Float = 1000f) {
         val chart = binding.pitchChart
         chart.description.isEnabled = false
         chart.setTouchEnabled(false)
@@ -124,10 +171,19 @@ class RecordingFragment : Fragment() {
 
         val leftAxis = chart.axisLeft
         leftAxis.axisMinimum = 0f
-        leftAxis.axisMaximum = 1000f
+        leftAxis.axisMaximum = (maxPitch * 1.1f).coerceAtLeast(100f) // 약간 여유 있게
 
         val xAxis = chart.xAxis
-        xAxis.isEnabled = false
+        xAxis.isEnabled = true
+        xAxis.position = com.github.mikephil.charting.components.XAxis.XAxisPosition.BOTTOM
+        xAxis.setDrawGridLines(false)
+        xAxis.granularity = 1f  // 1초 단위 간격
+        xAxis.labelCount = 5    // 라벨 개수 고정
+        xAxis.valueFormatter = object : com.github.mikephil.charting.formatter.ValueFormatter() {
+            override fun getFormattedValue(value: Float): String {
+                return "%.0f초".format(value)
+            }
+        }
 
         val userDataSet = LineDataSet(mutableListOf(), "User Pitch").apply {
             color = android.graphics.Color.BLUE
@@ -137,7 +193,7 @@ class RecordingFragment : Fragment() {
         }
 
         val originalDataSet = LineDataSet(mutableListOf(), "Original Pitch").apply {
-            color = android.graphics.Color.rgb(255, 165, 0) // ORANGE
+            color = android.graphics.Color.rgb(255, 165, 0)
             setDrawCircles(false)
             setDrawValues(false)
             lineWidth = 2f
@@ -150,7 +206,7 @@ class RecordingFragment : Fragment() {
 
     @SuppressLint("DefaultLocale")
     private fun formatMillisToTime(millis: Long): String {
-        val totalSeconds = millis / 1000
+        val totalSeconds = (millis / 1000.0).toInt() + if (millis % 1000 > 0) 1 else 0
         val minutes = totalSeconds / 60
         val seconds = totalSeconds % 60
         return String.format("%02d:%02d", minutes, seconds)

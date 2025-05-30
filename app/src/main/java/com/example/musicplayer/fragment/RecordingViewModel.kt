@@ -1,6 +1,5 @@
-package com.example.musicplayer.viewModel
+package com.example.musicplayer.fragment
 
-import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.MutableLiveData
@@ -18,7 +17,7 @@ class RecordingViewModel : ViewModel() {
     val pitchDifference = MutableLiveData<Float>()
     val elapsedTime = MutableLiveData<Long>()
     val score = MutableLiveData<Int>() // ✅ 최종 점수 LiveData 추가
-
+    val clearChartTrigger = MutableLiveData<Unit>() // 단순 트리거
     private var dispatcher: AudioDispatcher? = null
     private var pitchThread: Thread? = null
     private var timerHandler: Handler? = null
@@ -88,11 +87,9 @@ class RecordingViewModel : ViewModel() {
 
         elapsedTime.postValue(0)
 
-        calculateScore() // ✅ 녹음 종료 시 점수 계산
-    }
-
-    fun initTime(){
-        elapsedTime.postValue(0)
+        pitchDifference.postValue(0f)
+        clearChartTrigger.postValue(Unit)
+        calculateScore() // 녹음 종료 시 점수 계산
     }
 
     // ✅ 점수 계산 함수

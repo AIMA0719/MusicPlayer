@@ -124,16 +124,16 @@ class MusicListViewModel(
         try {
             extractor.setDataSource(context, uri, null)
 
-            // 오디오 트랙 선택
             val trackIndex = (0 until extractor.trackCount).firstOrNull { i ->
-                val format = extractor.getTrackFormat(i)
-                format.getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true
+                extractor.getTrackFormat(i).getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true
             } ?: return@withContext emptyList()
 
             extractor.selectTrack(trackIndex)
             val inputFormat = extractor.getTrackFormat(trackIndex)
 
             val mime = inputFormat.getString(MediaFormat.KEY_MIME) ?: return@withContext emptyList()
+            val sampleRate = inputFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)
+
             val codec = MediaCodec.createDecoderByType(mime)
             codec.configure(inputFormat, null, null, 0)
             codec.start()
@@ -142,14 +142,14 @@ class MusicListViewModel(
             val outputBuffers = codec.outputBuffers
             val bufferInfo = MediaCodec.BufferInfo()
 
-            val sampleRate = inputFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)
-            val bufferSize = 2048
-            val bufferOverlap = 1024
-
-            val rawPcmBuffer = ByteArrayOutputStream()
-
             var sawInputEOS = false
             var sawOutputEOS = false
+
+            val bufferSize = 2048
+            val bufferOverlap = 1024
+            var totalDecodedBytes = 0L
+
+            val durationUs = inputFormat.getLong(MediaFormat.KEY_DURATION)
 
             while (!sawOutputEOS) {
                 if (!sawInputEOS) {
@@ -186,10 +186,33 @@ class MusicListViewModel(
                     val chunk = ByteArray(bufferInfo.size)
                     outputBuffer.get(chunk)
                     outputBuffer.clear()
-
-                    rawPcmBuffer.write(chunk)
-
                     codec.releaseOutputBuffer(outputBufferIndex, false)
+
+                    totalDecodedBytes += chunk.size
+
+                    // PCM 데이터를 바로 분석
+                    val inputStream = ByteArrayInputStream(chunk)
+                    val audioFormat = TarsosDSPAudioFormat(
+                        sampleRate.toFloat(), 16, 1, true, false
+                    )
+                    val tarsosStream = UniversalAudioInputStream(inputStream, audioFormat)
+                    val dispatcher = AudioDispatcher(tarsosStream, bufferSize, bufferOverlap)
+
+                    dispatcher.addAudioProcessor(
+                        PitchProcessor(
+                            PitchProcessor.PitchEstimationAlgorithm.YIN,
+                            sampleRate.toFloat(),
+                            bufferSize
+                        ) { result, _ ->
+                            if (result.pitch > 0) pitchList.add(result.pitch)
+                        }
+                    )
+
+                    dispatcher.run()
+
+                    // 진행률 업데이트 (추정 기반)
+                    val progress = ((bufferInfo.presentationTimeUs / durationUs.toDouble()) * 100).toInt()
+                    onProgress(progress.coerceIn(0, 99))
 
                     if (bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) {
                         sawOutputEOS = true
@@ -201,43 +224,15 @@ class MusicListViewModel(
             codec.release()
             extractor.release()
 
-            // PCM byte array → InputStream → TarsosDSP 분석
-            val pcmData = rawPcmBuffer.toByteArray()
-            val inputStream = ByteArrayInputStream(pcmData)
-
-            val audioFormat = TarsosDSPAudioFormat(
-                sampleRate.toFloat(), 16, 1, true, false
-            )
-
-            val tarsosStream = UniversalAudioInputStream(inputStream, audioFormat)
-            val dispatcher = AudioDispatcher(tarsosStream, bufferSize, bufferOverlap)
-
-            var processedSamples = 0
-            val totalSamples = pcmData.size / 2  // 16-bit PCM, 2 bytes per sample
-
-            val processor = PitchProcessor(
-                PitchProcessor.PitchEstimationAlgorithm.YIN,
-                sampleRate.toFloat(),
-                bufferSize
-            ) { result, _ ->
-                if (result.pitch > 0) pitchList.add(result.pitch)
-
-                processedSamples += bufferSize - bufferOverlap
-                val progress = ((processedSamples.toDouble() / totalSamples) * 100).toInt()
-                onProgress(progress.coerceIn(0, 99)) // 100은 마지막에 따로
-            }
-
-            dispatcher.addAudioProcessor(processor)
-            dispatcher.run()
-
+            onProgress(100)
             pitchList
 
         } catch (e: Exception) {
             e.printStackTrace()
+            extractor.release()
+            onProgress(100)
             emptyList()
         }
     }
-
-
 
 }
