@@ -1,135 +1,145 @@
 package com.example.musicplayer.factory
 
+import android.content.Context
+import android.media.MediaCodec
+import android.media.MediaExtractor
+import android.media.MediaFormat
+import android.net.Uri
 import be.tarsos.dsp.AudioDispatcher
 import be.tarsos.dsp.io.TarsosDSPAudioFormat
 import be.tarsos.dsp.io.TarsosDSPAudioInputStream
+import be.tarsos.dsp.io.UniversalAudioInputStream
 import be.tarsos.dsp.pitch.PitchProcessor
 import com.example.musicplayer.manager.LogManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedInputStream
+import java.io.ByteArrayInputStream
 import java.io.InputStream
 
 object MusicFileDispatcherFactory {
 
-    suspend fun analyzePitchFromInputStream(
-        inputStream: InputStream,
-        durationInMillis: Long,
-        sampleRate: Int = 44100,
-        bufferSize: Int = 2048,
-        bufferOverlap: Int = 1024,
+    suspend fun analyzePitchFromMediaUri(
+        context: Context,
+        uri: Uri,
         onProgress: (Int) -> Unit
     ): List<Float> = withContext(Dispatchers.IO) {
+
         val pitchList = mutableListOf<Float>()
+        val extractor = MediaExtractor()
 
-        val audioFormat = TarsosDSPAudioFormat(sampleRate.toFloat(), 16, 1, true, false)
-        val stream = BufferedInputStream(inputStream)
+        try {
+            extractor.setDataSource(context, uri, null)
 
-        val tarsosStream = object : TarsosDSPAudioInputStream {
-            override fun read(b: ByteArray?, off: Int, len: Int): Int {
-                val bytesRead = stream.read(b, off, len)
-                LogManager.d("📦 read() returned: $bytesRead")
-                return bytesRead
-            }
+            val trackIndex = (0 until extractor.trackCount).firstOrNull { i ->
+                extractor.getTrackFormat(i).getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true
+            } ?: return@withContext emptyList()
 
-            override fun skip(bytesToSkip: Long) { stream.skip(bytesToSkip) }
-            override fun close() = stream.close()
-            override fun getFormat(): TarsosDSPAudioFormat = audioFormat
-            override fun getFrameLength(): Long = -1
-        }
+            extractor.selectTrack(trackIndex)
+            val inputFormat = extractor.getTrackFormat(trackIndex)
 
-        val dispatcher = AudioDispatcher(tarsosStream, bufferSize, bufferOverlap)
+            val mime = inputFormat.getString(MediaFormat.KEY_MIME) ?: return@withContext emptyList()
+            val sampleRate = inputFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)
 
-        val totalFrames = (durationInMillis * sampleRate) / 1000
-        val totalSteps = totalFrames / bufferSize
+            val codec = MediaCodec.createDecoderByType(mime)
+            codec.configure(inputFormat, null, null, 0)
+            codec.start()
 
-        var currentStep = 0
-        onProgress(0) // 분석 시작
+            val inputBuffers = codec.inputBuffers
+            val outputBuffers = codec.outputBuffers
+            val bufferInfo = MediaCodec.BufferInfo()
 
-        val pitchProcessor = PitchProcessor(
-            PitchProcessor.PitchEstimationAlgorithm.YIN,
-            sampleRate.toFloat(),
-            bufferSize
-        ) { result, _ ->
-            val pitch = result.pitch
-            if (pitch > 0) pitchList.add(pitch)
+            var sawInputEOS = false
+            var sawOutputEOS = false
 
-            currentStep++
-            if (currentStep % 5 == 0 || currentStep == totalSteps.toInt()) {
-                val progress = (currentStep.toFloat() / totalSteps * 100).toInt()
-                LogManager.d("🧮 Frame $currentStep / $totalSteps (progress: $progress%)")
-                onProgress(progress.coerceIn(0, 99)) // run() 이후에 100 호출
-            }
-        }
+            val bufferSize = 2048
+            val bufferOverlap = 1024
+            var totalDecodedBytes = 0L
 
-        dispatcher.addAudioProcessor(pitchProcessor)
+            val durationUs = inputFormat.getLong(MediaFormat.KEY_DURATION)
 
-        dispatcher.run()
+            while (!sawOutputEOS) {
+                if (!sawInputEOS) {
+                    val inputBufferIndex = codec.dequeueInputBuffer(10000)
+                    if (inputBufferIndex >= 0) {
+                        val inputBuffer = inputBuffers[inputBufferIndex]
+                        val sampleSize = extractor.readSampleData(inputBuffer, 0)
 
-        onProgress(100) // 분석 완료
-        pitchList
-    }
-
-    suspend fun analyzePitchFromWavInputStream(
-        inputStream: InputStream,
-        fileLengthBytes: Long,
-        sampleRate: Int = 44100,
-        bufferSize: Int = 2048,
-        bufferOverlap: Int = 1024,
-        onProgress: (Int) -> Unit
-    ): List<Float> = withContext(Dispatchers.IO) {
-        val pitchList = mutableListOf<Float>()
-
-        val audioFormat = TarsosDSPAudioFormat(
-            sampleRate.toFloat(), 16, 1, true, false
-        )
-
-        val stream = BufferedInputStream(inputStream)
-        var totalBytesRead = 0L
-
-        val tarsosStream = object : TarsosDSPAudioInputStream {
-            override fun read(b: ByteArray, off: Int, len: Int): Int {
-                val bytesRead = stream.read(b, off, len)
-                if (bytesRead > 0) {
-                    totalBytesRead += bytesRead
-                    val progress = ((totalBytesRead.toDouble() / fileLengthBytes) * 100).toInt()
-                    onProgress(progress.coerceAtMost(99)) // 마지막 100은 run() 후 따로
+                        if (sampleSize < 0) {
+                            codec.queueInputBuffer(
+                                inputBufferIndex,
+                                0,
+                                0,
+                                0L,
+                                MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                            )
+                            sawInputEOS = true
+                        } else {
+                            codec.queueInputBuffer(
+                                inputBufferIndex,
+                                0,
+                                sampleSize,
+                                extractor.sampleTime,
+                                0
+                            )
+                            extractor.advance()
+                        }
+                    }
                 }
-                return bytesRead
+
+                val outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo, 10000)
+                if (outputBufferIndex >= 0) {
+                    val outputBuffer = outputBuffers[outputBufferIndex]
+                    val chunk = ByteArray(bufferInfo.size)
+                    outputBuffer.get(chunk)
+                    outputBuffer.clear()
+                    codec.releaseOutputBuffer(outputBufferIndex, false)
+
+                    totalDecodedBytes += chunk.size
+
+                    // PCM 데이터를 바로 분석
+                    val inputStream = ByteArrayInputStream(chunk)
+                    val audioFormat = TarsosDSPAudioFormat(
+                        sampleRate.toFloat(), 16, 1, true, false
+                    )
+                    val tarsosStream = UniversalAudioInputStream(inputStream, audioFormat)
+                    val dispatcher = AudioDispatcher(tarsosStream, bufferSize, bufferOverlap)
+
+                    dispatcher.addAudioProcessor(
+                        PitchProcessor(
+                            PitchProcessor.PitchEstimationAlgorithm.YIN,
+                            sampleRate.toFloat(),
+                            bufferSize
+                        ) { result, _ ->
+                            pitchList.add(if (result.pitch > 0) result.pitch else 0f)
+                        }
+                    )
+
+                    dispatcher.run()
+
+                    // 진행률 업데이트 (추정 기반)
+                    val progress = ((bufferInfo.presentationTimeUs / durationUs.toDouble()) * 100).toInt()
+                    onProgress(progress.coerceIn(0, 99))
+
+                    if (bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) {
+                        sawOutputEOS = true
+                    }
+                }
             }
 
-            override fun skip(bytesToSkip: Long) {
-                stream.skip(bytesToSkip)
-            }
+            codec.stop()
+            codec.release()
+            extractor.release()
 
-            override fun close() {
-                stream.close()
-            }
+            onProgress(100)
+            pitchList
 
-            override fun getFormat(): TarsosDSPAudioFormat = audioFormat
-            override fun getFrameLength(): Long = -1
+        } catch (e: Exception) {
+            e.printStackTrace()
+            extractor.release()
+            onProgress(100)
+            emptyList()
         }
-
-        val dispatcher = AudioDispatcher(tarsosStream, bufferSize, bufferOverlap)
-
-        val pitchProcessor = PitchProcessor(
-            PitchProcessor.PitchEstimationAlgorithm.YIN,
-            sampleRate.toFloat(),
-            bufferSize
-        ) { result, _ ->
-            if (result.pitch > 0) {
-                pitchList.add(result.pitch)
-            }
-        }
-
-        dispatcher.addAudioProcessor(pitchProcessor)
-
-        dispatcher.run()
-
-        onProgress(100) // 완료
-        pitchList
     }
-
-
 }
 

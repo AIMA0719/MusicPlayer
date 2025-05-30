@@ -2,6 +2,7 @@ package com.example.musicplayer.fragment
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,12 +10,15 @@ import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import com.example.musicplayer.data.MusicFile
 import com.example.musicplayer.databinding.FragmentRecordingBinding
-import com.example.musicplayer.manager.LogManager
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class RecordingFragment : Fragment() {
 
@@ -27,40 +31,59 @@ class RecordingFragment : Fragment() {
     private var _binding: FragmentRecordingBinding? = null
     private val binding get() = _binding!!
 
+    private var elapsedJob: Job? = null
+    private var lastOriginIndex = -1
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
             music = it.getParcelable("music")!!
             pitchArray = it.getFloatArray("pitchArray")!!
             durationMillis = it.getLong("durationMillis", 0L)
-            LogManager.e(listOf(pitchArray.toList()))
         }
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?,
+        savedInstanceState: Bundle?
     ): View {
         _binding = FragmentRecordingBinding.inflate(inflater, container, false)
         val maxPitch = pitchArray.maxOrNull() ?: 1000f
-        initPitchChart(maxPitch) // 최대값 기반으로 차트 세팅
+        initPitchChart(maxPitch)
         setObserver()
 
-        // 마이크 아이콘 클릭 시 녹음 시작 / 중지
         binding.micImage.setOnClickListener {
             if (viewModel.isRecording.value == true) {
+                stopElapsedTimer()
                 viewModel.stopRecording()
             } else {
                 viewModel.startRecording(pitchArray)
+                startElapsedTimer()
             }
         }
 
         return binding.root
     }
 
+    private fun startElapsedTimer() {
+        val startTime = SystemClock.elapsedRealtime()
+        elapsedJob = lifecycleScope.launch {
+            while (true) {
+                val now = SystemClock.elapsedRealtime()
+                val elapsed = now - startTime
+                viewModel.elapsedTime.postValue(elapsed)
+                delay(100)
+            }
+        }
+    }
+
+    private fun stopElapsedTimer() {
+        elapsedJob?.cancel()
+        elapsedJob = null
+    }
+
     @SuppressLint("SetTextI18n")
     private fun setObserver() {
-        val durationMillis = arguments?.getLong("durationMillis") ?: 0L
         val totalTimeFormatted = formatMillisToTime(durationMillis)
         binding.timeDisplay.text = "00:00 / $totalTimeFormatted"
 
@@ -70,26 +93,26 @@ class RecordingFragment : Fragment() {
             val total = formatMillisToTime(durationMillis)
             binding.timeDisplay.text = "$elapsed / $total"
 
-            // 오리지널 피치 추가
-            val index = (elapsedMs / 100).toInt()
-            if (index in pitchArray.indices) {
-                val origin = pitchArray[index]
-                addOriginPitchEntry(origin, elapsedMs / 1000f)
+            val index = (clampedElapsed / 100).toInt()
+            if (index > lastOriginIndex) {
+                for (i in lastOriginIndex + 1..index) {
+                    val pitch = pitchArray.getOrNull(i) ?: 0f
+                    addOriginPitchEntry(pitch, i / 10f)
+                }
+                lastOriginIndex = index
             }
 
-            // 녹음이 끝나면 자동으로 중지
-            if (elapsedMs >= durationMillis) {
+            if (clampedElapsed >= durationMillis) {
+                stopElapsedTimer()
                 viewModel.stopRecording()
             }
         }
 
-        // pitch 및 오차 실시간 UI 반영
         viewModel.currentPitch.observe(viewLifecycleOwner) { pitch ->
             val diff = viewModel.pitchDifference.value ?: 0f
             val elapsed = viewModel.elapsedTime.value ?: 0
 
-            binding.pitchDifference.text = "🎵 현재 pitch: %.2f Hz / 오차: %.2f Hz".format(pitch, diff)
-
+            binding.pitchDifference.text = "\uD83C\uDFB5 현재 pitch: %.2f Hz / 오차: %.2f Hz".format(pitch, diff)
             addUserPitchEntry(pitch, elapsed / 1000f)
         }
 
@@ -102,11 +125,10 @@ class RecordingFragment : Fragment() {
         }
 
         viewModel.clearChartTrigger.observe(viewLifecycleOwner) {
-            val chart = binding.pitchChart
-            chart.data?.dataSets?.forEach { it.clear() }
-            chart.data?.notifyDataChanged()
-            chart.notifyDataSetChanged()
-            chart.invalidate()
+            binding.pitchChart.data?.dataSets?.forEach { it.clear() }
+            binding.pitchChart.data?.notifyDataChanged()
+            binding.pitchChart.notifyDataSetChanged()
+            lastOriginIndex = -1
         }
     }
 
@@ -133,9 +155,7 @@ class RecordingFragment : Fragment() {
     private fun adjustYAxisIfNeeded(newPitch: Float) {
         val axis = binding.pitchChart.axisLeft
         if (newPitch > axis.axisMaximum) {
-            val newMax = (newPitch * 1.1f).coerceAtLeast(100f)
-            axis.axisMaximum = newMax
-            binding.pitchChart.invalidate()
+            axis.axisMaximum = (newPitch * 1.1f).coerceAtLeast(100f)
         }
     }
 
@@ -144,7 +164,6 @@ class RecordingFragment : Fragment() {
         val userDataSet = data.getDataSetByIndex(0)
         val originDataSet = data.getDataSetByIndex(1)
 
-        // 오래된 데이터 삭제
         if (userDataSet.entryCount > 100) userDataSet.removeFirst()
         if (originDataSet.entryCount > 100) originDataSet.removeFirst()
 
@@ -171,18 +190,16 @@ class RecordingFragment : Fragment() {
 
         val leftAxis = chart.axisLeft
         leftAxis.axisMinimum = 0f
-        leftAxis.axisMaximum = (maxPitch * 1.1f).coerceAtLeast(100f) // 약간 여유 있게
+        leftAxis.axisMaximum = (maxPitch * 1.1f).coerceAtLeast(100f)
 
         val xAxis = chart.xAxis
         xAxis.isEnabled = true
         xAxis.position = com.github.mikephil.charting.components.XAxis.XAxisPosition.BOTTOM
         xAxis.setDrawGridLines(false)
-        xAxis.granularity = 1f  // 1초 단위 간격
-        xAxis.labelCount = 5    // 라벨 개수 고정
+        xAxis.granularity = 1f
+        xAxis.labelCount = 5
         xAxis.valueFormatter = object : com.github.mikephil.charting.formatter.ValueFormatter() {
-            override fun getFormattedValue(value: Float): String {
-                return "%.0f초".format(value)
-            }
+            override fun getFormattedValue(value: Float): String = "%.0f초".format(value)
         }
 
         val userDataSet = LineDataSet(mutableListOf(), "User Pitch").apply {
@@ -199,8 +216,7 @@ class RecordingFragment : Fragment() {
             lineWidth = 2f
         }
 
-        val data = LineData(userDataSet, originalDataSet)
-        chart.data = data
+        chart.data = LineData(userDataSet, originalDataSet)
         chart.invalidate()
     }
 
@@ -214,20 +230,20 @@ class RecordingFragment : Fragment() {
 
     override fun onDestroy() {
         super.onDestroy()
+        stopElapsedTimer()
         viewModel.stopRecording()
         _binding = null
     }
 
     companion object {
         fun newInstance(music: MusicFile, originalPitch: FloatArray, durationMillis: Long): RecordingFragment {
-            val fragment = RecordingFragment()
-            fragment.arguments = bundleOf(
-                "music" to music,
-                "pitchArray" to originalPitch,
-                "durationMillis" to durationMillis
-            )
-            return fragment
+            return RecordingFragment().apply {
+                arguments = bundleOf(
+                    "music" to music,
+                    "pitchArray" to originalPitch,
+                    "durationMillis" to durationMillis
+                )
+            }
         }
-
     }
 }
