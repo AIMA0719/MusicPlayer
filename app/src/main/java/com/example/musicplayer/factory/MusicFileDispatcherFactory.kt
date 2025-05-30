@@ -7,15 +7,11 @@ import android.media.MediaFormat
 import android.net.Uri
 import be.tarsos.dsp.AudioDispatcher
 import be.tarsos.dsp.io.TarsosDSPAudioFormat
-import be.tarsos.dsp.io.TarsosDSPAudioInputStream
 import be.tarsos.dsp.io.UniversalAudioInputStream
 import be.tarsos.dsp.pitch.PitchProcessor
-import com.example.musicplayer.manager.LogManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.BufferedInputStream
-import java.io.ByteArrayInputStream
-import java.io.InputStream
+import java.io.*
 
 object MusicFileDispatcherFactory {
 
@@ -24,13 +20,15 @@ object MusicFileDispatcherFactory {
         uri: Uri,
         onProgress: (Int) -> Unit
     ): List<Float> = withContext(Dispatchers.IO) {
-
         val pitchList = mutableListOf<Float>()
         val extractor = MediaExtractor()
 
+        // 임시 PCM 파일 생성
+        val tempPcmFile = File.createTempFile("decoded_pcm_", ".pcm", context.cacheDir)
+        val pcmOutputStream = BufferedOutputStream(FileOutputStream(tempPcmFile))
+
         try {
             extractor.setDataSource(context, uri, null)
-
             val trackIndex = (0 until extractor.trackCount).firstOrNull { i ->
                 extractor.getTrackFormat(i).getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true
             } ?: return@withContext emptyList()
@@ -40,6 +38,11 @@ object MusicFileDispatcherFactory {
 
             val mime = inputFormat.getString(MediaFormat.KEY_MIME) ?: return@withContext emptyList()
             val sampleRate = inputFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)
+            val durationUs = inputFormat.getLong(MediaFormat.KEY_DURATION)
+            val channelCount = inputFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+
+            val pcmBytesPerSecond = sampleRate * channelCount * 2 // 16bit = 2 bytes
+            val totalExpectedPcmBytes = (durationUs / 1_000_000.0 * pcmBytesPerSecond).toLong()
 
             val codec = MediaCodec.createDecoderByType(mime)
             codec.configure(inputFormat, null, null, 0)
@@ -51,12 +54,7 @@ object MusicFileDispatcherFactory {
 
             var sawInputEOS = false
             var sawOutputEOS = false
-
-            val bufferSize = 2048
-            val bufferOverlap = 1024
-            var totalDecodedBytes = 0L
-
-            val durationUs = inputFormat.getLong(MediaFormat.KEY_DURATION)
+            var writtenBytes: Long = 0
 
             while (!sawOutputEOS) {
                 if (!sawInputEOS) {
@@ -67,20 +65,12 @@ object MusicFileDispatcherFactory {
 
                         if (sampleSize < 0) {
                             codec.queueInputBuffer(
-                                inputBufferIndex,
-                                0,
-                                0,
-                                0L,
-                                MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                                inputBufferIndex, 0, 0, 0L, MediaCodec.BUFFER_FLAG_END_OF_STREAM
                             )
                             sawInputEOS = true
                         } else {
                             codec.queueInputBuffer(
-                                inputBufferIndex,
-                                0,
-                                sampleSize,
-                                extractor.sampleTime,
-                                0
+                                inputBufferIndex, 0, sampleSize, extractor.sampleTime, 0
                             )
                             extractor.advance()
                         }
@@ -95,51 +85,60 @@ object MusicFileDispatcherFactory {
                     outputBuffer.clear()
                     codec.releaseOutputBuffer(outputBufferIndex, false)
 
-                    totalDecodedBytes += chunk.size
+                    pcmOutputStream.write(chunk)
+                    writtenBytes += chunk.size
 
-                    // PCM 데이터를 바로 분석
-                    val inputStream = ByteArrayInputStream(chunk)
-                    val audioFormat = TarsosDSPAudioFormat(
-                        sampleRate.toFloat(), 16, 1, true, false
-                    )
-                    val tarsosStream = UniversalAudioInputStream(inputStream, audioFormat)
-                    val dispatcher = AudioDispatcher(tarsosStream, bufferSize, bufferOverlap)
-
-                    dispatcher.addAudioProcessor(
-                        PitchProcessor(
-                            PitchProcessor.PitchEstimationAlgorithm.YIN,
-                            sampleRate.toFloat(),
-                            bufferSize
-                        ) { result, _ ->
-                            pitchList.add(if (result.pitch > 0) result.pitch else 0f)
-                        }
-                    )
-
-                    dispatcher.run()
-
-                    // 진행률 업데이트 (추정 기반)
-                    val progress = ((bufferInfo.presentationTimeUs / durationUs.toDouble()) * 100).toInt()
-                    onProgress(progress.coerceIn(0, 99))
-
+                    val decodeProgress = ((writtenBytes.toDouble() / totalExpectedPcmBytes) * 80).toInt()
+                    onProgress(decodeProgress.coerceIn(0, 80)) // 디코딩 단계는 0~80%
                     if (bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) {
                         sawOutputEOS = true
                     }
                 }
             }
 
+            pcmOutputStream.flush()
+            pcmOutputStream.close()
             codec.stop()
             codec.release()
             extractor.release()
 
+            // 분석 단계 시작
+            val audioFormat = TarsosDSPAudioFormat(sampleRate.toFloat(), 16, 1, true, false)
+            val inputStream = BufferedInputStream(FileInputStream(tempPcmFile))
+            val tarsosStream = UniversalAudioInputStream(inputStream, audioFormat)
+
+            val bufferSize = sampleRate / 10 // 100ms 단위
+            val bufferOverlap = 0
+            val dispatcher = AudioDispatcher(tarsosStream, bufferSize, bufferOverlap)
+
+            val totalBytes = tempPcmFile.length()
+            var processedBytes = 0L
+
+            dispatcher.addAudioProcessor(
+                PitchProcessor(
+                    PitchProcessor.PitchEstimationAlgorithm.YIN,
+                    sampleRate.toFloat(),
+                    bufferSize
+                ) { result, _ ->
+                    pitchList.add(if (result.pitch > 0) result.pitch else 0f)
+                    processedBytes += bufferSize * 2L // 16bit = 2 bytes
+                    val analyzeProgress = 80 + ((processedBytes.toDouble() / totalBytes) * 20).toInt()
+                    onProgress(analyzeProgress.coerceIn(81, 99)) // 분석 단계는 81~99%
+                }
+            )
+
+            dispatcher.run()
             onProgress(100)
+            tempPcmFile.delete()
             pitchList
 
         } catch (e: Exception) {
             e.printStackTrace()
+            try { pcmOutputStream.close() } catch (_: IOException) {}
+            tempPcmFile.delete()
             extractor.release()
             onProgress(100)
             emptyList()
         }
     }
 }
-

@@ -6,6 +6,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModelProvider
+import com.example.musicplayer.R
 import com.example.musicplayer.fragment.MainFragment
 import com.example.musicplayer.manager.ContextManager
 import com.example.musicplayer.manager.FragmentMoveManager
@@ -71,7 +72,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setMainFragment() {
-        FragmentMoveManager.instance.pushFragment(MainFragment.newInstance())
+        val fragment = MainFragment.newInstance()
+        val fragmentManager = supportFragmentManager
+        val transaction = fragmentManager.beginTransaction()
+        transaction.replace(R.id.fl_main_layout, fragment)
+        transaction.addToBackStack(fragment.javaClass.simpleName)
+        transaction.commitAllowingStateLoss()
+
+        viewModel._currentFragment.value = fragment.javaClass.simpleName
     }
 
     private fun setOnBackPressed() {
@@ -105,13 +113,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun observeViewModel() {
         // 현재 Fragment 상태 변경 시 UI 업데이트
-        viewModel.currentFragment.observe(this) { fragmentTag ->
+        /*viewModel.currentFragment.observe(this) { fragmentTag ->
             binding.tvStatusBarTitle.text = fragmentTag
-        }
+        }*/
 
         // Toast 메시지 처리
         viewModel.toastMessage.observe(this) { message ->
-            ToastManager.show(this,message)
+            ToastManager.show(message)
         }
     }
 

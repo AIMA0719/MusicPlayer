@@ -13,12 +13,14 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.example.musicplayer.data.MusicFile
 import com.example.musicplayer.databinding.FragmentRecordingBinding
+import com.example.musicplayer.manager.LogManager
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.Arrays
 
 class RecordingFragment : Fragment() {
 
@@ -87,6 +89,8 @@ class RecordingFragment : Fragment() {
         val totalTimeFormatted = formatMillisToTime(durationMillis)
         binding.timeDisplay.text = "00:00 / $totalTimeFormatted"
 
+        //LogManager.e(listOf(pitchArray.toList()))
+
         viewModel.elapsedTime.observe(viewLifecycleOwner) { elapsedMs ->
             val clampedElapsed = elapsedMs.coerceAtMost(durationMillis)
             val elapsed = formatMillisToTime(clampedElapsed)
@@ -132,12 +136,18 @@ class RecordingFragment : Fragment() {
         }
     }
 
+    private var lastUserX = -1f
+    private var lastOriginX = -1f
+
     private fun addUserPitchEntry(userPitch: Float, xSec: Float) {
         val chart = binding.pitchChart
         val data = chart.data ?: return
         val userDataSet = data.getDataSetByIndex(0)
-        userDataSet.addEntry(Entry(xSec, userPitch))
 
+        if (xSec <= lastUserX) return  // 역순 방지
+        lastUserX = xSec
+
+        userDataSet.addEntry(Entry(xSec, userPitch))
         adjustYAxisIfNeeded(userPitch)
         trimAndRefreshChart(data)
     }
@@ -146,8 +156,11 @@ class RecordingFragment : Fragment() {
         val chart = binding.pitchChart
         val data = chart.data ?: return
         val originDataSet = data.getDataSetByIndex(1)
-        originDataSet.addEntry(Entry(xSec, originalPitch))
 
+        if (xSec <= lastOriginX) return  // 역순 방지
+        lastOriginX = xSec
+
+        originDataSet.addEntry(Entry(xSec, originalPitch))
         adjustYAxisIfNeeded(originalPitch)
         trimAndRefreshChart(data)
     }
@@ -161,20 +174,24 @@ class RecordingFragment : Fragment() {
 
     private fun trimAndRefreshChart(data: LineData) {
         val chart = binding.pitchChart
-        val userDataSet = data.getDataSetByIndex(0)
-        val originDataSet = data.getDataSetByIndex(1)
+        val userDataSet = data.getDataSetByLabel("User Pitch", true) ?: return
+        val originDataSet = data.getDataSetByLabel("Original Pitch", true) ?: return
 
-        if (userDataSet.entryCount > 100) userDataSet.removeFirst()
-        if (originDataSet.entryCount > 100) originDataSet.removeFirst()
+        if (userDataSet.entryCount > 100 && userDataSet.entryCount > 1) {
+            userDataSet.removeFirst()
+        }
+        if (originDataSet.entryCount > 100 && originDataSet.entryCount > 1) {
+            originDataSet.removeFirst()
+        }
+
+        if (userDataSet.entryCount < 2 || originDataSet.entryCount < 2) return
 
         data.notifyDataChanged()
         chart.notifyDataSetChanged()
         chart.setVisibleXRangeMaximum(10f)
 
-        if (userDataSet.entryCount > 0) {
-            val lastX = userDataSet.getEntryForIndex(userDataSet.entryCount - 1).x
-            chart.moveViewToX((lastX - 9f).coerceAtLeast(0f))
-        }
+        val lastX = userDataSet.getEntryForIndex(userDataSet.entryCount - 1).x
+        chart.moveViewToX((lastX - 9f).coerceAtLeast(0f))
 
         chart.invalidate()
     }
