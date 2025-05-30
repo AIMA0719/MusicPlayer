@@ -185,8 +185,6 @@ class RecordingFragment : Fragment() {
 
     private fun adjustYAxisIfNeeded(newPitch: Float) {
         val axis = binding.pitchChart.axisLeft
-        LogManager.e("Axis Max: ${axis.axisMaximum}")
-        LogManager.e("New Pitch: $newPitch")
         if (newPitch > axis.axisMaximum) {
             axis.axisMaximum = (newPitch * 1.1f).coerceAtLeast(100f)
         }
