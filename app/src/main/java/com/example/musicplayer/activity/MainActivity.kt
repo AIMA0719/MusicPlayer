@@ -6,7 +6,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModelProvider
-import com.example.musicplayer.R
 import com.example.musicplayer.fragment.MainFragment
 import com.example.musicplayer.manager.ContextManager
 import com.example.musicplayer.manager.FragmentMoveManager
@@ -72,14 +71,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setMainFragment() {
-        val fragment = MainFragment.newInstance()
-        val fragmentManager = supportFragmentManager
-        val transaction = fragmentManager.beginTransaction()
-        transaction.replace(R.id.fl_main_layout, fragment)
-        transaction.addToBackStack(fragment.javaClass.simpleName)
-        transaction.commitAllowingStateLoss()
-
-        viewModel._currentFragment.value = fragment.javaClass.simpleName
+        FragmentMoveManager.instance.pushFragment(MainFragment.newInstance())
     }
 
     private fun setOnBackPressed() {

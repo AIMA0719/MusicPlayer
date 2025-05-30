@@ -20,7 +20,6 @@ import com.github.mikephil.charting.data.LineDataSet
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.Arrays
 
 class RecordingFragment : Fragment() {
 
@@ -50,8 +49,7 @@ class RecordingFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentRecordingBinding.inflate(inflater, container, false)
-        val maxPitch = pitchArray.maxOrNull() ?: 1000f
-        initPitchChart(maxPitch)
+        initPitchChart()
         setObserver()
 
         binding.micImage.setOnClickListener {
@@ -129,11 +127,31 @@ class RecordingFragment : Fragment() {
         }
 
         viewModel.clearChartTrigger.observe(viewLifecycleOwner) {
-            binding.pitchChart.data?.dataSets?.forEach { it.clear() }
-            binding.pitchChart.data?.notifyDataChanged()
-            binding.pitchChart.notifyDataSetChanged()
+            // 기존 데이터셋을 완전히 제거하고 새로 추가해야 재시작 시 정상 동작함
+            val userDataSet = LineDataSet(mutableListOf(), "User Pitch").apply {
+                color = android.graphics.Color.BLUE
+                setDrawCircles(false)
+                setDrawValues(false)
+                lineWidth = 2f
+            }
+
+            val originalDataSet = LineDataSet(mutableListOf(), "Original Pitch").apply {
+                color = android.graphics.Color.rgb(255, 165, 0)
+                setDrawCircles(false)
+                setDrawValues(false)
+                lineWidth = 2f
+            }
+
+            binding.pitchChart.data = LineData(userDataSet, originalDataSet)
+            binding.pitchChart.invalidate()
+
             lastOriginIndex = -1
+            lastUserX = -1f
+            lastOriginX = -1f
+
+            initPitchChart()
         }
+
     }
 
     private var lastUserX = -1f
@@ -167,6 +185,8 @@ class RecordingFragment : Fragment() {
 
     private fun adjustYAxisIfNeeded(newPitch: Float) {
         val axis = binding.pitchChart.axisLeft
+        LogManager.e("Axis Max: ${axis.axisMaximum}")
+        LogManager.e("New Pitch: $newPitch")
         if (newPitch > axis.axisMaximum) {
             axis.axisMaximum = (newPitch * 1.1f).coerceAtLeast(100f)
         }
@@ -196,7 +216,9 @@ class RecordingFragment : Fragment() {
         chart.invalidate()
     }
 
-    private fun initPitchChart(maxPitch: Float = 1000f) {
+    private fun initPitchChart() {
+        val maxPitch = pitchArray.maxOrNull() ?: 1000f
+
         val chart = binding.pitchChart
         chart.description.isEnabled = false
         chart.setTouchEnabled(false)

@@ -7,9 +7,7 @@ import androidx.lifecycle.ViewModel
 import be.tarsos.dsp.AudioDispatcher
 import be.tarsos.dsp.io.android.AudioDispatcherFactory
 import be.tarsos.dsp.pitch.PitchProcessor
-import com.example.musicplayer.manager.LogManager
 import com.example.musicplayer.manager.ToastManager
-import java.util.Arrays
 import kotlin.math.abs
 
 class RecordingViewModel : ViewModel() {
