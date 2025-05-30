@@ -204,7 +204,7 @@ class MusicListViewModel(
                             sampleRate.toFloat(),
                             bufferSize
                         ) { result, _ ->
-                            if (result.pitch > 0) pitchList.add(result.pitch)
+                            pitchList.add(if (result.pitch > 0) result.pitch else 0f)
                         }
                     )
 

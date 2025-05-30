@@ -101,9 +101,9 @@ class RecordingViewModel : ViewModel() {
 
         val total = pitchPairs.size
         val scoreSum = pitchPairs.sumOf { (target, user) ->
-            LogManager.e("Target: $target, User: $user")
+            //LogManager.e("Target: $target, User: $user")
             val diff = abs(user - target)
-            LogManager.e("Diff: $diff")
+            //LogManager.e("Diff: $diff")
             when {
                 diff < 10f -> 100.0
                 diff < 25f -> 80.0
