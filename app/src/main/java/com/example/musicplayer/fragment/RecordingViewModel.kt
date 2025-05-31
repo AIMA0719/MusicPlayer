@@ -8,6 +8,7 @@ import be.tarsos.dsp.AudioDispatcher
 import be.tarsos.dsp.io.android.AudioDispatcherFactory
 import be.tarsos.dsp.pitch.PitchProcessor
 import com.example.musicplayer.manager.ToastManager
+import com.example.musicplayer.scoreAlgorythm.ScoreAnalyzer
 import kotlin.math.abs
 
 class RecordingViewModel : ViewModel() {
@@ -96,35 +97,18 @@ class RecordingViewModel : ViewModel() {
             currentPitch.postValue(0f)
             pitchDifference.postValue(0f)
             clearChartTrigger.postValue(Unit)
-            calculateScore() // 녹음 종료 시 점수 계산
+
+            // pitchPairs를 분리해서 ScoreAnalyzer에 넘기고 점수 계산
+            val originalPitchList = pitchPairs.map { it.first }
+            val userPitchList = pitchPairs.map { it.second }
+
+            val analyzer = ScoreAnalyzer(originalPitchList, userPitchList)
+            val finalScore = analyzer.calculateTotalScore()
+
+            score.postValue(finalScore)
         } catch (e: Exception) {
             ToastManager.show("녹음 중 오류가 발생했습니다: ${e.message}")
         }
-    }
-
-    // ✅ 점수 계산 함수
-    private fun calculateScore() {
-        if (pitchPairs.isEmpty()) {
-            score.postValue(0)
-            return
-        }
-
-        val total = pitchPairs.size
-        val scoreSum = pitchPairs.sumOf { (target, user) ->
-            //LogManager.e("Target: $target, User: $user")
-            val diff = abs(user - target)
-            //LogManager.e("Diff: $diff")
-            when {
-                diff < 10f -> 100.0
-                diff < 25f -> 80.0
-                diff < 50f -> 60.0
-                else -> 30.0
-            }
-        }
-
-        val finalScore = (scoreSum / total).toInt()
-        //LogManager.e("Total: $total, Score Sum: $scoreSum, Final Score: $finalScore")
-        score.postValue(finalScore)
     }
 }
 
