@@ -7,7 +7,7 @@ import kotlin.math.sqrt
  * 점수 계산을 위한 알고리즘 클래스
  * - pitchListOriginal: 원곡의 피치 값 리스트
  * - pitchListUser: 사용자의 피치 값 리스트
- * 두 리스트를 비교하여 유사도를 계산하고, RMS 에너지 차이도 함께 반영하여 점수를 계산
+ * - toleranceHz: 피치 비교 시 허용 오차 (Hz)
  */
 class ScoreAnalyzer(
     private val pitchListOriginal: List<Float>,
@@ -17,19 +17,20 @@ class ScoreAnalyzer(
 
     /**
      * 전체 점수 계산
-     * - 피치 유사도 점수와 RMS 에너지 유사도 점수를 평균하여 0~100 사이의 점수 반환
+     * - 피치, 에너지, 스펙트럼 중심 주파수, 롤오프 평균을 통해 최종 점수를 계산
      */
     fun calculateTotalScore(): Int {
         val pitchScore = calculatePitchSimilarity()
         val energyScore = calculateEnergySimilarity()
+        val centroidScore = calculateSpectralCentroidSimilarity()
+        val rolloffScore = calculateSpectralRolloffSimilarity()
 
-        // 평균을 내어 총 점수 반환 (0~100)
-        return ((pitchScore + energyScore) / 2 * 100).toInt()
+        val average = (pitchScore + energyScore + centroidScore + rolloffScore) / 4.0
+        return (average * 100).toInt()
     }
 
     /**
-     * 피치 유사도 계산
-     * - 두 리스트 간의 동일 인덱스에서의 피치 차이가 허용 오차 이내인 경우를 세서 비율로 점수 환산
+     * 피치 유사도 계산 (허용 오차 이내의 비율)
      */
     private fun calculatePitchSimilarity(): Double {
         val minSize = minOf(pitchListOriginal.size, pitchListUser.size)
@@ -47,8 +48,7 @@ class ScoreAnalyzer(
     }
 
     /**
-     * RMS (Root Mean Square) 에너지를 기반으로 한 유사도 계산
-     * - 두 리스트의 에너지값을 계산 후, 차이를 기반으로 유사도 반환
+     * RMS 에너지 기반 유사도 계산
      */
     private fun calculateEnergySimilarity(): Double {
         val rmsOriginal = calculateRMS(pitchListOriginal)
@@ -60,13 +60,57 @@ class ScoreAnalyzer(
     }
 
     /**
-     * RMS (Root Mean Square) 에너지 계산
-     * - 리스트의 제곱 평균 값의 제곱근 반환
+     * Spectral Centroid 기반 유사도 계산
+     * - 가중 평균 피치값을 사용해 중심 주파수의 차이를 비교
      */
+    private fun calculateSpectralCentroidSimilarity(): Double {
+        val centroidOriginal = calculateSpectralCentroid(pitchListOriginal)
+        val centroidUser = calculateSpectralCentroid(pitchListUser)
+
+        val diff = abs(centroidOriginal - centroidUser)
+        val max = maxOf(centroidOriginal, centroidUser)
+        return if (max > 0) 1.0 - (diff / max) else 0.0
+    }
+
+    /**
+     * Spectral Rolloff 기반 유사도 계산
+     * - 상위 85% 에너지에 도달하는 인덱스를 기준으로 계산
+     */
+    private fun calculateSpectralRolloffSimilarity(): Double {
+        val rolloffOriginal = calculateSpectralRolloff(pitchListOriginal)
+        val rolloffUser = calculateSpectralRolloff(pitchListUser)
+
+        val diff = abs(rolloffOriginal - rolloffUser)
+        val max = maxOf(rolloffOriginal, rolloffUser)
+        return if (max > 0) 1.0 - (diff / max) else 0.0
+    }
+
+    // --- 내부 계산 메서드 ---
     private fun calculateRMS(data: List<Float>): Double {
         if (data.isEmpty()) return 0.0
-
-        val sumSquares = data.map { it * it }.sum().toDouble()
+        val sumSquares = data.sumOf { (it * it).toDouble() }
         return sqrt(sumSquares / data.size)
+    }
+
+    private fun calculateSpectralCentroid(data: List<Float>): Double {
+        if (data.isEmpty()) return 0.0
+        val weightedSum = data.indices.sumOf { i -> (i.toDouble() * data[i]) }
+        val total = data.sumOf { it.toDouble() }
+        return if (total > 0.0) weightedSum / total else 0.0
+    }
+
+    private fun calculateSpectralRolloff(data: List<Float>, threshold: Double = 0.85): Int {
+        if (data.isEmpty()) return 0
+        val totalEnergy = data.sumOf { it.toDouble() }
+        val thresholdEnergy = totalEnergy * threshold
+        var cumulativeEnergy = 0.0
+
+        for ((i, value) in data.withIndex()) {
+            cumulativeEnergy += value
+            if (cumulativeEnergy >= thresholdEnergy) {
+                return i
+            }
+        }
+        return data.size - 1
     }
 }
