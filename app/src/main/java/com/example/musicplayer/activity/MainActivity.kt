@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity() {
         startTime = System.currentTimeMillis()
 
         splashScreen.setKeepOnScreenCondition {
-            System.currentTimeMillis() - startTime < 2000
+            System.currentTimeMillis() - startTime < 500
         }
 
         super.onCreate(savedInstanceState)

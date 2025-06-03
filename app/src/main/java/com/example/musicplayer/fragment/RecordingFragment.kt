@@ -10,9 +10,11 @@ import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.example.musicplayer.data.MusicFile
 import com.example.musicplayer.databinding.FragmentRecordingBinding
+import com.example.musicplayer.viewModel.ScoreViewModel
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
@@ -21,6 +23,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class RecordingFragment : Fragment() {
+
+    private val scoreViewModel: ScoreViewModel by viewModels {
+        ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().application)
+    }
 
     private val viewModel: RecordingViewModel by viewModels()
 
@@ -123,6 +129,7 @@ class RecordingFragment : Fragment() {
 
         viewModel.score.observe(viewLifecycleOwner) { score ->
             Toast.makeText(requireContext(), "점수: $score 점", Toast.LENGTH_LONG).show()
+            scoreViewModel.saveScore(music.title,score)
         }
 
         viewModel.clearChartTrigger.observe(viewLifecycleOwner) {
