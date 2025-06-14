@@ -13,68 +13,62 @@ import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.core.graphics.drawable.toDrawable
 import com.example.musicplayer.R
+import java.lang.ref.WeakReference
 
-class ToastManager {
+class ToastManager private constructor() {
+    private var popupWindow: PopupWindow? = null
+    private var contextRef: WeakReference<Context>? = null
 
     companion object {
-        private var popupWindow: PopupWindow? = null
-        @SuppressLint("StaticFieldLeak")
-        private lateinit var context: Context
+        private var instance: ToastManager? = null
 
-        @SuppressLint("InflateParams")
-        fun show(message: Any) {
-            try {
-                context = ContextManager.mainContext ?: return
-                if (context is Activity) {
-                    if (!(context as Activity).isFinishing && !(context as Activity).isDestroyed) {
-                        val layout = LayoutInflater.from(context).inflate(R.layout.custom_toast, null)
-                        val text: TextView = layout.findViewById(R.id.toast_text)
+        fun getInstance(): ToastManager {
+            if (instance == null) {
+                instance = ToastManager()
+            }
+            return instance!!
+        }
+    }
 
-                        val messageText = when(message){
-                            is String -> message
-                            is Int -> context.getString(message)
-                            else -> ""
-                        }
-                        text.text = messageText
+    @SuppressLint("InflateParams")
+    fun show(message: Any) {
+        try {
+            val context = contextRef?.get() ?: ContextManager.mainContext ?: return
+            if (context is Activity) {
+                if (!context.isFinishing && !context.isDestroyed) {
+                    val layout = LayoutInflater.from(context).inflate(R.layout.custom_toast, null)
+                    val text: TextView = layout.findViewById(R.id.toast_text)
 
-                        popupWindow = PopupWindow(
-                            layout,
-                            ViewGroup.LayoutParams.WRAP_CONTENT,
-                            ViewGroup.LayoutParams.WRAP_CONTENT
-                        )
-                        popupWindow!!.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
-                        popupWindow!!.isOutsideTouchable = true
-                        popupWindow!!.showAtLocation(
-                            (context as Activity).window.decorView,
-                            Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL,
-                            0,
-                            150
-                        )
-
-                        val toastView = popupWindow!!.contentView
-                        toastView?.translationY = 500f
-                        toastView?.animate()
-                            ?.translationYBy(-500f)
-                            ?.withEndAction {
-                                Handler(Looper.getMainLooper()).postDelayed({
-                                    toastView.animate()
-                                        ?.translationY(500f)
-                                        ?.withEndAction { popupWindow!!.dismiss() }
-                                        ?.start()
-                                }, 2000)
-                            }
-                            ?.start()
+                    val messageText = when(message) {
+                        is String -> message
+                        is Int -> context.getString(message)
+                        else -> ""
                     }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
+                    text.text = messageText
 
-        fun closeToast() {
-            if (popupWindow != null && popupWindow!!.isShowing) {
-                popupWindow!!.dismiss()
+                    popupWindow?.dismiss()
+                    popupWindow = PopupWindow(
+                        layout,
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+                        isOutsideTouchable = true
+                        showAsDropDown(layout, Gravity.CENTER, 0, 0)
+                    }
+
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        popupWindow?.dismiss()
+                        popupWindow = null
+                    }, 2000)
+                }
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
+    }
+
+    fun setContext(context: Context) {
+        contextRef = WeakReference(context)
     }
 }

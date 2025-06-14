@@ -73,11 +73,15 @@ class RecordingFragment : Fragment() {
     private fun startElapsedTimer() {
         val startTime = SystemClock.elapsedRealtime()
         elapsedJob = lifecycleScope.launch {
-            while (true) {
-                val now = SystemClock.elapsedRealtime()
-                val elapsed = now - startTime
-                viewModel.elapsedTime.postValue(elapsed)
-                delay(100)
+            try {
+                while (true) {
+                    val now = SystemClock.elapsedRealtime()
+                    val elapsed = now - startTime
+                    viewModel.elapsedTime.postValue(elapsed)
+                    delay(100)
+                }
+            } catch (e: Exception) {
+                // 타이머가 취소되었을 때 발생하는 예외는 무시
             }
         }
     }
