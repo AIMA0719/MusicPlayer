@@ -16,7 +16,7 @@ import com.example.musicplayer.manager.FragmentMoveManager
 import com.example.musicplayer.data.MusicListIntent
 import com.example.musicplayer.databinding.FragmentMusicListBinding
 import com.example.musicplayer.factory.MusicListViewModelFactory
-import com.example.musicplayer.viewmodel.MusicListViewModel
+import com.example.musicplayer.viewModel.MusicListViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 

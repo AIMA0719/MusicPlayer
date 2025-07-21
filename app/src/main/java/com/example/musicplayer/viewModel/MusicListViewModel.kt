@@ -1,4 +1,4 @@
-package com.example.musicplayer.viewmodel
+package com.example.musicplayer.viewModel
 
 import android.app.Application
 import android.content.ContentUris

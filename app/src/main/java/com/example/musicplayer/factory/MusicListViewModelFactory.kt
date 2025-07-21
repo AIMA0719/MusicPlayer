@@ -3,7 +3,7 @@ package com.example.musicplayer.factory
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.musicplayer.viewmodel.MusicListViewModel
+import com.example.musicplayer.viewModel.MusicListViewModel
 
 class MusicListViewModelFactory(
     private val application: Application

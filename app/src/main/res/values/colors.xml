@@ -15,4 +15,6 @@
     <color name="clr_13b5ff">#13b5ff</color>
     <color name="clr_ffffff">#ffffff</color>
     <color name="clr_f39d4e">#f39d4e</color>
+    <color name="colorPrimary">#6200EE</color>
+    <color name="gray">#808080</color>
 </resources>

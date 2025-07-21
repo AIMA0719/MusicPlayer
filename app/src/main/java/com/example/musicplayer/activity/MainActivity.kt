@@ -14,7 +14,7 @@ import com.example.musicplayer.manager.ProgressDialogManager
 import com.example.musicplayer.manager.ScoreDialogManager
 import com.example.musicplayer.manager.ToastManager
 import com.example.musicplayer.databinding.MusicPlayerMainActivityBinding
-import com.example.musicplayer.viewmodel.MainActivityViewModel
+import com.example.musicplayer.viewModel.MainActivityViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -111,7 +111,7 @@ class MainActivity : AppCompatActivity() {
 
         // Toast 메시지 처리
         viewModel.toastMessage.observe(this) { message ->
-            ToastManager.show(message)
+            ToastManager.showToast(message)
         }
     }
 

@@ -51,6 +51,18 @@
                 android:value="" />
         </activity>
 
+        <activity
+            android:name=".activity.FavoriteActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".activity.HistoryActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".activity.SearchActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

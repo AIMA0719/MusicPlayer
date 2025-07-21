@@ -28,6 +28,17 @@ class ToastManager private constructor() {
             }
             return instance!!
         }
+        
+        @JvmStatic
+        fun showToast(message: Any) {
+            getInstance().show(message)
+        }
+        
+        @JvmStatic
+        fun closeToast() {
+            getInstance().popupWindow?.dismiss()
+            getInstance().popupWindow = null
+        }
     }
 
     @SuppressLint("InflateParams")
@@ -54,7 +65,7 @@ class ToastManager private constructor() {
                     ).apply {
                         setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
                         isOutsideTouchable = true
-                        showAsDropDown(layout, Gravity.CENTER, 0, 0)
+                        showAtLocation(context.findViewById(android.R.id.content), Gravity.CENTER, 0, 0)
                     }
 
                     Handler(Looper.getMainLooper()).postDelayed({
