@@ -80,7 +80,7 @@ class RecordingFragment : Fragment() {
                     viewModel.elapsedTime.postValue(elapsed)
                     delay(100)
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // 타이머가 취소되었을 때 발생하는 예외는 무시
             }
         }
