@@ -1,11 +1,21 @@
 package com.example.musicplayer.manager
 
 import android.content.Context
-import com.example.musicplayer.activity.MainActivity
+import java.lang.ref.WeakReference
 
 object ContextManager {
-    @JvmField
-    public var mainContext: Context? = null
-    @JvmField
-    public var mainActivity: MainActivity? = null
+    private var mainContextRef: WeakReference<Context>? = null
+    
+    fun setContext(context: Context) {
+        mainContextRef = WeakReference(context)
+    }
+    
+    fun getContext(): Context? {
+        return mainContextRef?.get()
+    }
+    
+    fun clearContext() {
+        mainContextRef?.clear()
+        mainContextRef = null
+    }
 }

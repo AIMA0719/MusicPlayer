@@ -81,9 +81,7 @@ class MainActivity : AppCompatActivity() {
                     if (viewModel.isDoubleBackToExit()) {
                         ToastManager.closeToast()
 
-                        finishAffinity() // 모든 액티비티 종료
-                        android.os.Process.killProcess(android.os.Process.myPid()) // 현재 프로세스 종료
-                        exitProcess(0) // 안전하게 JVM 종료
+                        finish()
                     } else {
                         viewModel.triggerDoubleBackToExit()
                     }
@@ -95,8 +93,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setBaseSetting() {
-        ContextManager.mainContext = this
-        ContextManager.mainActivity = this
+        ContextManager.setContext(this)
     }
 
     private fun hideActionBar() {
@@ -122,6 +119,7 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         ProgressDialogManager.dismiss()
         ScoreDialogManager.dismiss()
+        ContextManager.clearContext()
         scope.cancel()
         job.cancel()
     }

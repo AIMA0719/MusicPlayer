@@ -44,7 +44,7 @@ class ToastManager private constructor() {
     @SuppressLint("InflateParams")
     fun show(message: Any) {
         try {
-            val context = contextRef?.get() ?: ContextManager.mainContext ?: return
+            val context = contextRef?.get() ?: ContextManager.getContext() ?: return
             if (context is Activity) {
                 if (!context.isFinishing && !context.isDestroyed) {
                     val layout = LayoutInflater.from(context).inflate(R.layout.custom_toast, null)

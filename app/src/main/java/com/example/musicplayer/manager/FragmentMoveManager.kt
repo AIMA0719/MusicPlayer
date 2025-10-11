@@ -15,7 +15,11 @@ class FragmentMoveManager private constructor() {
     }
 
     private fun getFragmentManager(): FragmentManager? {
-        return ContextManager.mainActivity?.supportFragmentManager
+        return ContextManager.getContext()?.let { context ->
+            if (context is androidx.appcompat.app.AppCompatActivity) {
+                context.supportFragmentManager
+            } else null
+        }
     }
 
     // Fragment를 추가하고 스택에 push
@@ -27,7 +31,7 @@ class FragmentMoveManager private constructor() {
             return // 이전과 동일한 프래그먼트라면 추가하지 않음
         }
 
-        if (fragmentManager != null && ContextManager.mainActivity?.findViewById<View>(R.id.fl_main_layout) != null) {
+        if (fragmentManager != null && (ContextManager.getContext() as? androidx.appcompat.app.AppCompatActivity)?.findViewById<View>(R.id.fl_main_layout) != null) {
             val transaction = fragmentManager.beginTransaction()
 
             // 슬라이드 애니메이션 설정
@@ -43,11 +47,15 @@ class FragmentMoveManager private constructor() {
 
             transaction.add(R.id.fl_main_layout, fragment)
             transaction.addToBackStack(null)
-            transaction.commitAllowingStateLoss()
+            if (!fragmentManager.isStateSaved) {
+                transaction.commit()
+            } else {
+                transaction.commitAllowingStateLoss()
+            }
 
             fragmentStack.push(fragment) // 스택에 추가
 
-            ContextManager.mainActivity?.viewModel?._currentFragment?.value = fragment.javaClass.simpleName
+            (ContextManager.getContext() as? com.example.musicplayer.activity.MainActivity)?.viewModel?._currentFragment?.value = fragment.javaClass.simpleName
         }
 
         ToastManager.closeToast()
@@ -66,16 +74,22 @@ class FragmentMoveManager private constructor() {
                 R.anim.slide_out_right // 뒤로 가기 시 기존 Fragment가 나가는 애니메이션
             )
 
-            transaction.remove(fragmentStack.pop()) // 스택에서 제거한 Fragment 삭제
-            transaction.commitAllowingStateLoss()
-
+            val removedFragment = fragmentStack.pop()
+            transaction.remove(removedFragment)
+            
             if (fragmentStack.isNotEmpty()) {
-                transaction.show(fragmentStack.peek()) // 이전 Fragment 다시 표시
+                transaction.show(fragmentStack.peek())
+            }
+            
+            if (!fragmentManager.isStateSaved) {
+                transaction.commit()
+            } else {
+                transaction.commitAllowingStateLoss()
             }
 
             fragmentManager.popBackStack()
 
-            ContextManager.mainActivity?.viewModel?._currentFragment?.value = getCurrentFragment() ?: "MainFragment"
+            (ContextManager.getContext() as? com.example.musicplayer.activity.MainActivity)?.viewModel?._currentFragment?.value = getCurrentFragment() ?: "MainFragment"
         }
 
         ToastManager.closeToast()

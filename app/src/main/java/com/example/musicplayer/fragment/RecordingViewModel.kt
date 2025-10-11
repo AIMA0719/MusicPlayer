@@ -1,7 +1,6 @@
 package com.example.musicplayer.fragment
 
-import android.os.Handler
-import android.os.Looper
+import kotlinx.coroutines.delay
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import be.tarsos.dsp.AudioDispatcher
@@ -32,9 +31,7 @@ class RecordingViewModel : ViewModel() {
     val clearChartTrigger = MutableLiveData<Unit>()
 
     private var dispatcher: AudioDispatcher? = null
-    private var pitchThread: Thread? = null
-    private var timerHandler: Handler? = null
-    private var timerRunnable: Runnable? = null
+    private var timerJob: kotlinx.coroutines.Job? = null
 
     private var currentPitchArray: FloatArray = floatArrayOf()
     private var startTimeMillis: Long = 0
@@ -65,15 +62,13 @@ class RecordingViewModel : ViewModel() {
     }
 
     private fun setupTimer() {
-        timerHandler = Handler(Looper.getMainLooper())
-        timerRunnable = object : Runnable {
-            override fun run() {
+        timerJob = viewModelScope.launch {
+            while (isRecording.value == true) {
                 val ms = (System.currentTimeMillis() - startTimeMillis)
                 elapsedTime.postValue(ms)
-                timerHandler?.postDelayed(this, 100)
+                delay(100)
             }
         }
-        timerHandler?.postDelayed(timerRunnable!!, 100)
     }
 
     private fun setupAudioDispatcher() {
@@ -112,8 +107,13 @@ class RecordingViewModel : ViewModel() {
         }
 
         dispatcher?.addAudioProcessor(pitchProcessor)
-        pitchThread = Thread(dispatcher, "Pitch Thread")
-        pitchThread?.start()
+        audioScope.launch {
+            try {
+                dispatcher?.run()
+            } catch (e: Exception) {
+                LogManager.e("Audio dispatcher error: ${e.message}")
+            }
+        }
     }
 
     fun stopRecording() {
@@ -130,11 +130,9 @@ class RecordingViewModel : ViewModel() {
     private fun cleanupResources() {
         dispatcher?.stop()
         dispatcher = null
-        pitchThread = null
 
-        timerHandler?.removeCallbacks(timerRunnable!!)
-        timerHandler = null
-        timerRunnable = null
+        timerJob?.cancel()
+        timerJob = null
 
         elapsedTime.postValue(0)
         currentPitch.postValue(0f)

@@ -75,7 +75,13 @@ class MusicListFragment : Fragment() {
     }
 
     override fun onDestroyView() {
-        mediaPlayer?.release()
+        mediaPlayer?.let { player ->
+            if (player.isPlaying) {
+                player.stop()
+            }
+            player.release()
+        }
+        mediaPlayer = null
         super.onDestroyView()
     }
 
