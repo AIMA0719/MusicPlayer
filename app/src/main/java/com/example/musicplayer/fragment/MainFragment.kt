@@ -26,8 +26,16 @@ class MainFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        view.findViewById<Button>(R.id.btn_goto_recording).setOnClickListener {
+            FragmentMoveManager.instance.pushFragment(RecordingOnlyFragment.newInstance())
+        }
+
         view.findViewById<Button>(R.id.tv_mainFragment_score).setOnClickListener {
             FragmentMoveManager.instance.pushFragment(MusicListFragment.newInstance())
+        }
+
+        view.findViewById<Button>(R.id.btn_goto_download).setOnClickListener {
+            FragmentMoveManager.instance.pushFragment(MusicDownloadFragment.newInstance())
         }
     }
 

@@ -67,6 +67,15 @@ class MusicListFragment : Fragment() {
                     }
 
                     adapter.submitList(state.musicFiles)
+                    
+                    // 빈 리스트 처리
+                    if (state.musicFiles.isEmpty() && !state.isAnalyzing) {
+                        binding.tvEmptyList.visibility = View.VISIBLE
+                        binding.list.visibility = View.GONE
+                    } else {
+                        binding.tvEmptyList.visibility = View.GONE
+                        binding.list.visibility = View.VISIBLE
+                    }
                 }
             }
         }

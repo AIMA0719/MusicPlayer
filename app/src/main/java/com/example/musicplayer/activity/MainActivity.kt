@@ -1,6 +1,7 @@
 package com.example.musicplayer.activity
 
 import android.os.Bundle
+import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -52,6 +53,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root) // 화면 세팅
         setBaseSetting() // 메인 context 및 메인 activity 캐싱
         hideActionBar() // 액션 바 숨기기
+        setupBackButton() // 뒤로가기 버튼 설정
         observeViewModel() // 화면 이동 및 토스트 메시지 처리
         setOnBackPressed() // 페이지 별 뒤로 가기 처리
         setMainFragment() // 메인 화면 설정
@@ -65,9 +67,19 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    private fun setupBackButton() {
+        // 뒤로가기 버튼 클릭 리스너 설정
+        binding.ivBackButton.setOnClickListener {
+            if (!viewModel.isFragmentStackEmpty()) {
+                FragmentMoveManager.instance.popFragment()
+            }
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         permissionManager.checkAndRequestPermissions()
+        updateBackButtonVisibility()
     }
 
     private fun setMainFragment() {
@@ -102,13 +114,30 @@ class MainActivity : AppCompatActivity() {
 
     private fun observeViewModel() {
         // 현재 Fragment 상태 변경 시 UI 업데이트
-        /*viewModel.currentFragment.observe(this) { fragmentTag ->
+        viewModel.currentFragment.observe(this) { fragmentTag ->
             binding.tvStatusBarTitle.text = fragmentTag
-        }*/
+            updateBackButtonVisibility()
+        }
 
         // Toast 메시지 처리
         viewModel.toastMessage.observe(this) { message ->
             ToastManager.showToast(message)
+        }
+    }
+
+    /**
+     * Fragment 상태에 따라 뒤로가기 버튼 표시/숨김
+     * MainFragment일 때는 숨기고, 나머지일 때는 표시
+     */
+    private fun updateBackButtonVisibility() {
+        val currentFragmentName = FragmentMoveManager.instance.getCurrentFragment()
+
+        if (currentFragmentName == null || currentFragmentName == "MainFragment") {
+            // MainFragment이거나 Fragment가 없을 때는 뒤로가기 버튼 숨김
+            binding.ivBackButton.visibility = View.GONE
+        } else {
+            // 다른 Fragment일 때는 뒤로가기 버튼 표시
+            binding.ivBackButton.visibility = View.VISIBLE
         }
     }
 
