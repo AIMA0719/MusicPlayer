@@ -1,68 +1,64 @@
 package com.example.musicplayer.manager
 
-import android.util.Log
-import java.io.PrintWriter
-import java.io.StringWriter
+import timber.log.Timber
 
+/**
+ * ## Log Manager
+ * Timber 기반 로깅 매니저
+ *
+ * 기존 코드와의 호환성을 유지하면서 Timber의 장점을 활용합니다.
+ * - Debug 빌드: Timber.DebugTree를 통해 자동 태깅 및 소스 위치 표시
+ * - Release 빌드: CrashlyticsTree 등 커스텀 트리 사용 가능
+ */
 object LogManager {
-    private const val TAG = "MusicPlayer"
-    private const val MAX_LENGTH = 4000
 
-    private enum class LogLevel(val logFunction: (String, String) -> Int) {
-        ERROR(Log::e),
-        WARN(Log::w),
-        INFO(Log::i),
-        DEBUG(Log::d),
-        VERBOSE(Log::v)
+    /**
+     * Error 레벨 로그
+     */
+    fun <T> e(message: T) {
+        Timber.e(message.toString())
     }
 
-    private fun log(level: LogLevel, message: String) {
-        if (message.length > MAX_LENGTH) {
-            level.logFunction(TAG, buildLogMsg(message.substring(0, MAX_LENGTH)))
-            log(level, message.substring(MAX_LENGTH))
-        } else {
-            level.logFunction(TAG, buildLogMsg(message))
-        }
+    /**
+     * Error 레벨 로그 (예외 포함)
+     */
+    fun <T> e(throwable: Throwable, message: T) {
+        Timber.e(throwable, message.toString())
     }
 
-    fun <T> e(message: T) = log(LogLevel.ERROR, message.toString())
-    fun <T> w(message: T) = log(LogLevel.WARN, message.toString())
-    fun <T> i(message: T) = log(LogLevel.INFO, message.toString())
-    fun <T> d(message: T) = log(LogLevel.DEBUG, message.toString())
-    fun <T> v(message: T) = log(LogLevel.VERBOSE, message.toString())
+    /**
+     * Warning 레벨 로그
+     */
+    fun <T> w(message: T) {
+        Timber.w(message.toString())
+    }
 
-    private fun buildLogMsg(message: String): String {
-        val ste = Thread.currentThread().stackTrace[4]
-        val sb = StringBuilder()
+    /**
+     * Info 레벨 로그
+     */
+    fun <T> i(message: T) {
+        Timber.i(message.toString())
+    }
 
-        try {
-            sb.append("[")
-                .append(ste.methodName)
-                .append("()")
-                .append("]")
-                .append(" :: ")
-                .append(message)
-                .append(" (")
-                .append(ste.fileName)
-                .append(":")
-                .append(ste.lineNumber)
-                .append(")")
-        } catch (e: Exception) {
-            val writer = StringWriter()
-            e.printStackTrace(PrintWriter(writer))
+    /**
+     * Debug 레벨 로그
+     */
+    fun <T> d(message: T) {
+        Timber.d(message.toString())
+    }
 
-            sb.append("[")
-                .append(ste.methodName)
-                .append("()")
-                .append("]")
-                .append(" :: ")
-                .append(" (")
-                .append(ste.fileName)
-                .append(":")
-                .append(ste.lineNumber)
-                .append(")")
-        }
+    /**
+     * Verbose 레벨 로그
+     */
+    fun <T> v(message: T) {
+        Timber.v(message.toString())
+    }
 
-        return sb.toString()
+    /**
+     * 특정 태그로 로그 출력
+     */
+    fun tag(tag: String): Timber.Tree {
+        return Timber.tag(tag)
     }
 }
+

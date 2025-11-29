@@ -21,7 +21,8 @@ class MainActivityViewModel : ViewModel() {
     private var doubleBackToExit = false
 
     fun isFragmentStackEmpty(): Boolean {
-        return FragmentMoveManager.instance.getCurrentFragment().equals(MainFragment::class.java.simpleName)
+        val currentFragment = FragmentMoveManager.instance.getCurrentFragment()
+        return currentFragment == null || currentFragment == MainFragment::class.java.simpleName
     }
 
     fun isDoubleBackToExit(): Boolean {
@@ -32,7 +33,7 @@ class MainActivityViewModel : ViewModel() {
         doubleBackToExit = true
         _toastMessage.value = "앱을 종료하려면 다시 한 번 눌러 주세요"
         CoroutineScope(Dispatchers.Main).launch {
-            delay(3000L)
+            delay(2000L)
             doubleBackToExit = false
         }
     }

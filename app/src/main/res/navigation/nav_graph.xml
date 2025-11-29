@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/navigation_home">
+
+    <!-- 홈 화면 -->
+    <fragment
+        android:id="@+id/navigation_home"
+        android:name="com.example.musicplayer.fragment.MainFragment"
+        android:label="홈"
+        tools:layout="@layout/fragment_main" />
+
+    <!-- 검색/다운로드 화면 -->
+    <fragment
+        android:id="@+id/navigation_search"
+        android:name="com.example.musicplayer.fragment.MusicDownloadFragment"
+        android:label="검색"
+        tools:layout="@layout/fragment_music_download" />
+
+    <!-- 녹음 화면 -->
+    <fragment
+        android:id="@+id/navigation_record"
+        android:name="com.example.musicplayer.fragment.RecordingOnlyFragment"
+        android:label="녹음"
+        tools:layout="@layout/fragment_recording_only" />
+
+    <!-- 음악 리스트 화면 -->
+    <fragment
+        android:id="@+id/navigation_music_list"
+        android:name="com.example.musicplayer.fragment.MusicListFragment"
+        android:label="음악"
+        tools:layout="@layout/fragment_music_list">
+
+        <action
+            android:id="@+id/action_musicList_to_recording"
+            app:destination="@id/recordingFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+
+    <!-- 피치 매칭 녹음 화면 (MusicListFragment에서 진입) -->
+    <fragment
+        android:id="@+id/recordingFragment"
+        android:name="com.example.musicplayer.fragment.RecordingFragment"
+        android:label="피치 매칭 녹음"
+        tools:layout="@layout/fragment_recording">
+
+        <argument
+            android:name="music"
+            app:argType="com.example.musicplayer.data.MusicFile" />
+
+        <argument
+            android:name="originalPitch"
+            app:argType="float[]" />
+
+        <argument
+            android:name="durationMillis"
+            app:argType="long" />
+    </fragment>
+
+</navigation>

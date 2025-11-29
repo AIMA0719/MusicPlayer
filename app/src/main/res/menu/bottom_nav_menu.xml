@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navigation_home"
+        android:icon="@drawable/ic_mic"
+        android:title="홈" />
+
+    <item
+        android:id="@+id/navigation_search"
+        android:icon="@drawable/ic_search"
+        android:title="검색" />
+
+    <item
+        android:id="@+id/navigation_record"
+        android:icon="@drawable/ic_microphone"
+        android:title="녹음" />
+
+    <item
+        android:id="@+id/navigation_music_list"
+        android:icon="@drawable/ic_favorite"
+        android:title="음악" />
+</menu>

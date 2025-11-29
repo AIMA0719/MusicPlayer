@@ -6,7 +6,8 @@ data class MusicListState(
     val isLoading: Boolean = false,
     val isAnalyzing: Boolean = false,
     val originalPitch: List<Float>? = null,
-    val analysisProgress: Int = 0 // 0~100
+    val analysisProgress: Int = 0, // 0~100
+    val hasNavigated: Boolean = false // 페이지 이동 여부
 )
 
 

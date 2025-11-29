@@ -2,6 +2,7 @@ package com.example.musicplayer.fragment
 
 import android.Manifest
 import android.content.Intent
+import android.media.MediaScannerConnection
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -65,24 +66,26 @@ class RecordingOnlyFragment : Fragment() {
     private fun setupViews() {
         binding.btnRecord.setOnClickListener {
             if (audioRecorderManager.isRecording.value) {
+                // 녹음 중이면 녹음 완료 (정지)
                 stopRecording()
             } else {
+                // 녹음 시작
                 checkPermissionAndStartRecording()
             }
         }
 
         binding.btnPause.setOnClickListener {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                audioRecorderManager.pauseRecording()
-                binding.btnPause.text = "재개"
-                binding.tvStatus.text = "녹음 일시정지"
+                if (audioRecorderManager.isPaused.value) {
+                    // 일시정지 중이면 재개
+                    audioRecorderManager.resumeRecording()
+                } else {
+                    // 녹음 중이면 일시정지
+                    audioRecorderManager.pauseRecording()
+                }
             } else {
                 ToastManager.showToast("Android 7.0 이상에서 지원됩니다.")
             }
-        }
-
-        binding.btnStop.setOnClickListener {
-            stopRecording()
         }
 
         binding.btnShare.setOnClickListener {
@@ -96,6 +99,12 @@ class RecordingOnlyFragment : Fragment() {
                 launch {
                     audioRecorderManager.isRecording.collectLatest { isRecording ->
                         updateRecordingUI(isRecording)
+                    }
+                }
+
+                launch {
+                    audioRecorderManager.isPaused.collectLatest { isPaused ->
+                        updatePauseUI(isPaused)
                     }
                 }
 
@@ -120,16 +129,15 @@ class RecordingOnlyFragment : Fragment() {
     private fun updateRecordingUI(isRecording: Boolean) {
         if (isRecording) {
             // 녹음 중
-            binding.btnRecord.text = "녹음\n중지"
+            binding.btnRecord.text = "녹음\n완료"
             binding.btnRecord.setBackgroundColor(
                 ContextCompat.getColor(requireContext(), android.R.color.holo_red_dark)
             )
             binding.tvStatus.text = "녹음 중..."
             binding.viewRecordingIndicator.isVisible = true
             binding.btnPause.isVisible = true
-            binding.btnStop.isVisible = true
             binding.layoutSavedFile.isVisible = false
-            
+
             // 마이크 아이콘을 빨간색으로 변경
             binding.ivMicrophone.setColorFilter(
                 ContextCompat.getColor(requireContext(), android.R.color.holo_red_dark)
@@ -143,13 +151,38 @@ class RecordingOnlyFragment : Fragment() {
             binding.tvStatus.text = "녹음 대기 중"
             binding.viewRecordingIndicator.isVisible = false
             binding.btnPause.isVisible = false
-            binding.btnStop.isVisible = false
-            
+
             // 마이크 아이콘을 원래 색상으로 복원
             binding.ivMicrophone.clearColorFilter()
-            
+
             // 일시정지 버튼 텍스트 초기화
             binding.btnPause.text = "일시\n정지"
+        }
+    }
+
+    private fun updatePauseUI(isPaused: Boolean) {
+        if (isPaused) {
+            // 일시정지 중
+            binding.btnPause.text = "재개"
+            binding.tvStatus.text = "녹음 일시정지"
+            binding.viewRecordingIndicator.isVisible = false
+
+            // 마이크 아이콘을 노란색으로 변경
+            binding.ivMicrophone.setColorFilter(
+                ContextCompat.getColor(requireContext(), android.R.color.holo_orange_dark)
+            )
+        } else {
+            // 녹음 중 또는 정지
+            if (audioRecorderManager.isRecording.value) {
+                binding.btnPause.text = "일시\n정지"
+                binding.tvStatus.text = "녹음 중..."
+                binding.viewRecordingIndicator.isVisible = true
+
+                // 마이크 아이콘을 빨간색으로 변경
+                binding.ivMicrophone.setColorFilter(
+                    ContextCompat.getColor(requireContext(), android.R.color.holo_red_dark)
+                )
+            }
         }
     }
 
@@ -190,12 +223,33 @@ class RecordingOnlyFragment : Fragment() {
                 showSavedFileInfo(savedFilePath)
                 LogManager.i("Recording saved: $savedFilePath")
                 ToastManager.showToast("녹음이 저장되었습니다.")
+
+                // MediaStore에 파일 등록 (선택사항, 시스템 미디어 스캔)
+                scanMediaFile(savedFilePath)
             } else {
                 ToastManager.showToast("녹음 저장에 실패했습니다.")
             }
         } catch (e: Exception) {
             LogManager.e("Failed to stop recording: ${e.message}")
             ToastManager.showToast("녹음 정지 실패: ${e.message}")
+        }
+    }
+
+    /**
+     * MediaStore에 파일 등록 (미디어 스캔)
+     * 이렇게 하면 시스템 갤러리나 뮤직 앱에서도 파일을 볼 수 있습니다.
+     */
+    private fun scanMediaFile(filePath: String) {
+        try {
+            MediaScannerConnection.scanFile(
+                requireContext(),
+                arrayOf(filePath),
+                arrayOf("audio/*")
+            ) { path, uri ->
+                LogManager.i("Media scan completed: $path -> $uri")
+            }
+        } catch (e: Exception) {
+            LogManager.e("Failed to scan media file: ${e.message}")
         }
     }
 

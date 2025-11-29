@@ -5,14 +5,14 @@ import com.example.musicplayer.manager.LogManager
 import com.example.musicplayer.manager.ToastManager
 
 object ErrorHandler {
-    fun handleException(context: Context, exception: Throwable) {
+    fun handleException(exception: Throwable) {
         when (exception) {
-            is AppException -> handleAppException(context, exception)
-            else -> handleGenericException(context, exception)
+            is AppException -> handleAppException(exception)
+            else -> handleGenericException(exception)
         }
     }
 
-    private fun handleAppException(context: Context, exception: AppException) {
+    private fun handleAppException(exception: AppException) {
         when (exception) {
             is AppException.AudioRecordingException -> {
                 LogManager.e("Audio recording error: ${exception.message}")
@@ -33,7 +33,7 @@ object ErrorHandler {
         }
     }
 
-    private fun handleGenericException(context: Context, exception: Throwable) {
+    private fun handleGenericException(exception: Throwable) {
         LogManager.e("Unexpected error: ${exception.message}")
         ToastManager.showToast("예기치 않은 오류가 발생했습니다: ${exception.message}")
     }

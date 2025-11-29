@@ -24,39 +24,62 @@ import com.example.musicplayer.manager.FileDownloadManager
 import com.example.musicplayer.manager.FragmentMoveManager
 import com.example.musicplayer.manager.LogManager
 import com.example.musicplayer.manager.ToastManager
-import com.example.musicplayer.server.JamendoApiService
-import com.example.musicplayer.server.RetrofitClient
-import com.example.musicplayer.server.model.toMusicDownloadItem
+import com.example.musicplayer.manager.GoogleAuthManager
+import com.example.musicplayer.manager.IOSStyleProgressDialog
+import com.example.musicplayer.repository.YouTubeRepository
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MusicDownloadFragment : Fragment() {
 
     private var _binding: FragmentMusicDownloadBinding? = null
     private val binding get() = _binding!!
 
+    @Inject
+    lateinit var youTubeRepository: YouTubeRepository
+
     private lateinit var downloadAdapter: MusicDownloadAdapter
     private lateinit var downloadedAdapter: DownloadedFileAdapter
     private lateinit var downloadManager: FileDownloadManager
-    private lateinit var jamendoApi: JamendoApiService
+    private lateinit var progressDialog: IOSStyleProgressDialog
 
-    private var currentTab = Tab.DOWNLOAD
     private var mediaPlayer: MediaPlayer? = null
+    private var currentDownloadId: String? = null
     private var isLoading = false
+    private var currentTab = Tab.DOWNLOAD
+
+    private enum class Tab {
+        DOWNLOAD, DOWNLOADED
+    }
 
     private val storagePermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        if (!isGranted) {
-            ToastManager.showToast("저장소 권한이 필요합니다.")
+        if (isGranted) {
+            ToastManager.showToast("저장소 권한이 허용되었습니다")
+        } else {
+            ToastManager.showToast("저장소 권한이 필요합니다")
         }
     }
 
-    enum class Tab {
-        DOWNLOAD, DOWNLOADED
+    private val signInLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        val account = GoogleAuthManager.handleSignInResult(task)
+        if (account != null) {
+            ToastManager.showToast("로그인 성공: ${account.email}")
+            loadMusicFromApi()
+        } else {
+            ToastManager.showToast("로그인이 필요합니다")
+        }
     }
 
     override fun onCreateView(
@@ -71,26 +94,15 @@ class MusicDownloadFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupDownloadManager()
-        setupApiService()
+        downloadManager = FileDownloadManager()
+        progressDialog = IOSStyleProgressDialog(requireContext())
+
         setupAdapters()
         setupViews()
-
-        // 초기 탭 설정
-        switchTab(Tab.DOWNLOAD)
-
-        // API에서 음악 목록 로드
-        loadMusicFromApi()
         observeDownloadProgress()
         checkStoragePermission()
-    }
 
-    private fun setupDownloadManager() {
-        downloadManager = FileDownloadManager()
-    }
-
-    private fun setupApiService() {
-        jamendoApi = RetrofitClient.createService()
+        loadMusicFromApi()
     }
 
     private fun setupAdapters() {
@@ -125,36 +137,25 @@ class MusicDownloadFragment : Fragment() {
 
         binding.btnTabDownloaded.setOnClickListener {
             switchTab(Tab.DOWNLOADED)
-            loadDownloadedFiles()
         }
 
         binding.btnCancelDownload.setOnClickListener {
-            // 현재 다운로드 중인 것이 있다면 취소
-            downloadManager.clearCompletedDownloads()
+            currentDownloadId?.let { downloadManager.cancelDownload(it) }
             binding.layoutDownloadProgress.isVisible = false
         }
     }
 
     private fun switchTab(tab: Tab) {
         currentTab = tab
-        
+
         when (tab) {
             Tab.DOWNLOAD -> {
-                // 탭 버튼 색상 변경
-                binding.btnTabDownload.apply {
-                    setBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.black))
-                    setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white))
-                }
-                binding.btnTabDownloaded.apply {
-                    setBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.white))
-                    setTextColor(ContextCompat.getColor(requireContext(), android.R.color.black))
-                }
-                
-                // 리스트 표시/숨김
+                binding.btnTabDownload.setBackgroundResource(android.R.drawable.btn_default)
+                binding.btnTabDownloaded.setBackgroundResource(android.R.drawable.btn_default)
                 binding.rvDownloadList.isVisible = true
                 binding.rvDownloadedList.isVisible = false
-                
-                // 다운로드 가능한 음악 리스트 확인
+
+                // 다운로드 탭의 빈 메시지 업데이트
                 val downloadList = downloadAdapter.currentList
                 binding.tvEmptyMessage.apply {
                     text = "다운로드 가능한 음악이 없습니다"
@@ -162,137 +163,91 @@ class MusicDownloadFragment : Fragment() {
                 }
             }
             Tab.DOWNLOADED -> {
-                // 탭 버튼 색상 변경
-                binding.btnTabDownload.apply {
-                    setBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.white))
-                    setTextColor(ContextCompat.getColor(requireContext(), android.R.color.black))
-                }
-                binding.btnTabDownloaded.apply {
-                    setBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.black))
-                    setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white))
-                }
-                
-                // 리스트 표시/숨김
+                binding.btnTabDownload.setBackgroundResource(android.R.drawable.btn_default)
+                binding.btnTabDownloaded.setBackgroundResource(android.R.drawable.btn_default)
                 binding.rvDownloadList.isVisible = false
                 binding.rvDownloadedList.isVisible = true
-                
-                // 다운로드된 파일 리스트 확인
-                val downloadedFiles = downloadedAdapter.currentList
-                binding.tvEmptyMessage.apply {
-                    text = "다운로드된 파일이 없습니다"
-                    isVisible = downloadedFiles.isEmpty()
-                }
+
+                // 다운로드됨 탭으로 전환 시 파일 로드
+                loadDownloadedFiles()
             }
         }
     }
 
-    /**
-     * Jamendo API에서 인기 음악 목록 로드
-     */
     private fun loadMusicFromApi() {
         if (isLoading) return
-
         isLoading = true
-        binding.tvEmptyMessage.apply {
-            text = "음악 목록을 불러오는 중..."
-            isVisible = true
-        }
 
         viewLifecycleOwner.lifecycleScope.launch {
+            progressDialog.show("음악 목록 로딩 중...")
             try {
-                val response = withContext(Dispatchers.IO) {
-                    jamendoApi.getTracks(
-                        limit = 30,
-                        order = "popularity_week"
-                    )
+                // Google 계정 확인
+                val account = GoogleAuthManager.getLastSignedInAccount(requireContext())
+                if (account == null) {
+                    progressDialog.dismiss()
+                    // 로그인 필요
+                    val signInIntent = GoogleAuthManager.getSignInIntent()
+                    signInLauncher.launch(signInIntent)
+                    return@launch
                 }
 
-                if (response.isSuccessful) {
-                    val tracksResponse = response.body()
-                    if (tracksResponse != null && tracksResponse.headers.status == "success") {
-                        val musicList = tracksResponse.results.map { it.toMusicDownloadItem() }
-                        downloadAdapter.submitList(musicList)
+                // YouTube API에서 음악 검색
+                val musicList = withContext(Dispatchers.IO) {
+                    try {
+                        val response = youTubeRepository.searchVideos("노래방 인기곡")
+                        if (response.isSuccessful && response.body() != null) {
+                            val jsonResponse = response.body()!!
+                            val items = jsonResponse.getAsJsonArray("items")
 
-                        // 현재 탭이 DOWNLOAD일 때만 빈 메시지 업데이트
-                        if (currentTab == Tab.DOWNLOAD) {
-                            binding.tvEmptyMessage.apply {
-                                text = "다운로드 가능한 음악이 없습니다"
-                                isVisible = musicList.isEmpty()
-                            }
+                            items?.mapNotNull { itemElement ->
+                                try {
+                                    val item = itemElement.asJsonObject
+                                    val snippet = item.getAsJsonObject("snippet")
+                                    val videoId = item.getAsJsonObject("id")?.get("videoId")?.asString
+
+                                    if (videoId != null) {
+                                        val thumbnailUrl = snippet.getAsJsonObject("thumbnails")
+                                            ?.getAsJsonObject("medium")
+                                            ?.get("url")?.asString ?: ""
+
+                                        MusicDownloadItem(
+                                            id = videoId,
+                                            title = snippet.get("title").asString,
+                                            artist = snippet.get("channelTitle").asString,
+                                            url = "https://www.youtube.com/watch?v=$videoId",
+                                            duration = "N/A",
+                                            size = "N/A",
+                                            genre = "YouTube",
+                                            thumbnailUrl = thumbnailUrl,
+                                            imageUrl = if (thumbnailUrl.isEmpty()) null else thumbnailUrl
+                                        )
+                                    } else null
+                                } catch (e: Exception) {
+                                    LogManager.e("Failed to parse item: ${e.message}")
+                                    null
+                                }
+                            } ?: emptyList()
+                        } else {
+                            LogManager.e("YouTube API failed: ${response.code()}")
+                            emptyList()
                         }
-
-                        LogManager.i("Loaded ${musicList.size} tracks from Jamendo API")
-                    } else {
-                        showApiError("API 응답 오류: ${tracksResponse?.headers?.errorMessage}")
+                    } catch (e: Exception) {
+                        LogManager.e("YouTube API error: ${e.message}")
+                        emptyList()
                     }
-                } else {
-                    showApiError("서버 오류: ${response.code()}")
                 }
+
+                downloadAdapter.submitList(musicList)
+                binding.tvEmptyMessage.isVisible = musicList.isEmpty()
+                progressDialog.dismiss()
+                isLoading = false
             } catch (e: Exception) {
                 LogManager.e("Failed to load music from API: ${e.message}")
-                showApiError("음악 목록을 불러오지 못했습니다: ${e.message}")
-            } finally {
+                ToastManager.showToast("음악 목록 로드 실패: ${e.message}")
+                progressDialog.dismiss()
                 isLoading = false
             }
         }
-    }
-
-    /**
-     * 특정 장르의 음악 로드
-     */
-    private fun loadMusicByGenre(genre: String) {
-        if (isLoading) return
-
-        isLoading = true
-        binding.tvEmptyMessage.apply {
-            text = "음악 목록을 불러오는 중..."
-            isVisible = true
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val response = withContext(Dispatchers.IO) {
-                    jamendoApi.getTracksByGenre(
-                        tags = genre,
-                        limit = 30
-                    )
-                }
-
-                if (response.isSuccessful) {
-                    val tracksResponse = response.body()
-                    if (tracksResponse != null && tracksResponse.headers.status == "success") {
-                        val musicList = tracksResponse.results.map { it.toMusicDownloadItem() }
-                        downloadAdapter.submitList(musicList)
-
-                        if (currentTab == Tab.DOWNLOAD) {
-                            binding.tvEmptyMessage.apply {
-                                text = "다운로드 가능한 음악이 없습니다"
-                                isVisible = musicList.isEmpty()
-                            }
-                        }
-
-                        LogManager.i("Loaded ${musicList.size} tracks for genre: $genre")
-                    } else {
-                        showApiError("API 응답 오류: ${tracksResponse?.headers?.errorMessage}")
-                    }
-                } else {
-                    showApiError("서버 오류: ${response.code()}")
-                }
-            } catch (e: Exception) {
-                LogManager.e("Failed to load music by genre: ${e.message}")
-                showApiError("음악 목록을 불러오지 못했습니다: ${e.message}")
-            } finally {
-                isLoading = false
-            }
-        }
-    }
-
-    private fun showApiError(message: String) {
-        binding.tvEmptyMessage.apply {
-            text = message
-            isVisible = true
-        }
-        ToastManager.showToast(message)
     }
 
     private fun loadDownloadedFiles() {
@@ -309,18 +264,24 @@ class MusicDownloadFragment : Fragment() {
     }
 
     private fun startDownload(musicItem: MusicDownloadItem) {
+        if (musicItem.genre == "YouTube") {
+            ToastManager.showToast("YouTube 다운로드는 지원되지 않습니다 (API 제한)")
+            return
+        }
+
         val fileName = "${musicItem.title.replace(" ", "_")}_${musicItem.artist.replace(" ", "_")}.mp3"
-        
+
+        currentDownloadId = musicItem.id
         binding.layoutDownloadProgress.isVisible = true
         binding.tvDownloadFile.text = fileName
-        
+
         downloadManager.downloadFile(
             context = requireContext(),
             downloadId = musicItem.id,
             url = musicItem.url,
             fileName = fileName
         )
-        
+
         ToastManager.showToast("다운로드를 시작합니다")
     }
 
@@ -407,6 +368,9 @@ class MusicDownloadFragment : Fragment() {
         mediaPlayer?.release()
         mediaPlayer = null
         downloadManager.release()
+        if (progressDialog.isShowing()) {
+            progressDialog.dismiss()
+        }
         _binding = null
     }
 

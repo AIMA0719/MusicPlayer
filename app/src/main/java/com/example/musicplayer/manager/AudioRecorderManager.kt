@@ -27,12 +27,18 @@ class AudioRecorderManager {
     
     private val _isRecording = MutableStateFlow(false)
     val isRecording: StateFlow<Boolean> = _isRecording.asStateFlow()
-    
+
+    private val _isPaused = MutableStateFlow(false)
+    val isPaused: StateFlow<Boolean> = _isPaused.asStateFlow()
+
     private val _recordingTime = MutableStateFlow(0L)
     val recordingTime: StateFlow<Long> = _recordingTime.asStateFlow()
-    
+
     private val _recordingError = MutableStateFlow<String?>(null)
     val recordingError: StateFlow<String?> = _recordingError.asStateFlow()
+
+    private var pausedTime: Long = 0
+    private var pauseStartTime: Long = 0
 
     fun startRecording(context: Context): String? {
         try {
@@ -116,8 +122,12 @@ class AudioRecorderManager {
     fun pauseRecording() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             try {
-                mediaRecorder?.pause()
-                LogManager.i("Recording paused")
+                if (!_isPaused.value && _isRecording.value) {
+                    mediaRecorder?.pause()
+                    _isPaused.value = true
+                    pauseStartTime = System.currentTimeMillis()
+                    LogManager.i("Recording paused")
+                }
             } catch (e: IllegalStateException) {
                 LogManager.e("Failed to pause recording: ${e.message}")
                 _recordingError.value = "녹음 일시정지 실패: ${e.message}"
@@ -128,8 +138,13 @@ class AudioRecorderManager {
     fun resumeRecording() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             try {
-                mediaRecorder?.resume()
-                LogManager.i("Recording resumed")
+                if (_isPaused.value && _isRecording.value) {
+                    mediaRecorder?.resume()
+                    _isPaused.value = false
+                    // 일시정지된 시간 누적
+                    pausedTime += System.currentTimeMillis() - pauseStartTime
+                    LogManager.i("Recording resumed")
+                }
             } catch (e: IllegalStateException) {
                 LogManager.e("Failed to resume recording: ${e.message}")
                 _recordingError.value = "녹음 재개 실패: ${e.message}"
@@ -153,8 +168,11 @@ class AudioRecorderManager {
     private fun startTimer() {
         coroutineScope.launch {
             while (_isRecording.value) {
-                val elapsedTime = System.currentTimeMillis() - startTime
-                _recordingTime.value = elapsedTime
+                if (!_isPaused.value) {
+                    // 일시정지 중이 아닐 때만 시간 업데이트
+                    val elapsedTime = System.currentTimeMillis() - startTime - pausedTime
+                    _recordingTime.value = elapsedTime
+                }
                 delay(100) // 100ms마다 업데이트
             }
         }
@@ -162,8 +180,11 @@ class AudioRecorderManager {
 
     private fun cleanup() {
         _isRecording.value = false
+        _isPaused.value = false
         _recordingTime.value = 0L
-        
+        pausedTime = 0L
+        pauseStartTime = 0L
+
         mediaRecorder?.apply {
             try {
                 reset()

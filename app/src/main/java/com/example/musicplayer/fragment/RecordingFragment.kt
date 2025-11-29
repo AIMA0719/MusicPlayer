@@ -1,6 +1,7 @@
 package com.example.musicplayer.fragment
 
 import android.annotation.SuppressLint
+import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.LayoutInflater
@@ -43,7 +44,12 @@ class RecordingFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
-            music = it.getParcelable("music")!!
+            music = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                it.getParcelable("music", MusicFile::class.java)!!
+            } else {
+                @Suppress("DEPRECATION")
+                it.getParcelable("music")!!
+            }
             pitchArray = it.getFloatArray("pitchArray")!!
             durationMillis = it.getLong("durationMillis", 0L)
         }

@@ -1,37 +1,38 @@
 package com.example.musicplayer.activity
 
 import android.os.Bundle
-import android.view.View
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModelProvider
-import com.example.musicplayer.fragment.MainFragment
+import androidx.navigation.NavController
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.setupWithNavController
+import com.example.musicplayer.R
 import com.example.musicplayer.manager.ContextManager
-import com.example.musicplayer.manager.FragmentMoveManager
 import com.example.musicplayer.manager.PermissionManager
 import com.example.musicplayer.manager.ProgressDialogManager
 import com.example.musicplayer.manager.ScoreDialogManager
 import com.example.musicplayer.manager.ToastManager
 import com.example.musicplayer.databinding.MusicPlayerMainActivityBinding
 import com.example.musicplayer.viewModel.MainActivityViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
-import kotlin.system.exitProcess
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: MusicPlayerMainActivityBinding
     lateinit var viewModel: MainActivityViewModel
-
+    private lateinit var navController: NavController
     private lateinit var permissionManager: PermissionManager
 
     private var startTime: Long = 0
 
     private val permissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
+        androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
         permissionManager.handlePermissionResult(result)
     }
@@ -47,16 +48,15 @@ class MainActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
 
-        binding = MusicPlayerMainActivityBinding.inflate(layoutInflater) // 객체 바인딩
-        viewModel = ViewModelProvider(this)[MainActivityViewModel::class.java] // 메인 뷰 모델
+        binding = MusicPlayerMainActivityBinding.inflate(layoutInflater)
+        viewModel = ViewModelProvider(this)[MainActivityViewModel::class.java]
 
-        setContentView(binding.root) // 화면 세팅
-        setBaseSetting() // 메인 context 및 메인 activity 캐싱
-        hideActionBar() // 액션 바 숨기기
-        setupBackButton() // 뒤로가기 버튼 설정
-        observeViewModel() // 화면 이동 및 토스트 메시지 처리
-        setOnBackPressed() // 페이지 별 뒤로 가기 처리
-        setMainFragment() // 메인 화면 설정
+        setContentView(binding.root)
+        setBaseSetting()
+        hideActionBar()
+        setupNavigation()
+        observeViewModel()
+        setOnBackPressed()
 
         permissionManager = PermissionManager(
             activity = this,
@@ -67,11 +67,80 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    private fun setupBackButton() {
-        // 뒤로가기 버튼 클릭 리스너 설정
-        binding.ivBackButton.setOnClickListener {
-            if (!viewModel.isFragmentStackEmpty()) {
-                FragmentMoveManager.instance.popFragment()
+    private fun setupNavigation() {
+        // NavHostFragment 가져오기
+        val navHostFragment = supportFragmentManager
+            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        navController = navHostFragment.navController
+
+        // BottomNavigationView와 NavController 연결
+        binding.bottomNavigation.setupWithNavController(navController)
+
+        // 하단 네비게이션 아이템 선택 리스너 (백스택 초기화용)
+        binding.bottomNavigation.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.navigation_music_list -> {
+                    // 음악 탭 클릭 시 백스택 모두 제거하고 MusicListFragment로 이동
+                    if (navController.currentDestination?.id != R.id.navigation_music_list) {
+                        navController.navigate(R.id.navigation_music_list, null,
+                            androidx.navigation.NavOptions.Builder()
+                                .setPopUpTo(R.id.navigation_music_list, true)
+                                .build()
+                        )
+                    }
+                    true
+                }
+                R.id.navigation_home -> {
+                    if (navController.currentDestination?.id != R.id.navigation_home) {
+                        navController.navigate(R.id.navigation_home)
+                    }
+                    true
+                }
+                R.id.navigation_search -> {
+                    if (navController.currentDestination?.id != R.id.navigation_search) {
+                        navController.navigate(R.id.navigation_search)
+                    }
+                    true
+                }
+                R.id.navigation_record -> {
+                    if (navController.currentDestination?.id != R.id.navigation_record) {
+                        navController.navigate(R.id.navigation_record)
+                    }
+                    true
+                }
+                else -> false
+            }
+        }
+
+        // Destination 변경 리스너 설정
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            val title = when (destination.id) {
+                R.id.navigation_home -> "홈"
+                R.id.navigation_search -> "검색"
+                R.id.navigation_record -> "녹음"
+                R.id.navigation_music_list -> "음악"
+                R.id.recordingFragment -> "피치 매칭 녹음"
+                else -> ""
+            }
+
+            binding.tvStatusBarTitle.text = title
+            viewModel._currentFragment.value = destination.label?.toString() ?: ""
+
+            // 하단 네비게이션에 포함되지 않은 화면(recordingFragment)에서는 뒤로가기 버튼 표시
+            val isTopLevelDestination = destination.id in setOf(
+                R.id.navigation_home,
+                R.id.navigation_search,
+                R.id.navigation_record,
+                R.id.navigation_music_list
+            )
+
+            if (isTopLevelDestination) {
+                binding.ivBackButton.visibility = android.view.View.GONE
+            } else {
+                binding.ivBackButton.visibility = android.view.View.VISIBLE
+                binding.ivBackButton.setOnClickListener {
+                    navController.navigateUp()
+                }
             }
         }
     }
@@ -79,26 +148,34 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         permissionManager.checkAndRequestPermissions()
-        updateBackButtonVisibility()
-    }
-
-    private fun setMainFragment() {
-        FragmentMoveManager.instance.pushFragment(MainFragment.newInstance())
     }
 
     private fun setOnBackPressed() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (viewModel.isFragmentStackEmpty()) {
+                // 최상위 레벨 화면인지 확인
+                val currentDestination = navController.currentDestination?.id
+                val isTopLevelDestination = currentDestination in setOf(
+                    R.id.navigation_home,
+                    R.id.navigation_search,
+                    R.id.navigation_record,
+                    R.id.navigation_music_list
+                )
+
+                if (isTopLevelDestination && currentDestination == R.id.navigation_home) {
+                    // 홈 화면에서 뒤로가기: 앱 종료 확인
                     if (viewModel.isDoubleBackToExit()) {
                         ToastManager.closeToast()
-
                         finish()
                     } else {
                         viewModel.triggerDoubleBackToExit()
                     }
+                } else if (isTopLevelDestination) {
+                    // 다른 최상위 화면에서는 홈으로 이동
+                    navController.navigate(R.id.navigation_home)
                 } else {
-                    FragmentMoveManager.instance.popFragment()
+                    // 하위 화면에서는 뒤로가기
+                    navController.navigateUp()
                 }
             }
         })
@@ -113,31 +190,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun observeViewModel() {
-        // 현재 Fragment 상태 변경 시 UI 업데이트
-        viewModel.currentFragment.observe(this) { fragmentTag ->
-            binding.tvStatusBarTitle.text = fragmentTag
-            updateBackButtonVisibility()
-        }
-
         // Toast 메시지 처리
         viewModel.toastMessage.observe(this) { message ->
             ToastManager.showToast(message)
-        }
-    }
-
-    /**
-     * Fragment 상태에 따라 뒤로가기 버튼 표시/숨김
-     * MainFragment일 때는 숨기고, 나머지일 때는 표시
-     */
-    private fun updateBackButtonVisibility() {
-        val currentFragmentName = FragmentMoveManager.instance.getCurrentFragment()
-
-        if (currentFragmentName == null || currentFragmentName == "MainFragment") {
-            // MainFragment이거나 Fragment가 없을 때는 뒤로가기 버튼 숨김
-            binding.ivBackButton.visibility = View.GONE
-        } else {
-            // 다른 Fragment일 때는 뒤로가기 버튼 표시
-            binding.ivBackButton.visibility = View.VISIBLE
         }
     }
 

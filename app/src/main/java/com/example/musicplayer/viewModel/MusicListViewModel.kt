@@ -3,7 +3,10 @@ package com.example.musicplayer.viewModel
 import android.app.Application
 import android.content.ContentUris
 import android.content.Context
+import android.media.MediaMetadataRetriever
+import android.net.Uri
 import android.provider.MediaStore
+import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.musicplayer.data.MusicFile
@@ -17,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
 
 class MusicListViewModel(
     application: Application
@@ -32,7 +36,8 @@ class MusicListViewModel(
             is MusicListIntent.LoadMusicFiles -> loadMusicFiles()
 
             is MusicListIntent.AnalyzeOriginalMusic -> {
-                _state.update { it.copy(isAnalyzing = true, analysisProgress = 0) }
+                LogManager.i("MusicListViewModel: Starting analysis for ${intent.music.title}")
+                _state.update { it.copy(isAnalyzing = true, analysisProgress = 0, hasNavigated = false) }
 
                 viewModelScope.launch {
                     val pitchList = analyzePitchFromMediaUri(
@@ -43,6 +48,7 @@ class MusicListViewModel(
                         }
                     )
 
+                    LogManager.i("MusicListViewModel: Analysis completed, pitch list size: ${pitchList.size}")
                     onIntent(
                         MusicListIntent.AnalysisCompleted(
                             music = intent.music,
@@ -52,12 +58,35 @@ class MusicListViewModel(
                 }
             }
 
-            is MusicListIntent.AnalysisCompleted -> _state.update {
-                it.copy(
-                    selectedMusic = intent.music,
-                    originalPitch = intent.originalPitch,
-                    isAnalyzing = false
-                )
+            is MusicListIntent.AnalysisCompleted -> {
+                LogManager.i("MusicListViewModel: AnalysisCompleted - Setting state with originalPitch and selectedMusic")
+                _state.update {
+                    it.copy(
+                        selectedMusic = intent.music,
+                        originalPitch = intent.originalPitch,
+                        isAnalyzing = false
+                    )
+                }
+            }
+
+            is MusicListIntent.MarkAsNavigated -> {
+                LogManager.i("MusicListViewModel: Marking as navigated")
+                _state.update {
+                    it.copy(hasNavigated = true)
+                }
+            }
+
+            is MusicListIntent.ResetAnalysisState -> {
+                LogManager.i("MusicListViewModel: Resetting analysis state")
+                _state.update {
+                    it.copy(
+                        selectedMusic = null,
+                        originalPitch = null,
+                        isAnalyzing = false,
+                        analysisProgress = 0,
+                        hasNavigated = false
+                    )
+                }
             }
         }
     }
@@ -67,6 +96,11 @@ class MusicListViewModel(
             _state.update { it.copy(isLoading = true) }
 
             val musicList = mutableListOf<MusicFile>()
+
+            // 1. 앱의 Recordings 디렉토리에서 녹음 파일 로드 (최우선)
+            loadRecordingsFromAppDirectory(musicList)
+
+            // 2. MediaStore에서 오디오 파일 로드
             val uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
 
             val cursor = context.contentResolver.query(
@@ -96,9 +130,62 @@ class MusicListViewModel(
                 }
             }
 
+            LogManager.i("총 로드된 음악 파일 수: ${musicList.size}")
+
             _state.update {
                 it.copy(musicFiles = musicList, isLoading = false)
             }
+        }
+    }
+
+    /**
+     * 앱의 Recordings 디렉토리에서 녹음 파일 로드
+     */
+    private fun loadRecordingsFromAppDirectory(musicList: MutableList<MusicFile>) {
+        try {
+            val recordingsDir = File(context.getExternalFilesDir(null), "Recordings")
+            if (!recordingsDir.exists() || !recordingsDir.isDirectory) {
+                LogManager.d("Recordings directory does not exist")
+                return
+            }
+
+            val recordingFiles = recordingsDir.listFiles { file ->
+                file.extension.lowercase() in listOf("m4a", "mp4", "mp3", "wav")
+            }?.sortedByDescending { it.lastModified() } // 최신 파일 먼저
+
+            recordingFiles?.forEach { file ->
+                try {
+                    val uri = file.toUri()
+                    val duration = getAudioDuration(file)
+                    val title = file.nameWithoutExtension
+                    val artist = "내 녹음"
+
+                    musicList.add(MusicFile(uri, title, artist, duration))
+                    LogManager.d("Added recording: ${file.name}, duration: $duration ms")
+                } catch (e: Exception) {
+                    LogManager.e("Error loading recording file ${file.name}: ${e.message}")
+                }
+            }
+
+            LogManager.i("Loaded ${recordingFiles?.size ?: 0} recordings from app directory")
+        } catch (e: Exception) {
+            LogManager.e("Error loading recordings: ${e.message}")
+        }
+    }
+
+    /**
+     * 오디오 파일의 재생 시간 가져오기
+     */
+    private fun getAudioDuration(file: File): Long {
+        return try {
+            val retriever = MediaMetadataRetriever()
+            retriever.setDataSource(file.absolutePath)
+            val durationStr = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+            retriever.release()
+            durationStr?.toLongOrNull() ?: 0L
+        } catch (e: Exception) {
+            LogManager.e("Failed to get audio duration for ${file.name}: ${e.message}")
+            0L
         }
     }
 

@@ -48,8 +48,6 @@ object MusicFileDispatcherFactory {
             codec.configure(inputFormat, null, null, 0)
             codec.start()
 
-            val inputBuffers = codec.inputBuffers
-            val outputBuffers = codec.outputBuffers
             val bufferInfo = MediaCodec.BufferInfo()
 
             var sawInputEOS = false
@@ -60,36 +58,41 @@ object MusicFileDispatcherFactory {
                 if (!sawInputEOS) {
                     val inputBufferIndex = codec.dequeueInputBuffer(10000)
                     if (inputBufferIndex >= 0) {
-                        val inputBuffer = inputBuffers[inputBufferIndex]
-                        val sampleSize = extractor.readSampleData(inputBuffer, 0)
+                        val inputBuffer = codec.getInputBuffer(inputBufferIndex)
+                        inputBuffer?.let { buffer ->
+                            val sampleSize = extractor.readSampleData(buffer, 0)
 
-                        if (sampleSize < 0) {
-                            codec.queueInputBuffer(
-                                inputBufferIndex, 0, 0, 0L, MediaCodec.BUFFER_FLAG_END_OF_STREAM
-                            )
-                            sawInputEOS = true
-                        } else {
-                            codec.queueInputBuffer(
-                                inputBufferIndex, 0, sampleSize, extractor.sampleTime, 0
-                            )
-                            extractor.advance()
+                            if (sampleSize < 0) {
+                                codec.queueInputBuffer(
+                                    inputBufferIndex, 0, 0, 0L, MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                                )
+                                sawInputEOS = true
+                            } else {
+                                codec.queueInputBuffer(
+                                    inputBufferIndex, 0, sampleSize, extractor.sampleTime, 0
+                                )
+                                extractor.advance()
+                            }
                         }
                     }
                 }
 
                 val outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo, 10000)
                 if (outputBufferIndex >= 0) {
-                    val outputBuffer = outputBuffers[outputBufferIndex]
-                    val chunk = ByteArray(bufferInfo.size)
-                    outputBuffer.get(chunk)
-                    outputBuffer.clear()
-                    codec.releaseOutputBuffer(outputBufferIndex, false)
+                    val outputBuffer = codec.getOutputBuffer(outputBufferIndex)
+                    outputBuffer?.let { buffer ->
+                        val chunk = ByteArray(bufferInfo.size)
+                        buffer.get(chunk)
+                        buffer.clear()
+                        codec.releaseOutputBuffer(outputBufferIndex, false)
 
-                    pcmOutputStream.write(chunk)
-                    writtenBytes += chunk.size
+                        pcmOutputStream.write(chunk)
+                        writtenBytes += chunk.size
 
-                    val decodeProgress = ((writtenBytes.toDouble() / totalExpectedPcmBytes) * 80).toInt()
-                    onProgress(decodeProgress.coerceIn(0, 80)) // 디코딩 단계는 0~80%
+                        val decodeProgress = ((writtenBytes.toDouble() / totalExpectedPcmBytes) * 80).toInt()
+                        onProgress(decodeProgress.coerceIn(0, 80))
+                    }
+
                     if (bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) {
                         sawOutputEOS = true
                     }

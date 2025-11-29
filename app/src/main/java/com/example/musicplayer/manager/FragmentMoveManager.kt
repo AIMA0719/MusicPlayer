@@ -22,6 +22,22 @@ class FragmentMoveManager private constructor() {
         }
     }
 
+    /**
+     * Activity가 재생성될 때 FragmentManager에서 복원된 Fragment들로 스택을 재구성
+     */
+    fun restoreStackFromFragmentManager() {
+        val fragmentManager = getFragmentManager() ?: return
+
+        // 스택이 비어있고 FragmentManager에 Fragment가 있으면 복원
+        if (fragmentStack.isEmpty()) {
+            val fragments = fragmentManager.fragments.filter { it.isAdded }
+            fragments.forEach { fragment ->
+                fragmentStack.push(fragment)
+            }
+            LogManager.d("FragmentStack restored with ${fragmentStack.size} fragments")
+        }
+    }
+
     // Fragment를 추가하고 스택에 push
     fun pushFragment(fragment: Fragment) {
         val fragmentManager = getFragmentManager()
