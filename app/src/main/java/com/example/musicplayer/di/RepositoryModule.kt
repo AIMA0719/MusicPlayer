@@ -1,18 +1,12 @@
 package com.example.musicplayer.di
 
-import android.content.Context
 import com.example.musicplayer.database.dao.FavoriteDao
 import com.example.musicplayer.database.dao.HistoryDao
-import com.example.musicplayer.database.dao.UserDao
 import com.example.musicplayer.repository.FavoriteRepository
 import com.example.musicplayer.repository.HistoryRepository
-import com.example.musicplayer.repository.UserRepository
-import com.example.musicplayer.repository.YouTubeRepository
-import com.example.musicplayer.server.YouTubeApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -34,21 +28,5 @@ object RepositoryModule {
         historyDao: HistoryDao
     ): HistoryRepository {
         return HistoryRepository(historyDao)
-    }
-
-    @Provides
-    @Singleton
-    fun provideUserRepository(
-        @ApplicationContext context: Context
-    ): UserRepository {
-        return UserRepository(context)
-    }
-
-    @Provides
-    @Singleton
-    fun provideYouTubeRepository(
-        @ApplicationContext context: Context
-    ): YouTubeRepository {
-        return YouTubeRepository(context)
     }
 }

@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.EditorInfo
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
@@ -16,7 +15,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.musicplayer.R
 import com.example.musicplayer.adapter.DownloadedFileAdapter
 import com.example.musicplayer.adapter.MusicDownloadAdapter
 import com.example.musicplayer.data.MusicDownloadItem
@@ -26,7 +24,6 @@ import com.example.musicplayer.manager.LogManager
 import com.example.musicplayer.manager.ToastManager
 import com.example.musicplayer.manager.IOSStyleProgressDialog
 import com.example.musicplayer.repository.JamendoRepository
-import com.google.android.material.tabs.TabLayout
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -53,7 +50,6 @@ class MusicDownloadFragment : Fragment() {
     private var currentDownloadId: String? = null
     private var isLoading = false
     private var currentTab = Tab.DOWNLOAD
-    private var currentFilter = "featured"
 
     private enum class Tab {
         DOWNLOAD, DOWNLOADED
@@ -86,9 +82,6 @@ class MusicDownloadFragment : Fragment() {
 
         setupAdapters()
         setupViews()
-        setupSearch()
-        setupFilters()
-        setupTabs()
         observeDownloadProgress()
         checkStoragePermission()
 
@@ -121,77 +114,18 @@ class MusicDownloadFragment : Fragment() {
     }
 
     private fun setupViews() {
-        binding.fabRefresh.setOnClickListener {
-            loadMusicFromApi()
-        }
-    }
-
-    private fun setupSearch() {
-        // 검색 버튼 클릭시
-        binding.btnSearch.setOnClickListener {
-            val query = binding.etSearch.text.toString().trim()
-            if (query.isNotEmpty()) {
-                searchMusic(query)
-                binding.etSearch.clearFocus()
-                // 키보드 숨기기
-                val imm = requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
-                imm.hideSoftInputFromWindow(binding.etSearch.windowToken, 0)
-            } else {
-                ToastManager.showToast("검색어를 입력해주세요")
-            }
+        binding.btnTabDownload.setOnClickListener {
+            switchTab(Tab.DOWNLOAD)
         }
 
-        // 키보드의 검색 버튼 클릭시
-        binding.etSearch.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                val query = binding.etSearch.text.toString().trim()
-                if (query.isNotEmpty()) {
-                    searchMusic(query)
-                    binding.etSearch.clearFocus()
-                    // 키보드 숨기기
-                    val imm = requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
-                    imm.hideSoftInputFromWindow(binding.etSearch.windowToken, 0)
-                } else {
-                    ToastManager.showToast("검색어를 입력해주세요")
-                }
-                true
-            } else {
-                false
-            }
+        binding.btnTabDownloaded.setOnClickListener {
+            switchTab(Tab.DOWNLOADED)
         }
-    }
 
-    private fun setupFilters() {
-        binding.chipGroupFilters.setOnCheckedStateChangeListener { _, checkedIds ->
-            if (checkedIds.isEmpty()) return@setOnCheckedStateChangeListener
-
-            val checkedId = checkedIds[0]
-            currentFilter = when (checkedId) {
-                R.id.chip_featured -> "featured"
-                R.id.chip_pop -> "pop"
-                R.id.chip_rock -> "rock"
-                R.id.chip_electronic -> "electronic"
-                R.id.chip_jazz -> "jazz"
-                R.id.chip_classical -> "classical"
-                else -> "featured"
-            }
-
-            loadMusicByFilter(currentFilter)
+        binding.btnCancelDownload.setOnClickListener {
+            currentDownloadId?.let { downloadManager.cancelDownload(it) }
+            binding.layoutDownloadProgress.isVisible = false
         }
-    }
-
-    private fun setupTabs() {
-        binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(tab: TabLayout.Tab?) {
-                when (tab?.position) {
-                    0 -> switchTab(Tab.DOWNLOAD)
-                    1 -> switchTab(Tab.DOWNLOADED)
-                }
-            }
-
-            override fun onTabUnselected(tab: TabLayout.Tab?) {}
-            override fun onTabReselected(tab: TabLayout.Tab?) {}
-        })
     }
 
     private fun switchTab(tab: Tab) {
@@ -199,78 +133,66 @@ class MusicDownloadFragment : Fragment() {
 
         when (tab) {
             Tab.DOWNLOAD -> {
+                binding.btnTabDownload.setBackgroundResource(android.R.drawable.btn_default)
+                binding.btnTabDownloaded.setBackgroundResource(android.R.drawable.btn_default)
                 binding.rvDownloadList.isVisible = true
                 binding.rvDownloadedList.isVisible = false
-                updateEmptyState(downloadAdapter.currentList.isEmpty())
+
+                // 다운로드 탭의 빈 메시지 업데이트
+                val downloadList = downloadAdapter.currentList
+                binding.tvEmptyMessage.apply {
+                    text = "다운로드 가능한 음악이 없습니다"
+                    isVisible = downloadList.isEmpty()
+                }
             }
             Tab.DOWNLOADED -> {
+                binding.btnTabDownload.setBackgroundResource(android.R.drawable.btn_default)
+                binding.btnTabDownloaded.setBackgroundResource(android.R.drawable.btn_default)
                 binding.rvDownloadList.isVisible = false
                 binding.rvDownloadedList.isVisible = true
+
+                // 다운로드됨 탭으로 전환 시 파일 로드
                 loadDownloadedFiles()
             }
         }
     }
 
-    private fun searchMusic(query: String) {
+    private fun loadMusicFromApi() {
         if (isLoading) return
         isLoading = true
 
         viewLifecycleOwner.lifecycleScope.launch {
-            progressDialog.show("검색 중...")
+            progressDialog.show("음악 목록 로딩 중...")
             try {
+                // Jamendo API에서 인기 음악 가져오기
                 val musicList = withContext(Dispatchers.IO) {
                     try {
-                        val response = jamendoRepository.searchTracks(query = query, limit = 50)
+                        val response = jamendoRepository.getFeaturedTracks(limit = 50)
                         if (response.isSuccessful && response.body() != null) {
-                            parseJamendoResponse(response.body()!!)
-                        } else {
-                            LogManager.e("Jamendo search failed: ${response.code()}")
-                            emptyList()
-                        }
-                    } catch (e: Exception) {
-                        LogManager.e("Jamendo search error: ${e.message}")
-                        e.printStackTrace()
-                        emptyList()
-                    }
-                }
+                            val jamendoResponse = response.body()!!
 
-                downloadAdapter.submitList(musicList)
-                updateEmptyState(musicList.isEmpty())
+                            // 다운로드 가능한 트랙만 필터링
+                            jamendoResponse.results
+                                .filter { it.audioDownloadAllowed }
+                                .map { track ->
+                                    val durationMinutes = track.duration / 60
+                                    val durationSeconds = track.duration % 60
+                                    val durationText = String.format("%d:%02d", durationMinutes, durationSeconds)
 
-                if (musicList.isEmpty()) {
-                    ToastManager.showToast("'$query' 검색 결과가 없습니다")
-                } else {
-                    ToastManager.showToast("${musicList.size}개의 검색 결과")
-                }
-
-                progressDialog.dismiss()
-                isLoading = false
-            } catch (e: Exception) {
-                LogManager.e("Failed to search music: ${e.message}")
-                ToastManager.showToast("검색 실패: ${e.message}")
-                progressDialog.dismiss()
-                isLoading = false
-            }
-        }
-    }
-
-    private fun loadMusicByFilter(filter: String) {
-        if (isLoading) return
-        isLoading = true
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            progressDialog.show("음악 로딩 중...")
-            try {
-                val musicList = withContext(Dispatchers.IO) {
-                    try {
-                        val response = if (filter == "featured") {
-                            jamendoRepository.getFeaturedTracks(limit = 50)
-                        } else {
-                            jamendoRepository.getTracksByTags(tags = filter, limit = 50)
-                        }
-
-                        if (response.isSuccessful && response.body() != null) {
-                            parseJamendoResponse(response.body()!!)
+                                    MusicDownloadItem(
+                                        id = track.id,
+                                        title = track.name,
+                                        artist = track.artistName,
+                                        url = track.audioDownload,
+                                        duration = durationText,
+                                        size = "MP3",
+                                        genre = "Jamendo",
+                                        description = "",
+                                        thumbnailUrl = track.image ?: track.albumImage ?: "",
+                                        imageUrl = track.image ?: track.albumImage,
+                                        albumName = track.albumName
+                                    )
+                                }
                         } else {
                             LogManager.e("Jamendo API failed: ${response.code()}")
                             emptyList()
@@ -283,66 +205,36 @@ class MusicDownloadFragment : Fragment() {
                 }
 
                 downloadAdapter.submitList(musicList)
-                updateEmptyState(musicList.isEmpty())
+                binding.tvEmptyMessage.isVisible = musicList.isEmpty()
+
+                if (musicList.isEmpty()) {
+                    ToastManager.showToast("다운로드 가능한 음악이 없습니다")
+                } else {
+                    ToastManager.showToast("${musicList.size}개의 음악을 불러왔습니다")
+                }
 
                 progressDialog.dismiss()
                 isLoading = false
             } catch (e: Exception) {
-                LogManager.e("Failed to load music: ${e.message}")
-                ToastManager.showToast("음악 로드 실패: ${e.message}")
+                LogManager.e("Failed to load music from API: ${e.message}")
+                ToastManager.showToast("음악 목록 로드 실패: ${e.message}")
                 progressDialog.dismiss()
                 isLoading = false
             }
-        }
-    }
-
-    private fun loadMusicFromApi() {
-        loadMusicByFilter(currentFilter)
-    }
-
-    private fun parseJamendoResponse(jamendoResponse: com.example.musicplayer.server.data.JamendoResponse): List<MusicDownloadItem> {
-        return jamendoResponse.results
-            .filter { it.audioDownloadAllowed }
-            .map { track ->
-                val durationMinutes = track.duration / 60
-                val durationSeconds = track.duration % 60
-                val durationText = String.format("%d:%02d", durationMinutes, durationSeconds)
-
-                MusicDownloadItem(
-                    id = track.id,
-                    title = track.name,
-                    artist = track.artistName,
-                    url = track.audioDownload,
-                    duration = durationText,
-                    size = "MP3",
-                    genre = "Jamendo",
-                    description = "",
-                    thumbnailUrl = track.image ?: track.albumImage ?: "",
-                    imageUrl = track.image ?: track.albumImage,
-                    albumName = track.albumName
-                )
-            }
-    }
-
-    private fun updateEmptyState(isEmpty: Boolean) {
-        if (currentTab == Tab.DOWNLOAD) {
-            binding.layoutEmpty.isVisible = isEmpty
-            val searchQuery = binding.etSearch.text.toString().trim()
-            binding.tvEmptyMessage.text = if (searchQuery.isEmpty()) {
-                "다운로드 가능한 음악이 없습니다"
-            } else {
-                "검색 결과가 없습니다"
-            }
-        } else {
-            binding.layoutEmpty.isVisible = isEmpty
-            binding.tvEmptyMessage.text = "다운로드된 파일이 없습니다"
         }
     }
 
     private fun loadDownloadedFiles() {
         val downloadedFiles = downloadManager.getDownloadedFiles(requireContext())
         downloadedAdapter.submitList(downloadedFiles)
-        updateEmptyState(downloadedFiles.isEmpty())
+        
+        // 현재 탭이 DOWNLOADED일 때만 빈 메시지 업데이트
+        if (currentTab == Tab.DOWNLOADED) {
+            binding.tvEmptyMessage.apply {
+                text = "다운로드된 파일이 없습니다"
+                isVisible = downloadedFiles.isEmpty()
+            }
+        }
     }
 
     private fun startDownload(musicItem: MusicDownloadItem) {
@@ -364,7 +256,7 @@ class MusicDownloadFragment : Fragment() {
             fileName = fileName
         )
 
-        ToastManager.showToast("다운로드 시작: ${musicItem.title}")
+        ToastManager.showToast("다운로드를 시작합니다: ${musicItem.title}")
     }
 
     private fun observeDownloadProgress() {
@@ -387,24 +279,21 @@ class MusicDownloadFragment : Fragment() {
         binding.apply {
             progressDownload.progress = progress.progress
             tvDownloadProgress.text = "${progress.progress}%"
-
+            
             val downloadedSize = FileDownloadManager.formatFileSize(progress.downloadedBytes)
             val totalSize = FileDownloadManager.formatFileSize(progress.totalBytes)
             tvDownloadSize.text = "$downloadedSize / $totalSize"
-
+            
             if (progress.isCompleted) {
                 ToastManager.showToast("다운로드가 완료되었습니다!")
                 layoutDownloadProgress.isVisible = false
+                
+                // 다운로드된 파일 리스트 항상 새로고침 (내부 데이터 업데이트)
                 loadDownloadedFiles()
             } else if (progress.isError) {
                 ToastManager.showToast("다운로드 실패: ${progress.errorMessage}")
                 layoutDownloadProgress.isVisible = false
             }
-        }
-
-        binding.btnCancelDownload.setOnClickListener {
-            currentDownloadId?.let { downloadManager.cancelDownload(it) }
-            binding.layoutDownloadProgress.isVisible = false
         }
     }
 

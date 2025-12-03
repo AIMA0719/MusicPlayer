@@ -5,6 +5,9 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.example.musicplayer.R
 import com.example.musicplayer.data.MusicDownloadItem
 import com.example.musicplayer.databinding.ItemMusicDownloadBinding
 
@@ -35,6 +38,15 @@ class MusicDownloadAdapter(
                 tvArtist.text = item.artist
                 tvDuration.text = item.duration
                 tvSize.text = item.size
+
+                // 앨범 아트 로딩
+                Glide.with(ivAlbumArt.context)
+                    .load(item.imageUrl)
+                    .placeholder(R.drawable.ic_microphone)
+                    .error(R.drawable.ic_microphone)
+                    .centerCrop()
+                    .transition(DrawableTransitionOptions.withCrossFade())
+                    .into(ivAlbumArt)
 
                 btnDownload.setOnClickListener {
                     onDownloadClick(item)
