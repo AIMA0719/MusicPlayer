@@ -182,7 +182,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setBaseSetting() {
-        ContextManager.setContext(this)
     }
 
     private fun hideActionBar() {
@@ -203,7 +202,6 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         ProgressDialogManager.dismiss()
         ScoreDialogManager.dismiss()
-        ContextManager.clearContext()
         scope.cancel()
         job.cancel()
     }

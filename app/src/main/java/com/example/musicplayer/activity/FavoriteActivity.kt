@@ -19,7 +19,6 @@ class FavoriteActivity : AppCompatActivity() {
 
         setupRecyclerView()
         loadFavorites()
-        ToastManager.getInstance().setContext(this)
     }
 
     private fun setupRecyclerView() {

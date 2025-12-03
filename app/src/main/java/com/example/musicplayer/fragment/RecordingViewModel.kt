@@ -1,8 +1,8 @@
 package com.example.musicplayer.fragment
 
 import kotlinx.coroutines.delay
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import be.tarsos.dsp.AudioDispatcher
 import be.tarsos.dsp.io.android.AudioDispatcherFactory
 import be.tarsos.dsp.pitch.PitchProcessor
@@ -11,24 +11,21 @@ import com.example.musicplayer.error.ErrorHandler
 import com.example.musicplayer.manager.LogManager
 import com.example.musicplayer.manager.ToastManager
 import com.example.musicplayer.scoreAlgorythm.ScoreAnalyzer
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.orbitmvi.orbit.Container
+import org.orbitmvi.orbit.ContainerHost
+import org.orbitmvi.orbit.syntax.simple.intent
+import org.orbitmvi.orbit.syntax.simple.postSideEffect
+import org.orbitmvi.orbit.syntax.simple.reduce
+import org.orbitmvi.orbit.viewmodel.container
 import kotlin.math.abs
 
-class RecordingViewModel : ViewModel() {
-    private val viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    private val audioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    
-    val isRecording = MutableLiveData(false)
-    val currentPitch = MutableLiveData<Float>()
-    val pitchDifference = MutableLiveData<Float>()
-    val elapsedTime = MutableLiveData<Long>()
-    val score = MutableLiveData<Int>()
-    val clearChartTrigger = MutableLiveData<Unit>()
+class RecordingViewModel : ViewModel(), ContainerHost<RecordingState, RecordingSideEffect> {
+
+    override val container: Container<RecordingState, RecordingSideEffect> =
+        container(RecordingState())
 
     private var dispatcher: AudioDispatcher? = null
     private var timerJob: kotlinx.coroutines.Job? = null
@@ -39,16 +36,15 @@ class RecordingViewModel : ViewModel() {
     private val pitchBuffer = mutableListOf<Pair<Float, Float>>()
     private val bufferSize = 10
 
-    fun startRecording(pitchArray: FloatArray) {
-        if (isRecording.value == true) {
+    fun startRecording(pitchArray: FloatArray) = intent {
+        if (state.isRecording) {
             throw AppException.InvalidStateException("Recording is already in progress")
         }
 
         try {
-            isRecording.postValue(true)
+            reduce { state.copy(isRecording = true, elapsedTime = 0, score = null) }
             currentPitchArray = pitchArray
             startTimeMillis = System.currentTimeMillis()
-            elapsedTime.postValue(0)
             pitchPairs.clear()
             pitchBuffer.clear()
 
@@ -63,9 +59,11 @@ class RecordingViewModel : ViewModel() {
 
     private fun setupTimer() {
         timerJob = viewModelScope.launch {
-            while (isRecording.value == true) {
+            while (container.stateFlow.value.isRecording) {
                 val ms = (System.currentTimeMillis() - startTimeMillis)
-                elapsedTime.postValue(ms)
+                intent {
+                    reduce { state.copy(elapsedTime = ms) }
+                }
                 delay(100)
             }
         }
@@ -79,7 +77,7 @@ class RecordingViewModel : ViewModel() {
             22050f,
             1024
         ) { result, _ ->
-            audioScope.launch {
+            viewModelScope.launch(Dispatchers.IO) {
                 try {
                     val ms = (System.currentTimeMillis() - startTimeMillis).toInt()
                     val index = ms / 100
@@ -89,15 +87,19 @@ class RecordingViewModel : ViewModel() {
                         val userPitch = if (result.pitch > 0) result.pitch else 0f
 
                         pitchBuffer.add(targetPitch to userPitch)
-                        
+
                         if (pitchBuffer.size >= bufferSize) {
                             pitchPairs.addAll(pitchBuffer)
                             pitchBuffer.clear()
                         }
 
-                        withContext(Dispatchers.Main) {
-                            currentPitch.postValue(userPitch)
-                            pitchDifference.postValue(abs(userPitch - targetPitch))
+                        intent {
+                            reduce {
+                                state.copy(
+                                    currentPitch = userPitch,
+                                    pitchDifference = abs(userPitch - targetPitch)
+                                )
+                            }
                         }
                     }
                 } catch (e: Exception) {
@@ -107,7 +109,7 @@ class RecordingViewModel : ViewModel() {
         }
 
         dispatcher?.addAudioProcessor(pitchProcessor)
-        audioScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 dispatcher?.run()
             } catch (e: Exception) {
@@ -116,9 +118,9 @@ class RecordingViewModel : ViewModel() {
         }
     }
 
-    fun stopRecording() {
+    fun stopRecording() = intent {
         try {
-            isRecording.postValue(false)
+            reduce { state.copy(isRecording = false) }
             cleanupResources()
             calculateScore()
         } catch (e: Exception) {
@@ -127,17 +129,22 @@ class RecordingViewModel : ViewModel() {
         }
     }
 
-    private fun cleanupResources() {
+    private fun cleanupResources() = intent {
         dispatcher?.stop()
         dispatcher = null
 
         timerJob?.cancel()
         timerJob = null
 
-        elapsedTime.postValue(0)
-        currentPitch.postValue(0f)
-        pitchDifference.postValue(0f)
-        clearChartTrigger.postValue(Unit)
+        reduce {
+            state.copy(
+                elapsedTime = 0,
+                currentPitch = 0f,
+                pitchDifference = 0f
+            )
+        }
+
+        postSideEffect(RecordingSideEffect.ClearChart)
 
         // 남은 버퍼 데이터 처리
         if (pitchBuffer.isNotEmpty()) {
@@ -146,33 +153,29 @@ class RecordingViewModel : ViewModel() {
         }
     }
 
-    private fun calculateScore() {
-        viewModelScope.launch {
-            try {
-                val originalPitchList = pitchPairs.map { it.first }
-                val userPitchList = pitchPairs.map { it.second }
+    private fun calculateScore() = intent {
+        try {
+            val originalPitchList = pitchPairs.map { it.first }
+            val userPitchList = pitchPairs.map { it.second }
 
-                val analyzer = ScoreAnalyzer(originalPitchList, userPitchList)
-                val finalScore = analyzer.calculateTotalScore()
+            val analyzer = ScoreAnalyzer(originalPitchList, userPitchList)
+            val finalScore = analyzer.calculateTotalScore()
 
-                score.postValue(finalScore)
-            } catch (e: Exception) {
-                LogManager.e("Failed to calculate score: ${e.message}")
-                throw AppException.ScoreCalculationException("Failed to calculate score", e)
-            }
+            reduce { state.copy(score = finalScore) }
+        } catch (e: Exception) {
+            LogManager.e("Failed to calculate score: ${e.message}")
+            throw AppException.ScoreCalculationException("Failed to calculate score", e)
         }
     }
 
     override fun onCleared() {
         super.onCleared()
-        cleanupResources()
-        viewModelScope.cancel()
-        audioScope.cancel()
+        dispatcher?.stop()
+        dispatcher = null
+        timerJob?.cancel()
+        timerJob = null
     }
 
     // 테스트를 위한 메서드
     fun getPitchPairs(): List<Pair<Float, Float>> = pitchPairs.toList()
 }
-
-
-

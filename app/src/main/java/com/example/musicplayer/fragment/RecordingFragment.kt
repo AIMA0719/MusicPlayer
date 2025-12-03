@@ -11,8 +11,10 @@ import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.example.musicplayer.data.MusicFile
 import com.example.musicplayer.databinding.FragmentRecordingBinding
 import com.example.musicplayer.viewModel.ScoreViewModel
@@ -38,7 +40,6 @@ class RecordingFragment : Fragment() {
     private var _binding: FragmentRecordingBinding? = null
     private val binding get() = _binding!!
 
-    private var elapsedJob: Job? = null
     private var lastOriginIndex = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,37 +65,14 @@ class RecordingFragment : Fragment() {
         setObserver()
 
         binding.micImage.setOnClickListener {
-            if (viewModel.isRecording.value == true) {
-                stopElapsedTimer()
+            if (viewModel.container.stateFlow.value.isRecording) {
                 viewModel.stopRecording()
             } else {
                 viewModel.startRecording(pitchArray)
-                startElapsedTimer()
             }
         }
 
         return binding.root
-    }
-
-    private fun startElapsedTimer() {
-        val startTime = SystemClock.elapsedRealtime()
-        elapsedJob = lifecycleScope.launch {
-            try {
-                while (true) {
-                    val now = SystemClock.elapsedRealtime()
-                    val elapsed = now - startTime
-                    viewModel.elapsedTime.postValue(elapsed)
-                    delay(100)
-                }
-            } catch (_: Exception) {
-                // 타이머가 취소되었을 때 발생하는 예외는 무시
-            }
-        }
-    }
-
-    private fun stopElapsedTimer() {
-        elapsedJob?.cancel()
-        elapsedJob = null
     }
 
     @SuppressLint("SetTextI18n")
@@ -104,70 +82,87 @@ class RecordingFragment : Fragment() {
 
         //LogManager.e(listOf(pitchArray.toList()))
 
-        viewModel.elapsedTime.observe(viewLifecycleOwner) { elapsedMs ->
-            val clampedElapsed = elapsedMs.coerceAtMost(durationMillis)
-            val elapsed = formatMillisToTime(clampedElapsed)
-            val total = formatMillisToTime(durationMillis)
-            binding.timeDisplay.text = "$elapsed / $total"
+        // State Flow collection
+        lifecycleScope.launch {
+            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.container.stateFlow.collect { state ->
+                    // Update elapsed time
+                    val elapsedMs = state.elapsedTime
+                    val clampedElapsed = elapsedMs.coerceAtMost(durationMillis)
+                    val elapsed = formatMillisToTime(clampedElapsed)
+                    val total = formatMillisToTime(durationMillis)
+                    binding.timeDisplay.text = "$elapsed / $total"
 
-            val index = (clampedElapsed / 100).toInt()
-            if (index > lastOriginIndex) {
-                for (i in lastOriginIndex + 1..index) {
-                    val pitch = pitchArray.getOrNull(i) ?: 0f
-                    addOriginPitchEntry(pitch, i / 10f)
+                    val index = (clampedElapsed / 100).toInt()
+                    if (index > lastOriginIndex) {
+                        for (i in lastOriginIndex + 1..index) {
+                            val pitch = pitchArray.getOrNull(i) ?: 0f
+                            addOriginPitchEntry(pitch, i / 10f)
+                        }
+                        lastOriginIndex = index
+                    }
+
+                    if (clampedElapsed >= durationMillis && state.isRecording) {
+                        viewModel.stopRecording()
+                    }
+
+                    // Update current pitch
+                    val pitch = state.currentPitch
+                    val diff = state.pitchDifference
+                    binding.pitchDifference.text = "\uD83C\uDFB5 현재 pitch: %.2f Hz / 오차: %.2f Hz".format(pitch, diff)
+                    if (pitch > 0) {
+                        addUserPitchEntry(pitch, elapsedMs / 1000f)
+                    }
+
+                    // Update recording state
+                    binding.micImage.alpha = if (state.isRecording) 1.0f else 0.5f
+
+                    // Update score
+                    state.score?.let { score ->
+                        Toast.makeText(requireContext(), "점수: $score 점", Toast.LENGTH_LONG).show()
+                        scoreViewModel.saveScore(music.title, score)
+                    }
                 }
-                lastOriginIndex = index
-            }
-
-            if (clampedElapsed >= durationMillis) {
-                stopElapsedTimer()
-                viewModel.stopRecording()
             }
         }
 
-        viewModel.currentPitch.observe(viewLifecycleOwner) { pitch ->
-            val diff = viewModel.pitchDifference.value ?: 0f
-            val elapsed = viewModel.elapsedTime.value ?: 0
+        // Side effect collection
+        lifecycleScope.launch {
+            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.container.sideEffectFlow.collect { sideEffect ->
+                    when (sideEffect) {
+                        is RecordingSideEffect.ClearChart -> {
+                            // 기존 데이터셋을 완전히 제거하고 새로 추가해야 재시작 시 정상 동작함
+                            val userDataSet = LineDataSet(mutableListOf(), "User Pitch").apply {
+                                color = android.graphics.Color.BLUE
+                                setDrawCircles(false)
+                                setDrawValues(false)
+                                lineWidth = 2f
+                            }
 
-            binding.pitchDifference.text = "\uD83C\uDFB5 현재 pitch: %.2f Hz / 오차: %.2f Hz".format(pitch, diff)
-            addUserPitchEntry(pitch, elapsed / 1000f)
-        }
+                            val originalDataSet = LineDataSet(mutableListOf(), "Original Pitch").apply {
+                                color = android.graphics.Color.rgb(255, 165, 0)
+                                setDrawCircles(false)
+                                setDrawValues(false)
+                                lineWidth = 2f
+                            }
 
-        viewModel.isRecording.observe(viewLifecycleOwner) { recording ->
-            binding.micImage.alpha = if (recording) 1.0f else 0.5f
-        }
+                            binding.pitchChart.data = LineData(userDataSet, originalDataSet)
+                            binding.pitchChart.invalidate()
 
-        viewModel.score.observe(viewLifecycleOwner) { score ->
-            Toast.makeText(requireContext(), "점수: $score 점", Toast.LENGTH_LONG).show()
-            scoreViewModel.saveScore(music.title,score)
-        }
+                            lastOriginIndex = -1
+                            lastUserX = -1f
+                            lastOriginX = -1f
 
-        viewModel.clearChartTrigger.observe(viewLifecycleOwner) {
-            // 기존 데이터셋을 완전히 제거하고 새로 추가해야 재시작 시 정상 동작함
-            val userDataSet = LineDataSet(mutableListOf(), "User Pitch").apply {
-                color = android.graphics.Color.BLUE
-                setDrawCircles(false)
-                setDrawValues(false)
-                lineWidth = 2f
+                            initPitchChart()
+                        }
+                        is RecordingSideEffect.ShowError -> {
+                            Toast.makeText(requireContext(), sideEffect.message, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
             }
-
-            val originalDataSet = LineDataSet(mutableListOf(), "Original Pitch").apply {
-                color = android.graphics.Color.rgb(255, 165, 0)
-                setDrawCircles(false)
-                setDrawValues(false)
-                lineWidth = 2f
-            }
-
-            binding.pitchChart.data = LineData(userDataSet, originalDataSet)
-            binding.pitchChart.invalidate()
-
-            lastOriginIndex = -1
-            lastUserX = -1f
-            lastOriginX = -1f
-
-            initPitchChart()
         }
-
     }
 
     private var lastUserX = -1f
@@ -275,7 +270,7 @@ class RecordingFragment : Fragment() {
 
     @SuppressLint("DefaultLocale")
     private fun formatMillisToTime(millis: Long): String {
-        val totalSeconds = (millis / 1000.0).toInt() + if (millis % 1000 > 0) 1 else 0
+        val totalSeconds = millis / 1000
         val minutes = totalSeconds / 60
         val seconds = totalSeconds % 60
         return String.format("%02d:%02d", minutes, seconds)
@@ -283,7 +278,6 @@ class RecordingFragment : Fragment() {
 
     override fun onDestroy() {
         super.onDestroy()
-        stopElapsedTimer()
         viewModel.stopRecording()
         _binding = null
     }

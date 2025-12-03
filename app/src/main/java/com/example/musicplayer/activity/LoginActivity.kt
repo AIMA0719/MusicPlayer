@@ -47,7 +47,6 @@ class LoginActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         // 초기화
-        ContextManager.setContext(this)
         AuthManager.init(this)
         GoogleAuthManager.init(this)
         userRepository = UserRepository(this)

@@ -23,7 +23,6 @@ class SearchActivity : AppCompatActivity() {
 
         setupViews()
         setupRecyclerView()
-        ToastManager.getInstance().setContext(this)
     }
 
     private fun setupViews() {

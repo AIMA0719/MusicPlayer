@@ -19,7 +19,6 @@ class HistoryActivity : AppCompatActivity() {
 
         setupRecyclerView()
         loadHistory()
-        ToastManager.getInstance().setContext(this)
     }
 
     private fun setupRecyclerView() {

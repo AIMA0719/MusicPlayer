@@ -8,4 +8,8 @@
         <item name="android:background">@color/black_overlay</item>
         <item name="android:buttonBarStyle">?android:attr/buttonBarStyle</item>
     </style>
+
+    <style name="ToastAnimationStyle">
+        <item name="android:windowEnterAnimation">@anim/slide_in_bottom</item>
+    </style>
 </resources>

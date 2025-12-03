@@ -27,6 +27,7 @@ object PlayerModule {
 
     @Provides
     @Singleton
+    @androidx.media3.common.util.UnstableApi
     fun provideExoPlayer(
         @ApplicationContext context: Context,
         audioAttributes: AudioAttributes

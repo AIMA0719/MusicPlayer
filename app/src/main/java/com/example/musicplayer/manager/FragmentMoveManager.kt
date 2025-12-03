@@ -15,7 +15,7 @@ class FragmentMoveManager private constructor() {
     }
 
     private fun getFragmentManager(): FragmentManager? {
-        return ContextManager.getContext()?.let { context ->
+        return ContextManager.getActivity()?.let { context ->
             if (context is androidx.appcompat.app.AppCompatActivity) {
                 context.supportFragmentManager
             } else null
@@ -47,7 +47,7 @@ class FragmentMoveManager private constructor() {
             return // 이전과 동일한 프래그먼트라면 추가하지 않음
         }
 
-        if (fragmentManager != null && (ContextManager.getContext() as? androidx.appcompat.app.AppCompatActivity)?.findViewById<View>(R.id.fl_main_layout) != null) {
+        if (fragmentManager != null && (ContextManager.getActivity() as? androidx.appcompat.app.AppCompatActivity)?.findViewById<View>(R.id.fl_main_layout) != null) {
             val transaction = fragmentManager.beginTransaction()
 
             // 슬라이드 애니메이션 설정
@@ -71,7 +71,7 @@ class FragmentMoveManager private constructor() {
 
             fragmentStack.push(fragment) // 스택에 추가
 
-            (ContextManager.getContext() as? com.example.musicplayer.activity.MainActivity)?.viewModel?._currentFragment?.value = fragment.javaClass.simpleName
+            (ContextManager.getActivity() as? com.example.musicplayer.activity.MainActivity)?.viewModel?._currentFragment?.value = fragment.javaClass.simpleName
         }
 
         ToastManager.closeToast()
@@ -105,7 +105,7 @@ class FragmentMoveManager private constructor() {
 
             fragmentManager.popBackStack()
 
-            (ContextManager.getContext() as? com.example.musicplayer.activity.MainActivity)?.viewModel?._currentFragment?.value = getCurrentFragment() ?: "MainFragment"
+            (ContextManager.getActivity() as? com.example.musicplayer.activity.MainActivity)?.viewModel?._currentFragment?.value = getCurrentFragment() ?: "MainFragment"
         }
 
         ToastManager.closeToast()

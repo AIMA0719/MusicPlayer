@@ -1,40 +1,44 @@
 package com.example.musicplayer.manager
 
+import android.app.Activity
 import android.content.Context
 import timber.log.Timber
+import java.lang.ref.WeakReference
 
 /**
  * ## Context Manager
- * 전역적으로 Application Context를 관리하는 매니저 클래스
+ * 전역적으로 현재 활성화된 Activity Context를 관리하는 매니저 클래스
  *
- * ⚠️ 메모리 누수 방지: Activity Context가 아닌 Application Context만 저장
+ * ⚠️ 메모리 누수 방지: WeakReference를 사용하여 Activity를 저장
  */
 object ContextManager {
-    private var applicationContext: Context? = null
+    private var currentActivity: WeakReference<Activity>? = null
 
     /**
-     * Application Context를 설정합니다.
-     * @param context Context - Application Context로 변환됩니다
+     * 현재 활성화된 Activity Context를 설정합니다.
+     * @param activity Activity - 현재 활성화된 Activity
      */
-    fun setContext(context: Context) {
-        // Activity Context가 들어와도 Application Context로 변환
-        this.applicationContext = context.applicationContext
-        Timber.d("ContextManager initialized with Application Context")
+    fun setActivity(activity: Activity) {
+        currentActivity = WeakReference(activity)
+        Timber.d("Current activity set: ${activity.javaClass.simpleName}")
     }
 
     /**
-     * Application Context를 반환합니다.
-     * @return Context? Application Context (null일 경우 초기화 필요)
+     * 현재 활성화된 Activity Context를 반환합니다.
+     * @return Activity? 현재 활성화된 Activity (null일 경우 사용 불가)
      */
-    fun getContext(): Context? {
-        if (applicationContext == null) {
-            Timber.w("ContextManager not initialized! Call setContext() first.")
+    fun getActivity(): Activity? {
+        val activity = currentActivity?.get()
+        if (activity == null) {
+            Timber.w("Current activity is null or has been destroyed.")
         }
-        return applicationContext
+        return activity
     }
 
-    fun clearContext() {
-        applicationContext = null
-        Timber.d("ContextManager cleared")
+    fun clearActivity(activity: Activity) {
+        if (currentActivity?.get() == activity) {
+            currentActivity?.clear()
+            Timber.d("Current activity cleared: ${activity.javaClass.simpleName}")
+        }
     }
 }

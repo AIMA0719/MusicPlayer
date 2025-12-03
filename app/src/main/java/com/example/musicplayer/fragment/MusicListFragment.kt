@@ -53,7 +53,7 @@ class MusicListFragment : Fragment() {
 
         lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.state.collect { state ->
+                viewModel.container.stateFlow.collect { state ->
                     LogManager.d("MusicListFragment state: isAnalyzing=${state.isAnalyzing}, " +
                             "hasOriginalPitch=${state.originalPitch != null}, " +
                             "hasSelectedMusic=${state.selectedMusic != null}, " +
