@@ -128,7 +128,8 @@ dependencies {
     implementation 'com.jakewharton.timber:timber:5.0.1'
 
     // === Debugging ===
-    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.13'
+    // LeakCanary - 메모리 누수 감지 라이브러리 (필요시 주석 해제)
+    // debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.13'
 
     // === Local Files ===
     implementation fileTree(dir: "libs", include: ["*.jar"])

@@ -37,6 +37,9 @@ class AudioRecorderManager {
     private val _recordingError = MutableStateFlow<String?>(null)
     val recordingError: StateFlow<String?> = _recordingError.asStateFlow()
 
+    private val _amplitude = MutableStateFlow(0)
+    val amplitude: StateFlow<Int> = _amplitude.asStateFlow()
+
     private var pausedTime: Long = 0
     private var pauseStartTime: Long = 0
 
@@ -172,6 +175,14 @@ class AudioRecorderManager {
                     // 일시정지 중이 아닐 때만 시간 업데이트
                     val elapsedTime = System.currentTimeMillis() - startTime - pausedTime
                     _recordingTime.value = elapsedTime
+
+                    // 진폭 업데이트
+                    try {
+                        val currentAmplitude = mediaRecorder?.maxAmplitude ?: 0
+                        _amplitude.value = currentAmplitude
+                    } catch (e: Exception) {
+                        LogManager.e("Failed to get amplitude: ${e.message}")
+                    }
                 }
                 delay(100) // 100ms마다 업데이트
             }
@@ -182,6 +193,7 @@ class AudioRecorderManager {
         _isRecording.value = false
         _isPaused.value = false
         _recordingTime.value = 0L
+        _amplitude.value = 0
         pausedTime = 0L
         pauseStartTime = 0L
 

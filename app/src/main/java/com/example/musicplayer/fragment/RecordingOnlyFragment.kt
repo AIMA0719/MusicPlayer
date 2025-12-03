@@ -64,16 +64,12 @@ class RecordingOnlyFragment : Fragment() {
     }
 
     private fun setupViews() {
-        binding.btnRecord.setOnClickListener {
-            if (audioRecorderManager.isRecording.value) {
-                // 녹음 중이면 녹음 완료 (정지)
-                stopRecording()
-            } else {
-                // 녹음 시작
-                checkPermissionAndStartRecording()
-            }
+        // 녹음 시작 버튼
+        binding.btnStart.setOnClickListener {
+            checkPermissionAndStartRecording()
         }
 
+        // 일시정지/재개 버튼
         binding.btnPause.setOnClickListener {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
                 if (audioRecorderManager.isPaused.value) {
@@ -88,6 +84,12 @@ class RecordingOnlyFragment : Fragment() {
             }
         }
 
+        // 녹음 완료 버튼
+        binding.btnStop.setOnClickListener {
+            stopRecording()
+        }
+
+        // 공유 버튼
         binding.btnShare.setOnClickListener {
             shareRecordingFile()
         }
@@ -115,6 +117,12 @@ class RecordingOnlyFragment : Fragment() {
                 }
 
                 launch {
+                    audioRecorderManager.amplitude.collectLatest { amplitude ->
+                        binding.waveformCircleView.setAmplitude(amplitude)
+                    }
+                }
+
+                launch {
                     audioRecorderManager.recordingError.collectLatest { error ->
                         error?.let {
                             ToastManager.showToast(it)
@@ -129,59 +137,63 @@ class RecordingOnlyFragment : Fragment() {
     private fun updateRecordingUI(isRecording: Boolean) {
         if (isRecording) {
             // 녹음 중
-            binding.btnRecord.text = "녹음\n완료"
-            binding.btnRecord.setBackgroundColor(
-                ContextCompat.getColor(requireContext(), android.R.color.holo_red_dark)
-            )
             binding.tvStatus.text = "녹음 중..."
             binding.viewRecordingIndicator.isVisible = true
+
+            // 버튼 visibility 변경
+            binding.btnStart.isVisible = false
             binding.btnPause.isVisible = true
+            binding.btnStop.isVisible = true
+
             binding.layoutSavedFile.isVisible = false
 
-            // 마이크 아이콘을 빨간색으로 변경
-            binding.ivMicrophone.setColorFilter(
-                ContextCompat.getColor(requireContext(), android.R.color.holo_red_dark)
-            )
+            // Circle View 애니메이션 시작
+            binding.waveformCircleView.startRecording()
         } else {
             // 녹음 정지
-            binding.btnRecord.text = "녹음\n시작"
-            binding.btnRecord.setBackgroundColor(
-                ContextCompat.getColor(requireContext(), android.R.color.holo_green_dark)
-            )
             binding.tvStatus.text = "녹음 대기 중"
             binding.viewRecordingIndicator.isVisible = false
-            binding.btnPause.isVisible = false
 
-            // 마이크 아이콘을 원래 색상으로 복원
-            binding.ivMicrophone.clearColorFilter()
+            // 버튼 visibility 변경
+            binding.btnStart.isVisible = true
+            binding.btnPause.isVisible = false
+            binding.btnStop.isVisible = false
 
             // 일시정지 버튼 텍스트 초기화
-            binding.btnPause.text = "일시\n정지"
+            binding.btnPause.text = "⏸"
+            binding.btnPause.backgroundTintList = ContextCompat.getColorStateList(
+                requireContext(), android.R.color.holo_orange_dark
+            )
+
+            // Circle View 애니메이션 중지
+            binding.waveformCircleView.stopRecording()
         }
     }
 
     private fun updatePauseUI(isPaused: Boolean) {
         if (isPaused) {
             // 일시정지 중
-            binding.btnPause.text = "재개"
-            binding.tvStatus.text = "녹음 일시정지"
+            binding.btnPause.text = "▶"
+            binding.btnPause.backgroundTintList = ContextCompat.getColorStateList(
+                requireContext(), android.R.color.holo_green_light
+            )
+            binding.tvStatus.text = "일시정지"
             binding.viewRecordingIndicator.isVisible = false
 
-            // 마이크 아이콘을 노란색으로 변경
-            binding.ivMicrophone.setColorFilter(
-                ContextCompat.getColor(requireContext(), android.R.color.holo_orange_dark)
-            )
+            // Circle View 일시정지 상태
+            binding.waveformCircleView.pauseRecording()
         } else {
             // 녹음 중 또는 정지
             if (audioRecorderManager.isRecording.value) {
-                binding.btnPause.text = "일시\n정지"
+                binding.btnPause.text = "⏸"
+                binding.btnPause.backgroundTintList = ContextCompat.getColorStateList(
+                    requireContext(), android.R.color.holo_orange_dark
+                )
                 binding.tvStatus.text = "녹음 중..."
                 binding.viewRecordingIndicator.isVisible = true
 
-                // 마이크 아이콘을 빨간색으로 변경
-                binding.ivMicrophone.setColorFilter(
-                    ContextCompat.getColor(requireContext(), android.R.color.holo_red_dark)
-                )
+                // Circle View 재개 상태
+                binding.waveformCircleView.resumeRecording()
             }
         }
     }

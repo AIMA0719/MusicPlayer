@@ -29,9 +29,12 @@ class RecordingViewModel : ViewModel(), ContainerHost<RecordingState, RecordingS
 
     private var dispatcher: AudioDispatcher? = null
     private var timerJob: kotlinx.coroutines.Job? = null
+    private var amplitudeJob: kotlinx.coroutines.Job? = null
 
     private var currentPitchArray: FloatArray = floatArrayOf()
     private var startTimeMillis: Long = 0
+    private var pausedTimeTotal: Long = 0
+    private var pauseStartTime: Long = 0
     private val pitchPairs = mutableListOf<Pair<Float, Float>>()
     private val pitchBuffer = mutableListOf<Pair<Float, Float>>()
     private val bufferSize = 10
@@ -42,13 +45,25 @@ class RecordingViewModel : ViewModel(), ContainerHost<RecordingState, RecordingS
         }
 
         try {
-            reduce { state.copy(isRecording = true, elapsedTime = 0, score = null) }
+            reduce {
+                state.copy(
+                    isRecording = true,
+                    isPaused = false,
+                    elapsedTime = 0,
+                    score = null,
+                    currentScore = 0,
+                    accuracy = 0f
+                )
+            }
             currentPitchArray = pitchArray
             startTimeMillis = System.currentTimeMillis()
+            pausedTimeTotal = 0
+            pauseStartTime = 0
             pitchPairs.clear()
             pitchBuffer.clear()
 
             setupTimer()
+            setupAmplitudeMonitor()
             setupAudioDispatcher()
         } catch (e: Exception) {
             LogManager.e("Failed to start recording: ${e.message}")
@@ -60,9 +75,27 @@ class RecordingViewModel : ViewModel(), ContainerHost<RecordingState, RecordingS
     private fun setupTimer() {
         timerJob = viewModelScope.launch {
             while (container.stateFlow.value.isRecording) {
-                val ms = (System.currentTimeMillis() - startTimeMillis)
-                intent {
-                    reduce { state.copy(elapsedTime = ms) }
+                if (!container.stateFlow.value.isPaused) {
+                    val ms = (System.currentTimeMillis() - startTimeMillis - pausedTimeTotal)
+                    intent {
+                        reduce { state.copy(elapsedTime = ms) }
+                    }
+                }
+                delay(100)
+            }
+        }
+    }
+
+    private fun setupAmplitudeMonitor() {
+        amplitudeJob = viewModelScope.launch {
+            while (container.stateFlow.value.isRecording) {
+                if (!container.stateFlow.value.isPaused) {
+                    // 진폭 시뮬레이션 (실제로는 마이크로부터 가져와야 함)
+                    // AudioDispatcher를 통해 가져올 수 있지만 여기서는 간단히 랜덤값 사용
+                    val simulatedAmplitude = (1000..5000).random()
+                    intent {
+                        reduce { state.copy(amplitude = simulatedAmplitude) }
+                    }
                 }
                 delay(100)
             }
@@ -79,7 +112,10 @@ class RecordingViewModel : ViewModel(), ContainerHost<RecordingState, RecordingS
         ) { result, _ ->
             viewModelScope.launch(Dispatchers.IO) {
                 try {
-                    val ms = (System.currentTimeMillis() - startTimeMillis).toInt()
+                    // 일시정지 중이면 피치 처리 건너뛰기
+                    if (container.stateFlow.value.isPaused) return@launch
+
+                    val ms = (System.currentTimeMillis() - startTimeMillis - pausedTimeTotal).toInt()
                     val index = ms / 100
 
                     if (index in currentPitchArray.indices) {
@@ -91,6 +127,9 @@ class RecordingViewModel : ViewModel(), ContainerHost<RecordingState, RecordingS
                         if (pitchBuffer.size >= bufferSize) {
                             pitchPairs.addAll(pitchBuffer)
                             pitchBuffer.clear()
+
+                            // 실시간 점수/정확도 계산
+                            calculateRealtimeScore()
                         }
 
                         intent {
@@ -118,6 +157,52 @@ class RecordingViewModel : ViewModel(), ContainerHost<RecordingState, RecordingS
         }
     }
 
+    private fun calculateRealtimeScore() = intent {
+        try {
+            if (pitchPairs.isEmpty()) return@intent
+
+            val originalPitchList = pitchPairs.map { it.first }
+            val userPitchList = pitchPairs.map { it.second }
+
+            val analyzer = ScoreAnalyzer(originalPitchList, userPitchList)
+            val score = analyzer.calculateTotalScore()
+
+            // 정확도 계산 (0-100%)
+            val accuracy = if (originalPitchList.isNotEmpty()) {
+                val matchCount = originalPitchList.zip(userPitchList).count { (original, user) ->
+                    user > 0 && abs(user - original) < 50 // 50Hz 이내면 정확하다고 판단
+                }
+                (matchCount.toFloat() / originalPitchList.size * 100f).coerceIn(0f, 100f)
+            } else {
+                0f
+            }
+
+            reduce {
+                state.copy(
+                    currentScore = score,
+                    accuracy = accuracy
+                )
+            }
+        } catch (e: Exception) {
+            LogManager.e("Failed to calculate realtime score: ${e.message}")
+        }
+    }
+
+    fun pauseRecording() = intent {
+        if (!state.isRecording || state.isPaused) return@intent
+
+        pauseStartTime = System.currentTimeMillis()
+        reduce { state.copy(isPaused = true) }
+    }
+
+    fun resumeRecording() = intent {
+        if (!state.isRecording || !state.isPaused) return@intent
+
+        pausedTimeTotal += (System.currentTimeMillis() - pauseStartTime)
+        pauseStartTime = 0
+        reduce { state.copy(isPaused = false) }
+    }
+
     fun stopRecording() = intent {
         try {
             reduce { state.copy(isRecording = false) }
@@ -136,13 +221,23 @@ class RecordingViewModel : ViewModel(), ContainerHost<RecordingState, RecordingS
         timerJob?.cancel()
         timerJob = null
 
+        amplitudeJob?.cancel()
+        amplitudeJob = null
+
         reduce {
             state.copy(
+                isPaused = false,
                 elapsedTime = 0,
                 currentPitch = 0f,
-                pitchDifference = 0f
+                pitchDifference = 0f,
+                amplitude = 0,
+                currentScore = 0,
+                accuracy = 0f
             )
         }
+
+        pausedTimeTotal = 0
+        pauseStartTime = 0
 
         postSideEffect(RecordingSideEffect.ClearChart)
 
@@ -174,6 +269,8 @@ class RecordingViewModel : ViewModel(), ContainerHost<RecordingState, RecordingS
         dispatcher = null
         timerJob?.cancel()
         timerJob = null
+        amplitudeJob?.cancel()
+        amplitudeJob = null
     }
 
     // 테스트를 위한 메서드
