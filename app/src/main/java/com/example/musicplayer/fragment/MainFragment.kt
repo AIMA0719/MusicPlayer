@@ -110,6 +110,9 @@ class MainFragment : Fragment() {
             try {
                 // Load user level data
                 val userLevel = database.userLevelDao().getByUserIdSync(userId)
+                com.example.musicplayer.manager.LogManager.i("MainFragment.loadGameData - userId: $userId, userLevel: $userLevel")
+                com.example.musicplayer.manager.LogManager.i("MainFragment.loadGameData - totalRecordings: ${userLevel?.totalRecordings}")
+
                 if (userLevel != null) {
                     tvLevelTitle.text = LevelSystem.getLevelTitle(userLevel.level)
                     tvLevel.text = "Lv.${userLevel.level}"

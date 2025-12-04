@@ -71,7 +71,8 @@ class RecordingOnlyFragment : Fragment() {
     }
 
     private fun setupGameManager() {
-        gameManager = GameManager(requireContext())
+        val userId = com.example.musicplayer.manager.AuthManager.getCurrentUserId() ?: "guest"
+        gameManager = GameManager(requireContext(), userId)
         gameManagerInitJob = lifecycleScope.launch {
             gameManager.initialize()
         }
@@ -274,12 +275,13 @@ class RecordingOnlyFragment : Fragment() {
 
                 LogManager.i("Starting to save recording history")
 
+                val userId = com.example.musicplayer.manager.AuthManager.getCurrentUserId() ?: "guest"
                 val recordingEndTime = System.currentTimeMillis()
                 val duration = recordingEndTime - recordingStartTime
 
                 // RecordingHistoryEntity 생성 (단순 녹음이므로 점수는 0)
                 val recordingHistory = RecordingHistoryEntity(
-                    userId = "guest",
+                    userId = userId,
                     songName = "녹음 파일",
                     songArtist = "",
                     songDuration = duration,

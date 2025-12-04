@@ -75,7 +75,8 @@ class RecordingFragment : Fragment() {
         }
 
         // GameManager 초기화 - Job 저장하여 나중에 완료 대기
-        gameManager = GameManager(requireContext())
+        val userId = com.example.musicplayer.manager.AuthManager.getCurrentUserId() ?: "guest"
+        gameManager = GameManager(requireContext(), userId)
         gameManagerInitJob = lifecycleScope.launch {
             gameManager.initialize()
         }

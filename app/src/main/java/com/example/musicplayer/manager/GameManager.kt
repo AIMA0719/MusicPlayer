@@ -20,7 +20,10 @@ import java.util.Calendar
  * - 도전과제
  * - 경험치 관리
  */
-class GameManager(private val context: Context) {
+class GameManager(
+    private val context: Context,
+    private val userId: String = "guest"
+) {
 
     private val database = AppDatabase.getDatabase(context)
     private val userLevelDao = database.userLevelDao()
@@ -28,7 +31,6 @@ class GameManager(private val context: Context) {
     private val recordingHistoryDao = database.recordingHistoryDao()
 
     private val scope = CoroutineScope(Dispatchers.IO)
-    private val userId = "guest" // 추후 로그인 시스템 연동
 
     /**
      * 초기화 - 사용자 레벨 및 도전과제 생성
@@ -120,7 +122,16 @@ class GameManager(private val context: Context) {
      * 사용자 통계 업데이트
      */
     private suspend fun updateUserStats(score: Int) {
+        LogManager.i("GameManager.updateUserStats called - userId: $userId, score: $score")
+
+        val beforeUpdate = userLevelDao.getByUserIdSync(userId)
+        LogManager.i("Before update - totalRecordings: ${beforeUpdate?.totalRecordings}")
+
         userLevelDao.incrementTotalRecordings(userId)
+
+        val afterUpdate = userLevelDao.getByUserIdSync(userId)
+        LogManager.i("After update - totalRecordings: ${afterUpdate?.totalRecordings}")
+
         userLevelDao.updateHighestScore(userId, score)
 
         // 연속 녹음 일수 체크
