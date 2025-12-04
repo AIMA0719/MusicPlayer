@@ -1,5 +1,6 @@
 package com.example.musicplayer.adapter
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -23,9 +24,16 @@ class MusicListAdapter(
     }
 
     inner class MusicViewHolder(private val binding: FragmentMusicListItemBinding) : RecyclerView.ViewHolder(binding.root) {
+        @SuppressLint("DefaultLocale")
         fun bind(music: MusicFile) {
             binding.title.text = music.title
-            binding.artist.text = music.artist
+
+            // 재생 시간 포맷팅
+            val durationSeconds = (music.duration / 1000).toInt()
+            val minutes = durationSeconds / 60
+            val seconds = durationSeconds % 60
+            binding.duration.text = String.format("%02d:%02d", minutes, seconds)
+
             binding.root.setOnClickListener { onClick(music) }
         }
     }

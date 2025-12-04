@@ -40,6 +40,14 @@
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right" />
+
+        <action
+            android:id="@+id/action_musicList_to_musicPlayer"
+            app:destination="@id/musicPlayerFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
 
     <!-- 피치 매칭 녹음 화면 (MusicListFragment에서 진입) -->
@@ -60,6 +68,24 @@
         <argument
             android:name="durationMillis"
             app:argType="long" />
+    </fragment>
+
+    <!-- 음악 재생 화면 (MusicListFragment에서 진입) -->
+    <fragment
+        android:id="@+id/musicPlayerFragment"
+        android:name="com.example.musicplayer.fragment.MusicPlayerFragment"
+        android:label="음악 재생"
+        tools:layout="@layout/fragment_music_player">
+
+        <argument
+            android:name="musicList"
+            app:argType="com.example.musicplayer.data.MusicFile[]"
+            app:nullable="false" />
+
+        <argument
+            android:name="currentIndex"
+            app:argType="integer"
+            android:defaultValue="0" />
     </fragment>
 
 </navigation>

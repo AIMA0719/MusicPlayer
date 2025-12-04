@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_dialog_rounded"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <!-- 타이틀 -->
+    <TextView
+        android:id="@+id/tv_music_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="음악 선택"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#212121"
+        android:gravity="center"
+        android:layout_marginBottom="20dp" />
+
+    <!-- 녹음하러 가기 버튼 -->
+    <LinearLayout
+        android:id="@+id/btn_go_recording"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@drawable/bg_button_primary"
+        android:padding="16dp"
+        android:layout_marginBottom="12dp"
+        android:gravity="center_vertical"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@android:drawable/ic_btn_speak_now"
+            android:tint="@android:color/white" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="녹음하기 (점수 내기)"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginStart="12dp" />
+
+    </LinearLayout>
+
+    <!-- 음악 듣기 버튼 -->
+    <LinearLayout
+        android:id="@+id/btn_play_music"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@drawable/bg_button_secondary"
+        android:padding="16dp"
+        android:layout_marginBottom="12dp"
+        android:gravity="center_vertical"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@android:drawable/ic_media_play"
+            android:tint="#2196F3" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="음악 듣기"
+            android:textColor="#212121"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginStart="12dp" />
+
+    </LinearLayout>
+
+    <!-- 취소 버튼 -->
+    <TextView
+        android:id="@+id/btn_cancel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="취소"
+        android:textSize="14sp"
+        android:textColor="#757575"
+        android:gravity="center"
+        android:padding="12dp"
+        android:clickable="true"
+        android:focusable="true" />
+
+</LinearLayout>

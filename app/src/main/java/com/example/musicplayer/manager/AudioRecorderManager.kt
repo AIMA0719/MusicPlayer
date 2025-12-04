@@ -157,14 +157,28 @@ class AudioRecorderManager {
 
     private fun createOutputFile(context: Context): File {
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val fileName = "recording_$timestamp.m4a"
-        
+
+        // 멋진 파일명 생성 (여러 옵션 중 랜덤 선택)
+        val coolPrefixes = listOf(
+            "MySinging",
+            "MyVocal",
+            "MyVoice",
+            "SweetVoice",
+            "GoldenVoice",
+            "MagicVoice",
+            "내노래",
+            "나의노래",
+            "감성보컬"
+        )
+        val randomPrefix = coolPrefixes.random()
+        val fileName = "${randomPrefix}_$timestamp.m4a"
+
         // 앱의 외부 저장소 디렉토리 사용 (Android/data/package/files/Recordings)
         val recordingsDir = File(context.getExternalFilesDir(null), "Recordings")
         if (!recordingsDir.exists()) {
             recordingsDir.mkdirs()
         }
-        
+
         return File(recordingsDir, fileName)
     }
 

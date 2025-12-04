@@ -1,37 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:paddingHorizontal="10dp"
-    android:paddingVertical="15dp"
-    android:layout_marginHorizontal="10dp"
-    android:layout_marginBottom="10dp"
+    android:layout_marginHorizontal="12dp"
+    android:layout_marginTop="6dp"
+    android:layout_marginBottom="6dp"
     android:background="@drawable/bg_file_item"
-    android:orientation="horizontal">
+    android:padding="14dp"
+    android:elevation="2dp">
 
+    <!-- 음악 아이콘 -->
+    <ImageView
+        android:id="@+id/icon_music"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@android:drawable/ic_media_play"
+        android:tint="#2196F3"
+        android:background="@drawable/bg_button_secondary"
+        android:padding="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <!-- 음악 제목 -->
     <TextView
         android:id="@+id/title"
-        app:layout_constraintStart_toStartOf="parent"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="8dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="#212121"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/duration"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/icon_music"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/artist"
-        android:textColor="@color/black"
-        android:gravity="left|center_vertical"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textAppearance="?attr/textAppearanceListItem" />
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="노래 제목" />
 
+    <!-- 음악 길이 -->
     <TextView
-        android:id="@+id/artist"
-        app:layout_constraintTop_toBottomOf="@+id/title"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:visibility="gone"
-        android:textColor="@color/black"
-        android:gravity="left|center_vertical"
-        android:layout_width="match_parent"
+        android:id="@+id/duration"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"/>
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="4dp"
+        android:textColor="#757575"
+        android:textSize="13sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/icon_music"
+        app:layout_constraintTop_toBottomOf="@+id/title"
+        tools:text="03:45" />
+
+    <!-- artist는 제거 -->
+
 </androidx.constraintlayout.widget.ConstraintLayout>
