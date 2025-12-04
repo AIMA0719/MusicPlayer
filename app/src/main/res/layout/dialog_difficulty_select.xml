@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_dialog_rounded"
+    android:layout_gravity="center"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- 타이틀 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="채점 난이도 선택"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#212121"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="8dp" />
+
+        <!-- 설명 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="얼마나 엄격하게 채점할까요?"
+            android:textSize="14sp"
+            android:textColor="#757575"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="24dp" />
+
+        <!-- 난이도 1: 안 불러도 돼 -->
+        <LinearLayout
+            android:id="@+id/difficulty_very_easy"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@drawable/bg_button_secondary"
+            android:layout_marginBottom="10dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="😊 안 불러도 돼"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#212121" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="점수 × 1.3배"
+                android:textSize="12sp"
+                android:textColor="#757575"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+
+        <!-- 난이도 2: 설렁설렁 -->
+        <LinearLayout
+            android:id="@+id/difficulty_easy"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@drawable/bg_button_secondary"
+            android:layout_marginBottom="10dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🙂 설렁설렁"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#212121" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="점수 × 1.15배"
+                android:textSize="12sp"
+                android:textColor="#757575"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+
+        <!-- 난이도 3: 보통 (추천) -->
+        <LinearLayout
+            android:id="@+id/difficulty_normal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@drawable/bg_button_primary"
+            android:layout_marginBottom="10dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="😐 보통 (추천)"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/white" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="점수 그대로"
+                android:textSize="12sp"
+                android:textColor="#E3F2FD"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+
+        <!-- 난이도 4: 잘 불러야 돼 -->
+        <LinearLayout
+            android:id="@+id/difficulty_hard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@drawable/bg_button_secondary"
+            android:layout_marginBottom="10dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="😤 잘 불러야 돼"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#212121" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="점수 × 0.9배"
+                android:textSize="12sp"
+                android:textColor="#757575"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+
+        <!-- 난이도 5: 인간 노래기계 모드 -->
+        <LinearLayout
+            android:id="@+id/difficulty_very_hard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@drawable/bg_button_secondary"
+            android:layout_marginBottom="16dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🤖 인간 노래기계 모드"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#212121" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="점수 × 0.75배"
+                android:textSize="12sp"
+                android:textColor="#757575"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+
+        <!-- 취소 버튼 -->
+        <TextView
+            android:id="@+id/btn_cancel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="취소"
+            android:textSize="14sp"
+            android:textColor="#757575"
+            android:gravity="center"
+            android:padding="12dp"
+            android:clickable="true"
+            android:focusable="true" />
+
+    </LinearLayout>
+
+</ScrollView>

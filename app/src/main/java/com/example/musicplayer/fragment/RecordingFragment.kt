@@ -17,6 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.musicplayer.data.MusicFile
 import com.example.musicplayer.databinding.FragmentRecordingBinding
+import com.example.musicplayer.manager.ScoreFeedbackDialogManager
 import com.example.musicplayer.viewModel.ScoreViewModel
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
@@ -162,9 +163,30 @@ class RecordingFragment : Fragment() {
                     }
 
                     // Update final score
-                    state.score?.let { score ->
-                        Toast.makeText(requireContext(), "최종 점수: $score 점", Toast.LENGTH_LONG).show()
-                        scoreViewModel.saveScore(music.title, score)
+                    state.score?.let { baseScore ->
+                        // ScoreAnalyzer 가져오기
+                        val analyzer = viewModel.getScoreAnalyzer()
+                        if (analyzer != null) {
+                            // 1단계: 채점 난이도 선택 다이얼로그 표시
+                            ScoreFeedbackDialogManager.showDifficultySelectDialog(
+                                requireContext(),
+                                baseScore
+                            ) { adjustedScore, difficulty ->
+                                // 점수 저장
+                                scoreViewModel.saveScore(music.title, adjustedScore, music.artist)
+
+                                // 2단계: 상세 피드백 다이얼로그 표시
+                                ScoreFeedbackDialogManager.showScoreFeedbackDialog(
+                                    requireContext(),
+                                    analyzer,
+                                    adjustedScore,
+                                    difficulty
+                                )
+                            }
+                        } else {
+                            // Fallback: analyzer가 없으면 토스트로 표시
+                            Toast.makeText(requireContext(), "점수 계산 중 오류가 발생했습니다", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
             }

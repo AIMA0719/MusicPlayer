@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    android:background="@drawable/bg_dialog_rounded"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- 타이틀 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="노래 분석 결과"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#212121"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="8dp" />
+
+        <!-- 최종 점수 -->
+        <TextView
+            android:id="@+id/tv_final_score"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="85점"
+            android:textSize="48sp"
+            android:textStyle="bold"
+            android:textColor="#2196F3"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="4dp" />
+
+        <!-- 점수 등급 메시지 -->
+        <TextView
+            android:id="@+id/tv_score_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="훌륭합니다!"
+            android:textSize="16sp"
+            android:textColor="#757575"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="24dp" />
+
+        <!-- 구분선 -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#E0E0E0"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 상세 점수 섹션 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="상세 점수"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#212121"
+            android:layout_marginBottom="12dp" />
+
+        <!-- 음정 정확도 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🎵 음정 정확도"
+                android:textSize="14sp"
+                android:textColor="#424242" />
+
+            <TextView
+                android:id="@+id/tv_pitch_score"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="87%"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#2196F3" />
+        </LinearLayout>
+
+        <!-- 리듬 정확도 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="⏱ 리듬 정확도"
+                android:textSize="14sp"
+                android:textColor="#424242" />
+
+            <TextView
+                android:id="@+id/tv_rhythm_score"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="92%"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#2196F3" />
+        </LinearLayout>
+
+        <!-- 볼륨 안정성 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🔊 볼륨 안정성"
+                android:textSize="14sp"
+                android:textColor="#424242" />
+
+            <TextView
+                android:id="@+id/tv_volume_score"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="78%"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#2196F3" />
+        </LinearLayout>
+
+        <!-- 길이 매칭 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="⏳ 길이 매칭"
+                android:textSize="14sp"
+                android:textColor="#424242" />
+
+            <TextView
+                android:id="@+id/tv_duration_score"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="100%"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#2196F3" />
+        </LinearLayout>
+
+        <!-- 구분선 -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#E0E0E0"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 추가 정보 섹션 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="추가 정보"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#212121"
+            android:layout_marginBottom="12dp" />
+
+        <!-- 난이도 정보 -->
+        <LinearLayout
+            android:id="@+id/difficulty_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🎯 곡 난이도"
+                android:textSize="14sp"
+                android:textColor="#424242" />
+
+            <TextView
+                android:id="@+id/tv_difficulty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="어려움"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#FF9800" />
+        </LinearLayout>
+
+        <!-- 비브라토 정보 -->
+        <LinearLayout
+            android:id="@+id/vibrato_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🎼 비브라토"
+                android:textSize="14sp"
+                android:textColor="#424242" />
+
+            <TextView
+                android:id="@+id/tv_vibrato"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="감지됨 (우수)"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#4CAF50" />
+        </LinearLayout>
+
+        <!-- 구분선 -->
+        <View
+            android:id="@+id/feedback_divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#E0E0E0"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone" />
+
+        <!-- 피드백 섹션 -->
+        <TextView
+            android:id="@+id/feedback_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="개선점"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#212121"
+            android:layout_marginBottom="12dp"
+            android:visibility="gone" />
+
+        <!-- 피드백 내용 -->
+        <TextView
+            android:id="@+id/tv_feedback"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="14sp"
+            android:textColor="#424242"
+            android:lineSpacingMultiplier="1.3"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone" />
+
+        <!-- 확인 버튼 -->
+        <TextView
+            android:id="@+id/btn_confirm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="확인"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:gravity="center"
+            android:padding="14dp"
+            android:background="@drawable/bg_button_primary"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginTop="8dp" />
+
+    </LinearLayout>
+
+</ScrollView>

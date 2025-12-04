@@ -1,19 +1,16 @@
 package com.example.musicplayer.fragment
 
-import kotlinx.coroutines.delay
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import be.tarsos.dsp.AudioDispatcher
 import be.tarsos.dsp.io.android.AudioDispatcherFactory
 import be.tarsos.dsp.pitch.PitchProcessor
 import com.example.musicplayer.error.AppException
-import com.example.musicplayer.error.ErrorHandler
 import com.example.musicplayer.manager.LogManager
-import com.example.musicplayer.manager.ToastManager
 import com.example.musicplayer.scoreAlgorythm.ScoreAnalyzer
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.orbitmvi.orbit.Container
 import org.orbitmvi.orbit.ContainerHost
 import org.orbitmvi.orbit.syntax.simple.intent
@@ -38,6 +35,9 @@ class RecordingViewModel : ViewModel(), ContainerHost<RecordingState, RecordingS
     private val pitchPairs = mutableListOf<Pair<Float, Float>>()
     private val pitchBuffer = mutableListOf<Pair<Float, Float>>()
     private val bufferSize = 10
+
+    // ScoreAnalyzer 저장
+    private var scoreAnalyzer: ScoreAnalyzer? = null
 
     fun startRecording(pitchArray: FloatArray) = intent {
         if (state.isRecording) {
@@ -254,7 +254,17 @@ class RecordingViewModel : ViewModel(), ContainerHost<RecordingState, RecordingS
             val userPitchList = pitchPairs.map { it.second }
 
             val analyzer = ScoreAnalyzer(originalPitchList, userPitchList)
-            val finalScore = analyzer.calculateTotalScore()
+            scoreAnalyzer = analyzer // Analyzer 저장
+            var finalScore = analyzer.calculateTotalScore()
+
+            // 95점 이상이면 50% 확률로 100점 처리
+            if (finalScore in 95..<100) {
+                val random = kotlin.random.Random.nextBoolean()
+                if (random) {
+                    finalScore = 100
+                    LogManager.d("Score bonus applied: 95+ → 100")
+                }
+            }
 
             reduce { state.copy(score = finalScore) }
         } catch (e: Exception) {
@@ -262,6 +272,9 @@ class RecordingViewModel : ViewModel(), ContainerHost<RecordingState, RecordingS
             throw AppException.ScoreCalculationException("Failed to calculate score", e)
         }
     }
+
+    // ScoreAnalyzer 가져오기
+    fun getScoreAnalyzer(): ScoreAnalyzer? = scoreAnalyzer
 
     override fun onCleared() {
         super.onCleared()
@@ -272,7 +285,4 @@ class RecordingViewModel : ViewModel(), ContainerHost<RecordingState, RecordingS
         amplitudeJob?.cancel()
         amplitudeJob = null
     }
-
-    // 테스트를 위한 메서드
-    fun getPitchPairs(): List<Pair<Float, Float>> = pitchPairs.toList()
 }

@@ -322,15 +322,6 @@ class ScoreAnalyzer(
         return pitch < silenceThreshold
     }
 
-    /**
-     * RMS (Root Mean Square) 계산
-     */
-    private fun calculateRMS(data: List<Float>): Double {
-        if (data.isEmpty()) return 0.0
-        val sumSquares = data.sumOf { (it * it).toDouble() }
-        return sqrt(sumSquares / data.size)
-    }
-
     // ==================== 상세 분석 메서드 (디버깅/피드백용) ====================
 
     /**
@@ -549,9 +540,18 @@ class ScoreAnalyzer(
         val difficulty = calculateDifficultyLevel()
 
         // 난이도에 따른 보너스/페널티 적용
-        val adjustedScore = (baseScore * difficulty.multiplier).toInt()
+        var adjustedScore = (baseScore * difficulty.multiplier).toInt()
+        adjustedScore = adjustedScore.coerceIn(0, 100)
 
-        return adjustedScore.coerceIn(0, 100)
+        // 95점 이상이면 50% 확률로 100점 처리
+        if (adjustedScore >= 95 && adjustedScore < 100) {
+            val random = kotlin.random.Random.nextBoolean()
+            if (random) {
+                adjustedScore = 100
+            }
+        }
+
+        return adjustedScore
     }
 
     // ==================== 중기 기능: 구간별 피드백 ====================
