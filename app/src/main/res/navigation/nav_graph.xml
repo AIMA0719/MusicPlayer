@@ -88,4 +88,57 @@
             android:defaultValue="0" />
     </fragment>
 
+    <!-- 설정 화면 -->
+    <fragment
+        android:id="@+id/navigation_settings"
+        android:name="com.example.musicplayer.fragment.SettingsFragment"
+        android:label="설정"
+        tools:layout="@layout/fragment_settings">
+
+        <action
+            android:id="@+id/action_settings_to_achievements"
+            app:destination="@id/achievementsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+
+        <action
+            android:id="@+id/action_settings_to_version"
+            app:destination="@id/versionInfoFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+
+        <action
+            android:id="@+id/action_settings_to_library"
+            app:destination="@id/libraryInfoFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+
+    <!-- 도전과제 화면 -->
+    <fragment
+        android:id="@+id/achievementsFragment"
+        android:name="com.example.musicplayer.fragment.AchievementsFragment"
+        android:label="도전과제"
+        tools:layout="@layout/fragment_achievements" />
+
+    <!-- 버전 정보 화면 -->
+    <fragment
+        android:id="@+id/versionInfoFragment"
+        android:name="com.example.musicplayer.fragment.VersionInfoFragment"
+        android:label="버전 정보"
+        tools:layout="@layout/fragment_version_info" />
+
+    <!-- 라이브러리 정보 화면 -->
+    <fragment
+        android:id="@+id/libraryInfoFragment"
+        android:name="com.example.musicplayer.fragment.LibraryInfoFragment"
+        android:label="오픈소스 라이선스"
+        tools:layout="@layout/fragment_library_info" />
+
 </navigation>

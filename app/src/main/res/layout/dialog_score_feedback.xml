@@ -23,17 +23,28 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="8dp" />
 
+        <!-- 점수 등급 -->
+        <TextView
+            android:id="@+id/tv_score_grade"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="A+"
+            android:textSize="64sp"
+            android:textStyle="bold"
+            android:textColor="#FFD700"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp" />
+
         <!-- 최종 점수 -->
         <TextView
             android:id="@+id/tv_final_score"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="85점"
-            android:textSize="48sp"
+            android:textSize="40sp"
             android:textStyle="bold"
             android:textColor="#2196F3"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="8dp"
             android:layout_marginBottom="4dp" />
 
         <!-- 점수 등급 메시지 -->
@@ -45,7 +56,57 @@
             android:textSize="16sp"
             android:textColor="#757575"
             android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="24dp" />
+            android:layout_marginBottom="16dp" />
+
+        <!-- 경험치 & 레벨업 정보 -->
+        <LinearLayout
+            android:id="@+id/game_reward_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#F5F5F5"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone">
+
+            <!-- 경험치 획득 -->
+            <TextView
+                android:id="@+id/tv_exp_gained"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⭐ +12 경험치"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#FF9800"
+                android:layout_gravity="center_horizontal" />
+
+            <!-- 레벨업 -->
+            <TextView
+                android:id="@+id/tv_level_up"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🎉 레벨 업! Lv.5 → Lv.6"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#4CAF50"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="4dp"
+                android:visibility="gone" />
+
+            <!-- 새 도전과제 -->
+            <TextView
+                android:id="@+id/tv_achievements"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🏆 새로운 업적 달성!"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#9C27B0"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="4dp"
+                android:visibility="gone" />
+
+        </LinearLayout>
 
         <!-- 구분선 -->
         <View

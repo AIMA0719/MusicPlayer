@@ -15,11 +15,15 @@ import com.example.musicplayer.activity.LoginActivity
 import com.example.musicplayer.database.AppDatabase
 import com.example.musicplayer.database.entity.LoginType
 import com.example.musicplayer.entity.ScoreEntity
+import com.example.musicplayer.entity.Achievement
+import com.example.musicplayer.entity.LevelSystem
 import com.example.musicplayer.manager.AuthManager
 import com.example.musicplayer.manager.ContextManager
 import com.example.musicplayer.repository.UserRepository
 import kotlinx.coroutines.launch
 import java.util.*
+import android.widget.ProgressBar
+import androidx.navigation.fragment.findNavController
 
 class MainFragment : Fragment() {
 
@@ -46,19 +50,23 @@ class MainFragment : Fragment() {
 
         setupViews(view)
         loadUserProfile(view)
+        loadGameData(view)
         loadScoreData(view)
     }
 
     override fun onResume() {
         super.onResume()
-        // 화면이 다시 보일 때마다 점수 데이터 갱신
-        view?.let { loadScoreData(it) }
+        // 화면이 다시 보일 때마다 데이터 갱신
+        view?.let {
+            loadGameData(it)
+            loadScoreData(it)
+        }
     }
 
     private fun setupViews(view: View) {
-        // Logout Button
-        view.findViewById<View>(R.id.btnLogout).setOnClickListener {
-            showLogoutConfirmDialog()
+        // View All Achievements Button - Navigate directly to achievements
+        view.findViewById<View>(R.id.btnViewAllAchievements).setOnClickListener {
+            findNavController().navigate(R.id.achievementsFragment)
         }
     }
 
@@ -66,27 +74,155 @@ class MainFragment : Fragment() {
         val tvUserName = view.findViewById<TextView>(R.id.tvUserName)
         val tvUserEmail = view.findViewById<TextView>(R.id.tvUserEmail)
 
-        val userId = AuthManager.getCurrentUserId()
-        if (userId != null) {
-            lifecycleScope.launch {
-                val user = userRepository.getUserById(userId)
-                if (user != null) {
-                    tvUserName.text = "${user.displayName}님"
-                    tvUserEmail.text = user.email ?: "이메일 없음"
+        val userId = AuthManager.getCurrentUserId() ?: "guest"
+        lifecycleScope.launch {
+            val user = userRepository.getUserById(userId)
+            if (user != null) {
+                tvUserName.text = "${user.displayName}님"
+                tvUserEmail.text = user.email ?: "이메일 없음"
 
-                    // If guest, show specific message
-                    if (user.loginType == LoginType.GUEST) {
-                        tvUserEmail.text = "게스트 로그인"
-                    }
-                } else {
-                    tvUserName.text = "사용자 정보 없음"
-                    tvUserEmail.text = "다시 로그인해주세요"
+                // If guest, show specific message
+                if (user.loginType == LoginType.GUEST) {
+                    tvUserEmail.text = "게스트 로그인"
                 }
+            } else {
+                tvUserName.text = "사용자 정보 없음"
+                tvUserEmail.text = "다시 로그인해주세요"
             }
-        } else {
-            tvUserName.text = "로그인 필요"
-            tvUserEmail.text = "로그인해주세요"
         }
+    }
+
+    private fun loadGameData(view: View) {
+        val tvLevelTitle = view.findViewById<TextView>(R.id.tvLevelTitle)
+        val tvLevel = view.findViewById<TextView>(R.id.tvLevel)
+        val tvExpProgress = view.findViewById<TextView>(R.id.tvExpProgress)
+        val progressExp = view.findViewById<ProgressBar>(R.id.progressExp)
+        val tvTotalRecordings = view.findViewById<TextView>(R.id.tvTotalRecordings)
+        val tvHighestScore = view.findViewById<TextView>(R.id.tvHighestScore)
+        val tvConsecutiveDays = view.findViewById<TextView>(R.id.tvConsecutiveDays)
+        val tvAchievementProgress = view.findViewById<TextView>(R.id.tvAchievementProgress)
+        val llRecentAchievements = view.findViewById<LinearLayout>(R.id.llRecentAchievements)
+        val tvNoAchievements = view.findViewById<TextView>(R.id.tvNoAchievements)
+
+        val userId = AuthManager.getCurrentUserId() ?: "guest"
+
+        lifecycleScope.launch {
+            try {
+                // Load user level data
+                val userLevel = database.userLevelDao().getByUserIdSync(userId)
+                if (userLevel != null) {
+                    tvLevelTitle.text = LevelSystem.getLevelTitle(userLevel.level)
+                    tvLevel.text = "Lv.${userLevel.level}"
+
+                    val requiredExp = LevelSystem.getRequiredExp(userLevel.level)
+                    tvExpProgress.text = "${userLevel.experience} / $requiredExp"
+                    progressExp.max = requiredExp
+                    progressExp.progress = userLevel.experience
+
+                    tvTotalRecordings.text = userLevel.totalRecordings.toString()
+                    tvHighestScore.text = userLevel.highestScore.toString()
+                    tvConsecutiveDays.text = "${userLevel.consecutiveDays}일 연속"
+                }
+
+                // Load achievements
+                val allAchievements = database.achievementDao().getAllByUser(userId)
+                allAchievements.collect { achievements ->
+                    val unlockedCount = achievements.count { it.isUnlocked }
+                    val totalCount = Achievement.values().size
+                    tvAchievementProgress.text = "$unlockedCount / $totalCount"
+
+                    // Show recent unlocked achievements
+                    val recentUnlocked = achievements.filter { it.isUnlocked }
+                        .sortedByDescending { it.unlockedAt }
+                        .take(3)
+
+                    llRecentAchievements.removeAllViews()
+                    if (recentUnlocked.isEmpty()) {
+                        llRecentAchievements.addView(tvNoAchievements)
+                    } else {
+                        recentUnlocked.forEach { entity ->
+                            val achievement = Achievement.values().find { it.id == entity.achievementId }
+                            if (achievement != null) {
+                                val itemView = createAchievementItemView(achievement)
+                                llRecentAchievements.addView(itemView)
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun createAchievementItemView(achievement: Achievement): View {
+        val itemLayout = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = 12
+            }
+            setPadding(0, 12, 0, 12)
+            gravity = android.view.Gravity.CENTER_VERTICAL
+        }
+
+        // Icon
+        val iconText = TextView(requireContext()).apply {
+            text = achievement.icon
+            textSize = 24f
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 0, 16, 0)
+            }
+        }
+
+        // Info container
+        val infoLayout = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+        }
+
+        // Title
+        val titleText = TextView(requireContext()).apply {
+            text = achievement.title
+            textSize = 14f
+            setTextColor(resources.getColor(android.R.color.black, null))
+        }
+
+        // Description
+        val descText = TextView(requireContext()).apply {
+            text = achievement.description
+            textSize = 12f
+            setTextColor(resources.getColor(android.R.color.darker_gray, null))
+        }
+
+        infoLayout.addView(titleText)
+        infoLayout.addView(descText)
+
+        // Unlocked badge
+        val badgeText = TextView(requireContext()).apply {
+            text = "✓"
+            textSize = 18f
+            setTextColor(resources.getColor(android.R.color.holo_green_dark, null))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        itemLayout.addView(iconText)
+        itemLayout.addView(infoLayout)
+        itemLayout.addView(badgeText)
+
+        return itemLayout
     }
 
     private fun showLogoutConfirmDialog() {

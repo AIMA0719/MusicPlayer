@@ -13,8 +13,8 @@ import com.example.musicplayer.manager.ContextManager
 import com.example.musicplayer.manager.PermissionManager
 import com.example.musicplayer.manager.ProgressDialogManager
 import com.example.musicplayer.manager.ScoreDialogManager
-import com.example.musicplayer.manager.ToastManager
 import com.example.musicplayer.databinding.MusicPlayerMainActivityBinding
+import android.widget.Toast
 import com.example.musicplayer.viewModel.MainActivityViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -108,6 +108,12 @@ class MainActivity : AppCompatActivity() {
                     }
                     true
                 }
+                R.id.navigation_settings -> {
+                    if (navController.currentDestination?.id != R.id.navigation_settings) {
+                        navController.navigate(R.id.navigation_settings)
+                    }
+                    true
+                }
                 else -> false
             }
         }
@@ -119,19 +125,24 @@ class MainActivity : AppCompatActivity() {
                 R.id.navigation_search -> "검색"
                 R.id.navigation_record -> "녹음"
                 R.id.navigation_music_list -> "음악"
+                R.id.navigation_settings -> "설정"
                 R.id.recordingFragment -> "피치 매칭 녹음"
+                R.id.achievementsFragment -> "도전과제"
+                R.id.versionInfoFragment -> "버전 정보"
+                R.id.libraryInfoFragment -> "오픈소스 라이선스"
                 else -> ""
             }
 
             binding.tvStatusBarTitle.text = title
             viewModel._currentFragment.value = destination.label?.toString() ?: ""
 
-            // 하단 네비게이션에 포함되지 않은 화면(recordingFragment)에서는 뒤로가기 버튼 표시
+            // 하단 네비게이션에 포함되지 않은 화면에서는 뒤로가기 버튼 표시
             val isTopLevelDestination = destination.id in setOf(
                 R.id.navigation_home,
                 R.id.navigation_search,
                 R.id.navigation_record,
-                R.id.navigation_music_list
+                R.id.navigation_music_list,
+                R.id.navigation_settings
             )
 
             if (isTopLevelDestination) {
@@ -159,20 +170,23 @@ class MainActivity : AppCompatActivity() {
                     R.id.navigation_home,
                     R.id.navigation_search,
                     R.id.navigation_record,
-                    R.id.navigation_music_list
+                    R.id.navigation_music_list,
+                    R.id.navigation_settings
                 )
 
-                if (isTopLevelDestination && currentDestination == R.id.navigation_home) {
-                    // 홈 화면에서 뒤로가기: 앱 종료 확인
+                if (isTopLevelDestination) {
+                    // 모든 최상위 화면에서 뒤로가기: 앱 종료 확인
                     if (viewModel.isDoubleBackToExit()) {
-                        ToastManager.closeToast()
                         finish()
                     } else {
                         viewModel.triggerDoubleBackToExit()
+                        // 시스템 토스트 사용
+                        android.widget.Toast.makeText(
+                            this@MainActivity,
+                            "앱을 종료하려면 다시 한 번 눌러주세요",
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
                     }
-                } else if (isTopLevelDestination) {
-                    // 다른 최상위 화면에서는 홈으로 이동
-                    navController.navigate(R.id.navigation_home)
                 } else {
                     // 하위 화면에서는 뒤로가기
                     navController.navigateUp()
@@ -189,9 +203,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun observeViewModel() {
-        // Toast 메시지 처리
+        // Toast 메시지 처리 - 시스템 토스트 사용
         viewModel.toastMessage.observe(this) { message ->
-            ToastManager.showToast(message)
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
         }
     }
 

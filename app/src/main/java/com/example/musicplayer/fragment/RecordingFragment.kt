@@ -1,12 +1,15 @@
 package com.example.musicplayer.fragment
 
 import android.annotation.SuppressLint
+import android.app.Dialog
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.Window
+import android.widget.TextView
 import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
@@ -15,8 +18,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.example.musicplayer.R
 import com.example.musicplayer.data.MusicFile
 import com.example.musicplayer.databinding.FragmentRecordingBinding
+import com.example.musicplayer.entity.RecordingHistoryEntity
+import com.example.musicplayer.manager.GameManager
 import com.example.musicplayer.manager.ScoreFeedbackDialogManager
 import com.example.musicplayer.viewModel.ScoreViewModel
 import com.github.mikephil.charting.data.Entry
@@ -51,6 +57,9 @@ class RecordingFragment : Fragment() {
     // 피드백 다이얼로그 표시 여부 (중복 방지)
     private var hasFeedbackShown = false
 
+    // 게임 매니저
+    private lateinit var gameManager: GameManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
@@ -62,6 +71,12 @@ class RecordingFragment : Fragment() {
             }
             pitchArray = it.getFloatArray("pitchArray")!!
             durationMillis = it.getLong("durationMillis", 0L)
+        }
+
+        // GameManager 초기화
+        gameManager = GameManager(requireContext())
+        lifecycleScope.launch {
+            gameManager.initialize()
         }
     }
 
@@ -102,17 +117,70 @@ class RecordingFragment : Fragment() {
     }
 
     /**
-     * 난이도 선택 다이얼로그를 표시하고 선택 후 녹음 시작
+     * 난이도 선택 다이얼로그를 표시하고 선택 후 카운트다운 & 녹음 시작
+     * 설정에서 기본 난이도가 설정되어 있으면 다이얼로그를 건너뛰고 바로 시작
      */
     private fun showDifficultySelectAndStartRecording() {
-        ScoreFeedbackDialogManager.showDifficultySelectDialog(
-            requireContext(),
-            baseScore = 0  // 녹음 시작 시에는 점수가 없으므로 0
-        ) { _, difficulty ->
-            // 선택한 난이도 저장
-            selectedDifficulty = difficulty
+        // SharedPreferences에서 기본 난이도 확인
+        val sharedPrefs = requireContext().getSharedPreferences("app_settings", android.content.Context.MODE_PRIVATE)
+        val defaultDifficultyIndex = sharedPrefs.getInt("default_difficulty", -1)
+
+        if (defaultDifficultyIndex != -1) {
+            // 설정에서 기본 난이도가 설정되어 있으면 다이얼로그 건너뛰기
+            selectedDifficulty = when (defaultDifficultyIndex) {
+                0 -> ScoreFeedbackDialogManager.ScoringDifficulty.VERY_EASY
+                1 -> ScoreFeedbackDialogManager.ScoringDifficulty.EASY
+                2 -> ScoreFeedbackDialogManager.ScoringDifficulty.NORMAL
+                3 -> ScoreFeedbackDialogManager.ScoringDifficulty.HARD
+                4 -> ScoreFeedbackDialogManager.ScoringDifficulty.VERY_HARD
+                else -> ScoreFeedbackDialogManager.ScoringDifficulty.NORMAL
+            }
             // 피드백 표시 플래그 리셋
             hasFeedbackShown = false
+            // 카운트다운 후 녹음 시작
+            showCountdownAndStartRecording()
+        } else {
+            // 기본 난이도가 설정되지 않았으면 다이얼로그 표시
+            ScoreFeedbackDialogManager.showDifficultySelectDialog(
+                requireContext(),
+                baseScore = 0  // 녹음 시작 시에는 점수가 없으므로 0
+            ) { _, difficulty ->
+                // 선택한 난이도 저장
+                selectedDifficulty = difficulty
+                // 피드백 표시 플래그 리셋
+                hasFeedbackShown = false
+                // 카운트다운 후 녹음 시작
+                showCountdownAndStartRecording()
+            }
+        }
+    }
+
+    /**
+     * 3-2-1 카운트다운 후 녹음 시작
+     */
+    private fun showCountdownAndStartRecording() {
+        val dialog = Dialog(requireContext())
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.dialog_countdown)
+        dialog.setCancelable(false)
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        val tvCountdown = dialog.findViewById<TextView>(R.id.tv_countdown)
+
+        dialog.show()
+
+        // 카운트다운: 3 -> 2 -> 1 -> 시작!
+        lifecycleScope.launch {
+            tvCountdown.text = "3"
+            delay(1000)
+            tvCountdown.text = "2"
+            delay(1000)
+            tvCountdown.text = "1"
+            delay(1000)
+            tvCountdown.text = "시작!"
+            delay(500)
+            dialog.dismiss()
+
             // 녹음 시작
             viewModel.startRecording(pitchArray)
         }
@@ -198,16 +266,48 @@ class RecordingFragment : Fragment() {
                             // 저장된 난이도로 점수 조정
                             val adjustedScore = ScoreFeedbackDialogManager.calculateAdjustedScore(baseScore, difficulty)
 
-                            // 점수 저장
+                            // 점수 저장 (기존 방식)
                             scoreViewModel.saveScore(music.title, adjustedScore, music.artist)
 
-                            // 피드백 다이얼로그 표시
-                            ScoreFeedbackDialogManager.showScoreFeedbackDialog(
-                                requireContext(),
-                                analyzer,
-                                adjustedScore,
-                                difficulty
-                            )
+                            // 히스토리 저장 및 게임 보상 처리
+                            lifecycleScope.launch {
+                                val detailedScores = analyzer.getDetailedScores()
+                                val vibratoInfo = analyzer.detectVibrato()
+
+                                // RecordingHistoryEntity 생성
+                                val recordingHistory = RecordingHistoryEntity(
+                                    userId = "guest",
+                                    songName = music.title,
+                                    songArtist = music.artist,
+                                    songDuration = durationMillis,
+                                    totalScore = adjustedScore,
+                                    pitchAccuracy = detailedScores["pitch_accuracy"] ?: 0.0,
+                                    rhythmScore = detailedScores["rhythm_score"] ?: 0.0,
+                                    volumeStability = detailedScores["volume_stability"] ?: 0.0,
+                                    durationMatch = detailedScores["duration_match"] ?: 0.0,
+                                    hasVibrato = vibratoInfo.hasVibrato,
+                                    vibratoScore = vibratoInfo.score,
+                                    difficulty = difficulty.name,
+                                    recordingFilePath = "" // 녹음 파일은 현재 구현 안됨
+                                )
+
+                                // 게임 보상 계산
+                                val gameReward = gameManager.onRecordingCompleted(
+                                    songName = music.title,
+                                    score = adjustedScore,
+                                    difficulty = difficulty.name,
+                                    recordingHistory = recordingHistory
+                                )
+
+                                // 피드백 다이얼로그 표시 (게임 보상 포함)
+                                ScoreFeedbackDialogManager.showScoreFeedbackDialog(
+                                    requireContext(),
+                                    analyzer,
+                                    adjustedScore,
+                                    difficulty,
+                                    gameReward
+                                )
+                            }
 
                             // 피드백 표시 완료 플래그 설정
                             hasFeedbackShown = true

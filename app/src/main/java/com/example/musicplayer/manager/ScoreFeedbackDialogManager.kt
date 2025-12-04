@@ -11,6 +11,7 @@ import android.view.Window
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.example.musicplayer.R
+import com.example.musicplayer.manager.GameReward
 import com.example.musicplayer.scoreAlgorythm.ScoreAnalyzer
 
 /**
@@ -131,6 +132,7 @@ object ScoreFeedbackDialogManager {
      * @param analyzer ScoreAnalyzer 인스턴스
      * @param finalScore 최종 선택된 점수
      * @param difficulty 선택한 채점 난이도
+     * @param gameReward 게임 보상 정보 (선택)
      * @param onDismiss 다이얼로그 닫힘 콜백
      */
     @SuppressLint("InflateParams", "SetTextI18n")
@@ -139,6 +141,7 @@ object ScoreFeedbackDialogManager {
         analyzer: ScoreAnalyzer,
         finalScore: Int,
         difficulty: ScoringDifficulty,
+        gameReward: GameReward? = null,
         onDismiss: (() -> Unit)? = null
     ) {
         val dialog = Dialog(context)
@@ -153,6 +156,12 @@ object ScoreFeedbackDialogManager {
         val detailedScores = analyzer.getDetailedScores()
         val vibratoInfo = analyzer.detectVibrato()
 
+        // 점수 등급
+        val tvScoreGrade = dialog.findViewById<TextView>(R.id.tv_score_grade)
+        val grade = getScoreGrade(finalScore)
+        tvScoreGrade.text = grade.grade
+        tvScoreGrade.setTextColor(android.graphics.Color.parseColor(grade.color))
+
         // 최종 점수
         val tvFinalScore = dialog.findViewById<TextView>(R.id.tv_final_score)
         tvFinalScore.text = "${finalScore}점"
@@ -160,6 +169,30 @@ object ScoreFeedbackDialogManager {
         // 점수 메시지
         val tvScoreMessage = dialog.findViewById<TextView>(R.id.tv_score_message)
         tvScoreMessage.text = getScoreMessage(finalScore)
+
+        // 게임 리워드 정보 표시
+        if (gameReward != null && gameReward.exp > 0) {
+            dialog.findViewById<LinearLayout>(R.id.game_reward_section).visibility = View.VISIBLE
+
+            // 경험치
+            dialog.findViewById<TextView>(R.id.tv_exp_gained).text = "⭐ +${gameReward.exp} 경험치"
+
+            // 레벨업
+            if (gameReward.leveledUp) {
+                dialog.findViewById<TextView>(R.id.tv_level_up).apply {
+                    visibility = View.VISIBLE
+                    text = "🎉 레벨 업! Lv.${gameReward.newLevel - 1} → Lv.${gameReward.newLevel}"
+                }
+            }
+
+            // 도전과제
+            if (gameReward.unlockedAchievements.isNotEmpty()) {
+                dialog.findViewById<TextView>(R.id.tv_achievements).apply {
+                    visibility = View.VISIBLE
+                    text = "🏆 새로운 업적 ${gameReward.unlockedAchievements.size}개 달성!"
+                }
+            }
+        }
 
         // 상세 점수
         dialog.findViewById<TextView>(R.id.tv_pitch_score).text =
@@ -230,16 +263,39 @@ object ScoreFeedbackDialogManager {
     }
 
     /**
+     * 점수 등급 정보
+     */
+    private data class ScoreGrade(val grade: String, val color: String)
+
+    /**
+     * 점수에 따른 등급 반환
+     */
+    private fun getScoreGrade(score: Int): ScoreGrade {
+        return when {
+            score >= 98 -> ScoreGrade("S", "#FFD700") // 금색
+            score >= 95 -> ScoreGrade("A+", "#FF6B35") // 주황색
+            score >= 90 -> ScoreGrade("A", "#FF8559") // 연한 주황색
+            score >= 85 -> ScoreGrade("B+", "#4ECDC4") // 청록색
+            score >= 80 -> ScoreGrade("B", "#95E1D3") // 연한 청록색
+            score >= 70 -> ScoreGrade("C+", "#9C88FF") // 보라색
+            score >= 60 -> ScoreGrade("C", "#C3AEF0") // 연한 보라색
+            else -> ScoreGrade("D", "#A8A8A8") // 회색
+        }
+    }
+
+    /**
      * 점수에 따른 메시지 반환
      */
     private fun getScoreMessage(score: Int): String {
         return when {
-            score >= 95 -> "완벽합니다! 🎉"
-            score >= 90 -> "훌륭합니다! ⭐"
+            score >= 98 -> "완벽합니다! 프로 수준이에요! 🎉"
+            score >= 95 -> "놀라워요! 거의 완벽해요! ⭐⭐⭐"
+            score >= 90 -> "훌륭합니다! 정말 잘하셨어요! ⭐⭐"
+            score >= 85 -> "아주 좋아요! 실력이 느껴져요! ⭐"
             score >= 80 -> "잘 부르셨어요! 👍"
-            score >= 70 -> "좋아요! 💪"
-            score >= 60 -> "괜찮아요! 연습하면 더 좋아질 거예요 😊"
-            else -> "힘내세요! 연습이 필요해요 📚"
+            score >= 70 -> "좋아요! 계속 연습하면 더 좋아질 거예요! 💪"
+            score >= 60 -> "괜찮아요! 조금만 더 연습해봐요 😊"
+            else -> "힘내세요! 연습이 실력을 만들어요 📚"
         }
     }
 

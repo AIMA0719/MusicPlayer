@@ -8,6 +8,9 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.musicplayer.entity.ScoreEntity
+import com.example.musicplayer.entity.RecordingHistoryEntity
+import com.example.musicplayer.entity.AchievementEntity
+import com.example.musicplayer.entity.UserLevelEntity
 import com.example.musicplayer.database.entity.Favorite
 import com.example.musicplayer.database.entity.History
 import com.example.musicplayer.database.entity.User
@@ -17,6 +20,9 @@ import com.example.musicplayer.database.dao.FavoriteDao
 import com.example.musicplayer.database.dao.HistoryDao
 import com.example.musicplayer.database.dao.UserDao
 import com.example.musicplayer.database.dao.PlaylistDao
+import com.example.musicplayer.database.dao.RecordingHistoryDao
+import com.example.musicplayer.database.dao.AchievementDao
+import com.example.musicplayer.database.dao.UserLevelDao
 
 @Database(
     entities = [
@@ -25,9 +31,12 @@ import com.example.musicplayer.database.dao.PlaylistDao
         History::class,
         User::class,
         Playlist::class,
-        PlaylistItem::class
+        PlaylistItem::class,
+        RecordingHistoryEntity::class,
+        AchievementEntity::class,
+        UserLevelEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -37,6 +46,9 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun historyDao(): HistoryDao
     abstract fun userDao(): UserDao
     abstract fun playlistDao(): PlaylistDao
+    abstract fun recordingHistoryDao(): RecordingHistoryDao
+    abstract fun achievementDao(): AchievementDao
+    abstract fun userLevelDao(): UserLevelDao
 
     companion object {
         @Volatile
@@ -49,7 +61,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "karaoke_db"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                     .fallbackToDestructiveMigration(dropAllTables = true)
                     .build()
                 INSTANCE = instance
@@ -160,6 +172,64 @@ abstract class AppDatabase : RoomDatabase() {
 
                 // Rename new table
                 db.execSQL("ALTER TABLE scores_new RENAME TO scores")
+            }
+        }
+
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Create recording_history table
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS recording_history (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        userId TEXT NOT NULL,
+                        songName TEXT NOT NULL,
+                        songArtist TEXT NOT NULL DEFAULT '',
+                        songDuration INTEGER NOT NULL,
+                        totalScore INTEGER NOT NULL,
+                        pitchAccuracy REAL NOT NULL,
+                        rhythmScore REAL NOT NULL,
+                        volumeStability REAL NOT NULL,
+                        durationMatch REAL NOT NULL,
+                        hasVibrato INTEGER NOT NULL DEFAULT 0,
+                        vibratoScore REAL NOT NULL DEFAULT 0.0,
+                        difficulty TEXT NOT NULL DEFAULT 'NORMAL',
+                        recordingFilePath TEXT NOT NULL,
+                        timestamp INTEGER NOT NULL
+                    )
+                """.trimIndent())
+
+                // Create achievements table
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS achievements (
+                        achievementId TEXT NOT NULL,
+                        userId TEXT NOT NULL,
+                        isUnlocked INTEGER NOT NULL DEFAULT 0,
+                        progress INTEGER NOT NULL DEFAULT 0,
+                        maxProgress INTEGER NOT NULL DEFAULT 1,
+                        unlockedAt INTEGER,
+                        PRIMARY KEY(achievementId, userId)
+                    )
+                """.trimIndent())
+
+                // Create user_level table
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS user_level (
+                        userId TEXT NOT NULL PRIMARY KEY,
+                        level INTEGER NOT NULL DEFAULT 1,
+                        experience INTEGER NOT NULL DEFAULT 0,
+                        totalRecordings INTEGER NOT NULL DEFAULT 0,
+                        averageScore REAL NOT NULL DEFAULT 0.0,
+                        highestScore INTEGER NOT NULL DEFAULT 0,
+                        consecutiveDays INTEGER NOT NULL DEFAULT 0,
+                        lastRecordingDate INTEGER NOT NULL DEFAULT 0,
+                        currentTheme TEXT NOT NULL DEFAULT 'DEFAULT'
+                    )
+                """.trimIndent())
+
+                // Insert default user level for guest
+                db.execSQL("""
+                    INSERT OR IGNORE INTO user_level (userId) VALUES ('guest')
+                """.trimIndent())
             }
         }
     }
