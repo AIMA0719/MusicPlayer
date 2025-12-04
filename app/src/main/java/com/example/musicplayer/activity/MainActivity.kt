@@ -14,7 +14,7 @@ import com.example.musicplayer.manager.PermissionManager
 import com.example.musicplayer.manager.ProgressDialogManager
 import com.example.musicplayer.manager.ScoreDialogManager
 import com.example.musicplayer.databinding.MusicPlayerMainActivityBinding
-import android.widget.Toast
+import com.example.musicplayer.manager.ToastManager
 import com.example.musicplayer.viewModel.MainActivityViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -180,12 +180,7 @@ class MainActivity : AppCompatActivity() {
                         finish()
                     } else {
                         viewModel.triggerDoubleBackToExit()
-                        // 시스템 토스트 사용
-                        android.widget.Toast.makeText(
-                            this@MainActivity,
-                            "앱을 종료하려면 다시 한 번 눌러주세요",
-                            android.widget.Toast.LENGTH_SHORT
-                        ).show()
+                        ToastManager.showToast("앱을 종료하려면 다시 한 번 눌러주세요")
                     }
                 } else {
                     // 하위 화면에서는 뒤로가기
@@ -203,9 +198,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun observeViewModel() {
-        // Toast 메시지 처리 - 시스템 토스트 사용
+        // Toast 메시지 처리
         viewModel.toastMessage.observe(this) { message ->
-            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+            ToastManager.showToast(message)
         }
     }
 

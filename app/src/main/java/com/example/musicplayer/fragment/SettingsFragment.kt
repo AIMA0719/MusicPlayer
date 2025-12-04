@@ -8,7 +8,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SwitchCompat
 import androidx.fragment.app.Fragment
@@ -18,6 +17,7 @@ import com.example.musicplayer.R
 import com.example.musicplayer.activity.LoginActivity
 import com.example.musicplayer.database.entity.LoginType
 import com.example.musicplayer.manager.AuthManager
+import com.example.musicplayer.manager.ToastManager
 import com.example.musicplayer.repository.UserRepository
 import kotlinx.coroutines.launch
 import java.io.File
@@ -59,13 +59,13 @@ class SettingsFragment : Fragment() {
         // Dark Mode Switch - App-level theme only
         view.findViewById<SwitchCompat>(R.id.switchDarkMode).setOnCheckedChangeListener { _, isChecked ->
             sharedPrefs.edit().putBoolean("dark_mode", isChecked).apply()
-            Toast.makeText(requireContext(), "앱을 재시작하면 테마가 적용됩니다", Toast.LENGTH_SHORT).show()
+            ToastManager.showToast("앱을 재시작하면 테마가 적용됩니다")
         }
 
         // Notifications Switch
         view.findViewById<SwitchCompat>(R.id.switchNotifications).setOnCheckedChangeListener { _, isChecked ->
             sharedPrefs.edit().putBoolean("notifications", isChecked).apply()
-            Toast.makeText(requireContext(), if (isChecked) "알림이 켜졌습니다" else "알림이 꺼졌습니다", Toast.LENGTH_SHORT).show()
+            ToastManager.showToast(if (isChecked) "알림이 켜졌습니다" else "알림이 꺼졌습니다")
         }
 
         // Logout
@@ -90,7 +90,7 @@ class SettingsFragment : Fragment() {
 
         // Manage Recordings
         view.findViewById<TextView>(R.id.btnManageRecordings).setOnClickListener {
-            Toast.makeText(requireContext(), "녹음 파일 관리 기능은 준비 중입니다", Toast.LENGTH_SHORT).show()
+            ToastManager.showToast("녹음 파일 관리 기능은 준비 중입니다")
         }
 
         // Contact
@@ -137,7 +137,7 @@ class SettingsFragment : Fragment() {
             .setTitle("기본 채점 난이도")
             .setSingleChoiceItems(difficulties, currentDifficulty) { dialog, which ->
                 sharedPrefs.edit().putInt("default_difficulty", which).apply()
-                Toast.makeText(requireContext(), "${difficulties[which]} 선택됨", Toast.LENGTH_SHORT).show()
+                ToastManager.showToast("${difficulties[which]} 선택됨")
                 dialog.dismiss()
             }
             .setNegativeButton("취소", null)
@@ -159,9 +159,9 @@ class SettingsFragment : Fragment() {
         try {
             val cacheDir = requireContext().cacheDir
             val size = deleteDir(cacheDir)
-            Toast.makeText(requireContext(), "캐시가 삭제되었습니다", Toast.LENGTH_SHORT).show()
+            ToastManager.showToast("캐시가 삭제되었습니다")
         } catch (e: Exception) {
-            Toast.makeText(requireContext(), "캐시 삭제 실패", Toast.LENGTH_SHORT).show()
+            ToastManager.showToast("캐시 삭제 실패")
         }
     }
 
@@ -192,7 +192,7 @@ class SettingsFragment : Fragment() {
         try {
             startActivity(Intent.createChooser(intent, "이메일 앱 선택"))
         } catch (e: Exception) {
-            Toast.makeText(requireContext(), "이메일 앱이 설치되어 있지 않습니다", Toast.LENGTH_SHORT).show()
+            ToastManager.showToast("이메일 앱이 설치되어 있지 않습니다")
         }
     }
 
@@ -219,7 +219,7 @@ class SettingsFragment : Fragment() {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
             startActivity(intent)
         } catch (e: Exception) {
-            Toast.makeText(requireContext(), "웹 브라우저를 열 수 없습니다", Toast.LENGTH_SHORT).show()
+            ToastManager.showToast("웹 브라우저를 열 수 없습니다")
         }
     }
 

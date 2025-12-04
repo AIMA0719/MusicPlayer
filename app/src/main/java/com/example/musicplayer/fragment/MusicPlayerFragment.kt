@@ -10,13 +10,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.SeekBar
-import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.musicplayer.R
 import com.example.musicplayer.data.MusicFile
 import com.example.musicplayer.databinding.FragmentMusicPlayerBinding
+import com.example.musicplayer.manager.ToastManager
 
 /**
  * 음악 재생 Fragment
@@ -87,7 +87,7 @@ class MusicPlayerFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         if (musicList.isEmpty()) {
-            Toast.makeText(requireContext(), "음악 정보를 불러올 수 없습니다", Toast.LENGTH_SHORT).show()
+            ToastManager.showToast("음악 정보를 불러올 수 없습니다")
             findNavController().navigateUp()
             return
         }
@@ -174,11 +174,7 @@ class MusicPlayerFragment : Fragment() {
             }
 
         } catch (e: Exception) {
-            Toast.makeText(
-                requireContext(),
-                "음악 파일을 불러올 수 없습니다: ${e.message}",
-                Toast.LENGTH_SHORT
-            ).show()
+            ToastManager.showToast("음악 파일을 불러올 수 없습니다: ${e.message}")
         }
     }
 

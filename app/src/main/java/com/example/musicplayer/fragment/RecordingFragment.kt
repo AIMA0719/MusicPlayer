@@ -10,7 +10,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.TextView
-import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -24,6 +23,7 @@ import com.example.musicplayer.databinding.FragmentRecordingBinding
 import com.example.musicplayer.entity.RecordingHistoryEntity
 import com.example.musicplayer.manager.GameManager
 import com.example.musicplayer.manager.ScoreFeedbackDialogManager
+import com.example.musicplayer.manager.ToastManager
 import com.example.musicplayer.viewModel.ScoreViewModel
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
@@ -59,6 +59,7 @@ class RecordingFragment : Fragment() {
 
     // 게임 매니저
     private lateinit var gameManager: GameManager
+    private var gameManagerInitJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,9 +74,9 @@ class RecordingFragment : Fragment() {
             durationMillis = it.getLong("durationMillis", 0L)
         }
 
-        // GameManager 초기화
+        // GameManager 초기화 - Job 저장하여 나중에 완료 대기
         gameManager = GameManager(requireContext())
-        lifecycleScope.launch {
+        gameManagerInitJob = lifecycleScope.launch {
             gameManager.initialize()
         }
     }
@@ -271,6 +272,9 @@ class RecordingFragment : Fragment() {
 
                             // 히스토리 저장 및 게임 보상 처리
                             lifecycleScope.launch {
+                                // GameManager 초기화 완료 대기
+                                gameManagerInitJob?.join()
+
                                 val detailedScores = analyzer.getDetailedScores()
                                 val vibratoInfo = analyzer.detectVibrato()
 
@@ -313,7 +317,7 @@ class RecordingFragment : Fragment() {
                             hasFeedbackShown = true
                         } else {
                             // Fallback: analyzer가 없으면 토스트로 표시
-                            Toast.makeText(requireContext(), "점수 계산 중 오류가 발생했습니다", Toast.LENGTH_SHORT).show()
+                            ToastManager.showToast("점수 계산 중 오류가 발생했습니다")
                         }
                     }
                 }
@@ -332,7 +336,7 @@ class RecordingFragment : Fragment() {
                             initPitchChart()
                         }
                         is RecordingSideEffect.ShowError -> {
-                            Toast.makeText(requireContext(), sideEffect.message, Toast.LENGTH_SHORT).show()
+                            ToastManager.showToast(sideEffect.message)
                         }
                     }
                 }

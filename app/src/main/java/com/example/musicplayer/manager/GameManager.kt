@@ -41,17 +41,23 @@ class GameManager(private val context: Context) {
             userLevelDao.insert(userLevel)
         }
 
-        // 도전과제 초기화
+        // 도전과제 초기화 - 새로운 도전과제 추가
         val existingAchievements = achievementDao.getAllByUser(userId).first()
-        if (existingAchievements.isEmpty()) {
-            val achievements = Achievement.values().map { achievement ->
+        val existingIds = existingAchievements.map { it.achievementId }.toSet()
+
+        // 새로운 도전과제만 추가 (기존 것은 유지)
+        val newAchievements = Achievement.values()
+            .filter { it.id !in existingIds }
+            .map { achievement ->
                 AchievementEntity(
                     achievementId = achievement.id,
                     userId = userId,
                     maxProgress = achievement.maxProgress
                 )
             }
-            achievementDao.insertAll(achievements)
+
+        if (newAchievements.isNotEmpty()) {
+            achievementDao.insertAll(newAchievements)
         }
     }
 
@@ -156,6 +162,7 @@ class GameManager(private val context: Context) {
     ): List<AchievementEntity> {
         val unlocked = mutableListOf<AchievementEntity>()
 
+        // === 기본 도전과제 ===
         // 첫 녹음
         checkAndUnlock(Achievement.FIRST_RECORDING, 1)?.let { unlocked.add(it) }
 
@@ -164,17 +171,7 @@ class GameManager(private val context: Context) {
             checkAndUnlock(Achievement.FIRST_90_SCORE, 1)?.let { unlocked.add(it) }
         }
 
-        // 100점 달성
-        if (score >= 100) {
-            checkAndUnlock(Achievement.PERFECT_SCORE, 1)?.let { unlocked.add(it) }
-        }
-
-        // 비브라토
-        if (recordingHistory.hasVibrato) {
-            checkAndIncrement(Achievement.VIBRATO_MASTER)?.let { unlocked.add(it) }
-        }
-
-        // 연속 녹음 일수
+        // === 연속 도전과제 ===
         val userLevel = userLevelDao.getByUserIdSync(userId)
         if (userLevel != null) {
             if (userLevel.consecutiveDays >= 3) {
@@ -183,23 +180,206 @@ class GameManager(private val context: Context) {
             if (userLevel.consecutiveDays >= 7) {
                 checkAndUnlock(Achievement.CONSECUTIVE_7_DAYS, 7)?.let { unlocked.add(it) }
             }
+            if (userLevel.consecutiveDays >= 30) {
+                checkAndUnlock(Achievement.CONSECUTIVE_30_DAYS, 30)?.let { unlocked.add(it) }
+            }
         }
 
+        // === 점수 도전과제 ===
         // 90점 이상 5곡
-        val highScoreCount = recordingHistoryDao.getCountByMinScore(userId, 90)
-        checkAndUnlock(Achievement.SCORE_90_5_SONGS, highScoreCount)?.let { unlocked.add(it) }
+        val score90Count = recordingHistoryDao.getCountByMinScore(userId, 90)
+        checkAndUnlock(Achievement.SCORE_90_5_SONGS, score90Count)?.let { unlocked.add(it) }
 
-        // 총 녹음 수
-        val totalCount = recordingHistoryDao.getTotalRecordingCount(userId)
-        checkAndUnlock(Achievement.RECORDING_10, totalCount)?.let { unlocked.add(it) }
-        checkAndUnlock(Achievement.RECORDING_50, totalCount)?.let { unlocked.add(it) }
-        checkAndUnlock(Achievement.RECORDING_100, totalCount)?.let { unlocked.add(it) }
+        // 95점 이상 3곡
+        val score95Count = recordingHistoryDao.getCountByMinScore(userId, 95)
+        checkAndUnlock(Achievement.SCORE_95_3_SONGS, score95Count)?.let { unlocked.add(it) }
+
+        // 100점 달성
+        if (score >= 100) {
+            checkAndUnlock(Achievement.PERFECT_SCORE, 1)?.let { unlocked.add(it) }
+        }
+
+        // 10곡 연속 80점 이상 (최근 10곡 체크)
+        val recent10 = recordingHistoryDao.getRecentRecordings(userId, 10)
+        if (recent10.size >= 10 && recent10.all { it.totalScore >= 80 }) {
+            checkAndUnlock(Achievement.CONSISTENCY_MASTER, 10)?.let { unlocked.add(it) }
+        }
+
+        // === 난이도 도전과제 ===
+        // 모든 난이도 시도
+        val triedDifficultyCount = recordingHistoryDao.getTriedDifficultyCount(userId)
+        checkAndUnlock(Achievement.TRY_ALL_DIFFICULTY, triedDifficultyCount)?.let { unlocked.add(it) }
+
+        // 고수 모드로 80점 이상
+        if (recordingHistory.difficulty == "HARD" && score >= 80) {
+            checkAndUnlock(Achievement.HARD_MODE_MASTER, 1)?.let { unlocked.add(it) }
+        }
+
+        // 초고수 모드로 70점 이상
+        if (recordingHistory.difficulty == "VERY_HARD" && score >= 70) {
+            checkAndUnlock(Achievement.VERY_HARD_CLEAR, 1)?.let { unlocked.add(it) }
+        }
+
+        // === 특수 도전과제 ===
+        // 비브라토
+        if (recordingHistory.hasVibrato) {
+            checkAndIncrement(Achievement.VIBRATO_MASTER)?.let { unlocked.add(it) }
+        }
 
         // 같은 곡 10번
         val songHistory = recordingHistoryDao.getHistoryBySong(userId, songName).first()
         checkAndUnlock(Achievement.SONG_MASTER, songHistory.size)?.let { unlocked.add(it) }
 
+        // 시간대 체크
+        val calendar = Calendar.getInstance()
+        calendar.timeInMillis = recordingHistory.timestamp
+        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+        val minute = calendar.get(Calendar.MINUTE)
+
+        // 아침 새 (오전 6시~9시)
+        if (hour in 6..9) {
+            checkAndUnlock(Achievement.MORNING_BIRD, 1)?.let { unlocked.add(it) }
+        }
+
+        // 올빼미 (자정~새벽 3시)
+        if (hour in 0..3) {
+            checkAndUnlock(Achievement.NIGHT_OWL, 1)?.let { unlocked.add(it) }
+        }
+
+        // === 횟수 도전과제 ===
+        val totalCount = recordingHistoryDao.getTotalRecordingCount(userId)
+        checkAndUnlock(Achievement.RECORDING_10, totalCount)?.let { unlocked.add(it) }
+        checkAndUnlock(Achievement.RECORDING_50, totalCount)?.let { unlocked.add(it) }
+        checkAndUnlock(Achievement.RECORDING_100, totalCount)?.let { unlocked.add(it) }
+        checkAndUnlock(Achievement.RECORDING_500, totalCount)?.let { unlocked.add(it) }
+
+        // === 히든 도전과제 ===
+        // 럭키 세븐 (정확히 77점)
+        if (score == 77) {
+            checkAndUnlock(Achievement.LUCKY_7, 1)?.let { unlocked.add(it) }
+        }
+
+        // 럭키 에이트 (정확히 88점)
+        if (score == 88) {
+            checkAndUnlock(Achievement.LUCKY_8, 1)?.let { unlocked.add(it) }
+        }
+
+        // 아깝다! (정확히 99점)
+        if (score == 99) {
+            checkAndUnlock(Achievement.ALMOST_PERFECT, 1)?.let { unlocked.add(it) }
+        }
+
+        // 용감한 도전 (50점 미만)
+        if (score < 50) {
+            checkAndUnlock(Achievement.BRAVE_ATTEMPT, 1)?.let { unlocked.add(it) }
+        }
+
+        // 자정의 가수 (정확히 자정)
+        if (hour == 0 && minute == 0) {
+            checkAndUnlock(Achievement.MIDNIGHT_SINGER, 1)?.let { unlocked.add(it) }
+        }
+
+        // 새벽 기상 (새벽 5시~6시)
+        if (hour in 5..6) {
+            checkAndUnlock(Achievement.EARLY_BIRD, 1)?.let { unlocked.add(it) }
+        }
+
+        // 점심시간 가수 (12~13시에 5곡) - 점심시간에 녹음한 경우 체크
+        if (hour in 12..13) {
+            // 오늘의 점심시간 범위
+            val todayLunchStart = Calendar.getInstance().apply {
+                timeInMillis = recordingHistory.timestamp
+                set(Calendar.HOUR_OF_DAY, 12)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.timeInMillis
+            val todayLunchEnd = todayLunchStart + 2 * 60 * 60 * 1000 // 2시간 (12시~14시)
+            val lunchCount = recordingHistoryDao.getRecordingCountInTimeRange(userId, todayLunchStart, todayLunchEnd)
+            checkAndUnlock(Achievement.LUNCH_TIME_SINGER, lunchCount)?.let { unlocked.add(it) }
+        }
+
+        // 시간 여행자 (새벽/아침/점심/저녁/밤 모두 녹음) - 진행도 체크
+        checkTimeOfDayProgress()?.let { unlocked.add(it) }
+
+        // 트리플 크라운 (3곡 연속 95점 이상)
+        val recent3 = recordingHistoryDao.getRecentRecordings(userId, 3)
+        if (recent3.size >= 3 && recent3.all { it.totalScore >= 95 }) {
+            checkAndUnlock(Achievement.TRIPLE_CROWN, 3)?.let { unlocked.add(it) }
+        }
+
+        // 스피드 러너 (1시간 내 5곡)
+        val oneHourAgo = recordingHistory.timestamp - 60 * 60 * 1000
+        val countLastHour = recordingHistoryDao.getRecordingCountInTimeRange(userId, oneHourAgo, recordingHistory.timestamp)
+        checkAndUnlock(Achievement.SPEED_DEMON, countLastHour)?.let { unlocked.add(it) }
+
+        // 마라톤 가수 (하루에 20곡)
+        val todayStart = Calendar.getInstance().apply {
+            timeInMillis = recordingHistory.timestamp
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+        val todayEnd = todayStart + 24 * 60 * 60 * 1000
+        val todayCount = recordingHistoryDao.getRecordingCountInTimeRange(userId, todayStart, todayEnd)
+        checkAndUnlock(Achievement.MARATHON_SINGER, todayCount)?.let { unlocked.add(it) }
+
+        // 다양성의 달인 (서로 다른 10곡)
+        val uniqueSongCount = recordingHistoryDao.getUniqueSongCount(userId)
+        checkAndUnlock(Achievement.DIVERSITY_MASTER, uniqueSongCount)?.let { unlocked.add(it) }
+
+        // 재기의 달인 (40점대 이후 90점 이상)
+        val recent2 = recordingHistoryDao.getRecentRecordings(userId, 2)
+        if (recent2.size >= 2) {
+            val previousScore = recent2[1].totalScore // 이전 녹음
+            if (previousScore in 40..49 && score >= 90) {
+                checkAndUnlock(Achievement.COMEBACK, 1)?.let { unlocked.add(it) }
+            }
+        }
+
+        // 주말 전사 (주말에만 10곡)
+        checkWeekendWarrior()?.let { unlocked.add(it) }
+
         return unlocked
+    }
+
+    /**
+     * 시간 여행자 도전과제 체크
+     * 새벽(0-5), 아침(6-9), 점심(12-13), 저녁(18-21), 밤(21-24) 모두 녹음
+     */
+    private suspend fun checkTimeOfDayProgress(): AchievementEntity? {
+        val allRecordings = recordingHistoryDao.getAllByUser(userId).first()
+        val timeSlots = mutableSetOf<com.example.musicplayer.entity.TimeOfDay>()
+
+        allRecordings.forEach { recording ->
+            val cal = Calendar.getInstance().apply { timeInMillis = recording.timestamp }
+            val hour = cal.get(Calendar.HOUR_OF_DAY)
+
+            when (hour) {
+                in 0..5 -> timeSlots.add(com.example.musicplayer.entity.TimeOfDay.DAWN)
+                in 6..9 -> timeSlots.add(com.example.musicplayer.entity.TimeOfDay.MORNING)
+                in 12..13 -> timeSlots.add(com.example.musicplayer.entity.TimeOfDay.LUNCH)
+                in 18..21 -> timeSlots.add(com.example.musicplayer.entity.TimeOfDay.EVENING)
+                in 21..23 -> timeSlots.add(com.example.musicplayer.entity.TimeOfDay.NIGHT)
+            }
+        }
+
+        return checkAndUnlock(Achievement.TIME_TRAVELER, timeSlots.size)
+    }
+
+    /**
+     * 주말 전사 도전과제 체크
+     */
+    private suspend fun checkWeekendWarrior(): AchievementEntity? {
+        val allRecordings = recordingHistoryDao.getAllByUser(userId).first()
+        val weekendCount = allRecordings.count { recording ->
+            val cal = Calendar.getInstance().apply { timeInMillis = recording.timestamp }
+            val dayOfWeek = cal.get(Calendar.DAY_OF_WEEK)
+            dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY
+        }
+
+        return checkAndUnlock(Achievement.WEEKEND_WARRIOR, weekendCount)
     }
 
     /**

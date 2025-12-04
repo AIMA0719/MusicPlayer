@@ -57,4 +57,49 @@ interface RecordingHistoryDao {
         AND totalScore >= :minScore
     """)
     suspend fun getCountByMinScore(userId: String, minScore: Int): Int
+
+    @Query("""
+        SELECT COUNT(*) FROM recording_history
+        WHERE userId = :userId
+        AND totalScore >= :minScore
+        AND totalScore < :maxScore
+    """)
+    suspend fun getCountByScoreRange(userId: String, minScore: Int, maxScore: Int): Int
+
+    @Query("""
+        SELECT * FROM recording_history
+        WHERE userId = :userId
+        ORDER BY timestamp DESC
+        LIMIT :limit
+    """)
+    suspend fun getRecentRecordings(userId: String, limit: Int): List<RecordingHistoryEntity>
+
+    @Query("""
+        SELECT COUNT(DISTINCT songName) FROM recording_history
+        WHERE userId = :userId
+    """)
+    suspend fun getUniqueSongCount(userId: String): Int
+
+    @Query("""
+        SELECT COUNT(*) FROM recording_history
+        WHERE userId = :userId
+        AND timestamp >= :startTime
+        AND timestamp < :endTime
+    """)
+    suspend fun getRecordingCountInTimeRange(userId: String, startTime: Long, endTime: Long): Int
+
+    @Query("""
+        SELECT * FROM recording_history
+        WHERE userId = :userId
+        AND timestamp >= :startTime
+        AND timestamp < :endTime
+        ORDER BY timestamp
+    """)
+    suspend fun getRecordingsInTimeRange(userId: String, startTime: Long, endTime: Long): List<RecordingHistoryEntity>
+
+    @Query("""
+        SELECT COUNT(DISTINCT difficulty) FROM recording_history
+        WHERE userId = :userId
+    """)
+    suspend fun getTriedDifficultyCount(userId: String): Int
 }

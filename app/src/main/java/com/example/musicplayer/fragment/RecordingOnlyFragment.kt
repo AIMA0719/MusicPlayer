@@ -16,10 +16,13 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.musicplayer.R
 import com.example.musicplayer.databinding.FragmentRecordingOnlyBinding
+import com.example.musicplayer.entity.RecordingHistoryEntity
 import com.example.musicplayer.manager.AudioRecorderManager
 import com.example.musicplayer.manager.FragmentMoveManager
+import com.example.musicplayer.manager.GameManager
 import com.example.musicplayer.manager.LogManager
 import com.example.musicplayer.manager.ToastManager
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.io.File
@@ -30,7 +33,10 @@ class RecordingOnlyFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var audioRecorderManager: AudioRecorderManager
+    private lateinit var gameManager: GameManager
+    private var gameManagerInitJob: Job? = null
     private var currentRecordingFile: String? = null
+    private var recordingStartTime: Long = 0
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -53,14 +59,22 @@ class RecordingOnlyFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
+
         setupAudioRecorder()
+        setupGameManager()
         setupViews()
         observeRecordingState()
     }
 
     private fun setupAudioRecorder() {
         audioRecorderManager = AudioRecorderManager()
+    }
+
+    private fun setupGameManager() {
+        gameManager = GameManager(requireContext())
+        gameManagerInitJob = lifecycleScope.launch {
+            gameManager.initialize()
+        }
     }
 
     private fun setupViews() {
@@ -214,6 +228,7 @@ class RecordingOnlyFragment : Fragment() {
 
     private fun startRecording() {
         try {
+            recordingStartTime = System.currentTimeMillis()
             currentRecordingFile = audioRecorderManager.startRecording(requireContext())
             if (currentRecordingFile != null) {
                 LogManager.i("Recording started: $currentRecordingFile")
@@ -234,6 +249,10 @@ class RecordingOnlyFragment : Fragment() {
                 currentRecordingFile = savedFilePath
                 showSavedFileInfo(savedFilePath)
                 LogManager.i("Recording saved: $savedFilePath")
+
+                // 녹음 히스토리 저장 및 도전과제 체크
+                saveRecordingHistory(savedFilePath)
+
                 ToastManager.showToast("녹음이 저장되었습니다.")
 
                 // MediaStore에 파일 등록 (선택사항, 시스템 미디어 스캔)
@@ -244,6 +263,52 @@ class RecordingOnlyFragment : Fragment() {
         } catch (e: Exception) {
             LogManager.e("Failed to stop recording: ${e.message}")
             ToastManager.showToast("녹음 정지 실패: ${e.message}")
+        }
+    }
+
+    private fun saveRecordingHistory(filePath: String) {
+        lifecycleScope.launch {
+            try {
+                // GameManager 초기화 완료 대기
+                gameManagerInitJob?.join()
+
+                LogManager.i("Starting to save recording history")
+
+                val recordingEndTime = System.currentTimeMillis()
+                val duration = recordingEndTime - recordingStartTime
+
+                // RecordingHistoryEntity 생성 (단순 녹음이므로 점수는 0)
+                val recordingHistory = RecordingHistoryEntity(
+                    userId = "guest",
+                    songName = "녹음 파일",
+                    songArtist = "",
+                    songDuration = duration,
+                    totalScore = 0,
+                    pitchAccuracy = 0.0,
+                    rhythmScore = 0.0,
+                    volumeStability = 0.0,
+                    durationMatch = 0.0,
+                    hasVibrato = false,
+                    vibratoScore = 0.0,
+                    difficulty = "NONE",
+                    recordingFilePath = filePath
+                )
+
+                LogManager.i("Calling gameManager.onRecordingCompleted")
+
+                // 게임 보상 계산 (녹음 개수, 도전과제 등)
+                val reward = gameManager.onRecordingCompleted(
+                    songName = "녹음 파일",
+                    score = 0,
+                    difficulty = "NONE",
+                    recordingHistory = recordingHistory
+                )
+
+                LogManager.i("Recording history saved successfully. Exp gained: ${reward.exp}, Achievements: ${reward.unlockedAchievements.size}")
+            } catch (e: Exception) {
+                LogManager.e("Failed to save recording history: ${e.message}")
+                e.printStackTrace()
+            }
         }
     }
 
@@ -305,7 +370,8 @@ class RecordingOnlyFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         if (audioRecorderManager.isRecording.value) {
-            audioRecorderManager.stopRecording()
+            // 녹음 중이면 우리의 stopRecording() 메서드 호출 (히스토리 저장 포함)
+            stopRecording()
         }
         audioRecorderManager.release()
         _binding = null

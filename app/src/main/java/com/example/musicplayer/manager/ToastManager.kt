@@ -54,7 +54,8 @@ class ToastManager private constructor() {
                 }
                 text.text = messageText
 
-                val yOffset = (20 * context.resources.displayMetrics.density).toInt()
+                // 화면 최하단으로부터 위로 40dp 떨어진 위치
+                val yOffset = (40 * context.resources.displayMetrics.density).toInt()
 
                 popupWindow?.dismiss() // 이전 팝업 즉시 제거
                 popupWindow = PopupWindow(
@@ -65,7 +66,8 @@ class ToastManager private constructor() {
                     animationStyle = R.style.ToastAnimationStyle
                     isFocusable = false
                     setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
-                    showAtLocation(context.findViewById(android.R.id.content), Gravity.BOTTOM, 0, yOffset)
+                    // Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL로 중앙 하단에 표시
+                    showAtLocation(context.findViewById(android.R.id.content), Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, yOffset)
                 }
 
                 Handler(Looper.getMainLooper()).postDelayed({
