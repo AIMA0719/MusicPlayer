@@ -7,8 +7,13 @@ import com.example.musicplayer.database.entity.User
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
-class UserRepository(context: Context) {
+class UserRepository(private val context: Context) {
     private val userDao = AppDatabase.getDatabase(context).userDao()
+    private val prefs = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+
+    companion object {
+        private const val KEY_GUEST_USER_ID = "guest_user_id"
+    }
 
     suspend fun getCurrentUser(): User? {
         return userDao.getCurrentUser()
@@ -31,14 +36,34 @@ class UserRepository(context: Context) {
     }
 
     suspend fun createGuestUser(): User {
+        // 이미 저장된 게스트 ID가 있는지 확인
+        val savedGuestId = prefs.getString(KEY_GUEST_USER_ID, null)
+
+        if (savedGuestId != null) {
+            // 기존 게스트 ID가 있으면 해당 사용자 조회
+            val existingUser = getUserById(savedGuestId)
+            if (existingUser != null) {
+                // 기존 게스트 사용자가 DB에 있으면 반환
+                return existingUser
+            }
+        }
+
+        // 새로운 게스트 사용자 생성
+        val guestUserId = "guest_${UUID.randomUUID()}"
         val guestUser = User(
-            userId = "guest_${UUID.randomUUID()}",
+            userId = guestUserId,
             email = null,
             displayName = "게스트",
             profileImageUrl = null,
             loginType = LoginType.GUEST
         )
+
+        // DB에 저장
         insertUser(guestUser)
+
+        // SharedPreferences에 게스트 ID 저장 (앱 캐시 지우기 전까지 유지)
+        prefs.edit().putString(KEY_GUEST_USER_ID, guestUserId).apply()
+
         return guestUser
     }
 
