@@ -3,8 +3,10 @@ package com.example.musicplayer.manager
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.view.Window
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -22,11 +24,11 @@ object ScoreFeedbackDialogManager {
      * 채점 난이도
      */
     enum class ScoringDifficulty(val displayName: String, val multiplier: Double) {
-        VERY_EASY("안 불러도 돼", 1.3),
-        EASY("설렁설렁", 1.15),
-        NORMAL("보통", 1.0),
-        HARD("잘 불러야 돼", 0.9),
-        VERY_HARD("인간 노래기계 모드", 0.75)
+        VERY_EASY("피스 오브 케익 모드", 1.3),
+        EASY("이지 모드", 1.15),
+        NORMAL("노말 모드", 1.0),
+        HARD("고수 모드", 0.85),
+        VERY_HARD("초고수 모드", 0.7)
     }
 
     /**
@@ -87,12 +89,27 @@ object ScoreFeedbackDialogManager {
         }
 
         dialog.show()
+
+        // 다이얼로그 너비 설정: 화면 너비 - 좌우 각 10dp
+        dialog.window?.let { window ->
+            val displayMetrics = context.resources.displayMetrics
+            val marginDp = 10f
+            val marginPx = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                marginDp,
+                displayMetrics
+            ).toInt()
+
+            val params = window.attributes
+            params.width = displayMetrics.widthPixels - (marginPx * 2)
+            window.attributes = params
+        }
     }
 
     /**
      * 난이도에 따른 점수 조정
      */
-    private fun calculateAdjustedScore(baseScore: Int, difficulty: ScoringDifficulty): Int {
+    fun calculateAdjustedScore(baseScore: Int, difficulty: ScoringDifficulty): Int {
         var adjustedScore = (baseScore * difficulty.multiplier).toInt()
         adjustedScore = adjustedScore.coerceIn(0, 100)
 
@@ -195,6 +212,21 @@ object ScoreFeedbackDialogManager {
         }
 
         dialog.show()
+
+        // 다이얼로그 너비 설정: 화면 너비 - 좌우 각 10dp
+        dialog.window?.let { window ->
+            val displayMetrics = context.resources.displayMetrics
+            val marginDp = 10f
+            val marginPx = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                marginDp,
+                displayMetrics
+            ).toInt()
+
+            val params = window.attributes
+            params.width = displayMetrics.widthPixels - (marginPx * 2)
+            window.attributes = params
+        }
     }
 
     /**

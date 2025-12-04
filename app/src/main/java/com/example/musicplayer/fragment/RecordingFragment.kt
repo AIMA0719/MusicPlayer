@@ -45,6 +45,12 @@ class RecordingFragment : Fragment() {
     private var lastUserX = -1f
     private var lastOriginIndex = -1
 
+    // 선택된 난이도 저장
+    private var selectedDifficulty: ScoreFeedbackDialogManager.ScoringDifficulty? = null
+
+    // 피드백 다이얼로그 표시 여부 (중복 방지)
+    private var hasFeedbackShown = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
@@ -75,9 +81,9 @@ class RecordingFragment : Fragment() {
         // 노래 제목 설정
         binding.songTitle.text = music.title
 
-        // 시작 버튼
+        // 시작 버튼 - 난이도 선택 후 녹음 시작
         binding.btnStart.setOnClickListener {
-            viewModel.startRecording(pitchArray)
+            showDifficultySelectAndStartRecording()
         }
 
         // 일시정지/재개 버튼
@@ -92,6 +98,23 @@ class RecordingFragment : Fragment() {
         // 정지 버튼
         binding.btnStop.setOnClickListener {
             viewModel.stopRecording()
+        }
+    }
+
+    /**
+     * 난이도 선택 다이얼로그를 표시하고 선택 후 녹음 시작
+     */
+    private fun showDifficultySelectAndStartRecording() {
+        ScoreFeedbackDialogManager.showDifficultySelectDialog(
+            requireContext(),
+            baseScore = 0  // 녹음 시작 시에는 점수가 없으므로 0
+        ) { _, difficulty ->
+            // 선택한 난이도 저장
+            selectedDifficulty = difficulty
+            // 피드백 표시 플래그 리셋
+            hasFeedbackShown = false
+            // 녹음 시작
+            viewModel.startRecording(pitchArray)
         }
     }
 
@@ -164,25 +187,30 @@ class RecordingFragment : Fragment() {
 
                     // Update final score
                     state.score?.let { baseScore ->
+                        // 이미 피드백을 보여줬으면 중복 방지
+                        if (hasFeedbackShown) return@let
+
                         // ScoreAnalyzer 가져오기
                         val analyzer = viewModel.getScoreAnalyzer()
-                        if (analyzer != null) {
-                            // 1단계: 채점 난이도 선택 다이얼로그 표시
-                            ScoreFeedbackDialogManager.showDifficultySelectDialog(
-                                requireContext(),
-                                baseScore
-                            ) { adjustedScore, difficulty ->
-                                // 점수 저장
-                                scoreViewModel.saveScore(music.title, adjustedScore, music.artist)
+                        val difficulty = selectedDifficulty ?: ScoreFeedbackDialogManager.ScoringDifficulty.NORMAL
 
-                                // 2단계: 상세 피드백 다이얼로그 표시
-                                ScoreFeedbackDialogManager.showScoreFeedbackDialog(
-                                    requireContext(),
-                                    analyzer,
-                                    adjustedScore,
-                                    difficulty
-                                )
-                            }
+                        if (analyzer != null) {
+                            // 저장된 난이도로 점수 조정
+                            val adjustedScore = ScoreFeedbackDialogManager.calculateAdjustedScore(baseScore, difficulty)
+
+                            // 점수 저장
+                            scoreViewModel.saveScore(music.title, adjustedScore, music.artist)
+
+                            // 피드백 다이얼로그 표시
+                            ScoreFeedbackDialogManager.showScoreFeedbackDialog(
+                                requireContext(),
+                                analyzer,
+                                adjustedScore,
+                                difficulty
+                            )
+
+                            // 피드백 표시 완료 플래그 설정
+                            hasFeedbackShown = true
                         } else {
                             // Fallback: analyzer가 없으면 토스트로 표시
                             Toast.makeText(requireContext(), "점수 계산 중 오류가 발생했습니다", Toast.LENGTH_SHORT).show()
