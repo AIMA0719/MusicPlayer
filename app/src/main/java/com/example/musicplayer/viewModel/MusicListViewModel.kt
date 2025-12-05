@@ -4,7 +4,6 @@ import android.app.Application
 import android.content.ContentUris
 import android.content.Context
 import android.media.MediaMetadataRetriever
-import android.net.Uri
 import android.provider.MediaStore
 import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
@@ -14,7 +13,6 @@ import com.example.musicplayer.data.MusicListSideEffect
 import com.example.musicplayer.data.MusicListState
 import com.example.musicplayer.factory.MusicFileDispatcherFactory.analyzePitchFromMediaUri
 import com.example.musicplayer.manager.LogManager
-import kotlinx.coroutines.Dispatchers
 import org.orbitmvi.orbit.Container
 import org.orbitmvi.orbit.ContainerHost
 import org.orbitmvi.orbit.syntax.simple.intent
@@ -31,6 +29,10 @@ class MusicListViewModel(
     override val container: Container<MusicListState, MusicListSideEffect> =
         container(MusicListState())
 
+    // 분석 취소 플래그
+    @Volatile
+    private var isAnalysisCancelled = false
+
     fun onIntent(intent: MusicListIntent) {
         when (intent) {
             is MusicListIntent.LoadMusicFiles -> loadMusicFiles()
@@ -45,11 +47,27 @@ class MusicListViewModel(
             is MusicListIntent.MarkAsNavigated -> markAsNavigated()
 
             is MusicListIntent.ResetAnalysisState -> resetAnalysisState()
+
+            is MusicListIntent.CancelAnalysis -> cancelAnalysis()
+        }
+    }
+
+    private fun cancelAnalysis() = intent {
+        LogManager.i("MusicListViewModel: Analysis cancelled by user")
+        isAnalysisCancelled = true
+        reduce {
+            state.copy(
+                isAnalyzing = false,
+                analysisProgress = 0,
+                selectedMusic = null,
+                originalPitch = null
+            )
         }
     }
 
     private fun analyzeOriginalMusic(music: MusicFile) = intent {
         LogManager.i("MusicListViewModel: Starting analysis for ${music.title}")
+        isAnalysisCancelled = false
         reduce {
             state.copy(isAnalyzing = true, analysisProgress = 0, hasNavigated = false)
         }
@@ -58,11 +76,20 @@ class MusicListViewModel(
             context = context,
             uri = music.uri,
             onProgress = { progress ->
-                intent {
-                    reduce { state.copy(analysisProgress = progress) }
+                // 취소되었으면 진행 상황 업데이트 무시
+                if (!isAnalysisCancelled) {
+                    intent {
+                        reduce { state.copy(analysisProgress = progress) }
+                    }
                 }
             }
         )
+
+        // 취소되었으면 결과 무시
+        if (isAnalysisCancelled) {
+            LogManager.i("MusicListViewModel: Analysis was cancelled, ignoring results")
+            return@intent
+        }
 
         LogManager.i("MusicListViewModel: Analysis completed, pitch list size: ${pitchList.size}")
         analysisCompleted(music, pitchList)

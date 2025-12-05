@@ -22,6 +22,7 @@ import com.example.musicplayer.adapter.MusicListAdapter
 import com.example.musicplayer.data.MusicFile
 import com.example.musicplayer.manager.IOSStyleProgressDialog
 import com.example.musicplayer.manager.LogManager
+import com.example.musicplayer.manager.ToastManager
 import com.example.musicplayer.data.MusicListIntent
 import com.example.musicplayer.databinding.FragmentMusicListBinding
 import com.example.musicplayer.factory.MusicListViewModelFactory
@@ -66,8 +67,15 @@ class MusicListFragment : Fragment() {
                             "hasNavigated=${state.hasNavigated}")
 
                     if (state.isAnalyzing) {
-                        progressDialog.show("${state.analysisProgress}% 분석 중...")
-                        progressDialog.updateMessage("${state.analysisProgress}% 분석 중...")
+                        if (!progressDialog.isShowing()) {
+                            progressDialog.showCancelable("${state.analysisProgress}% 분석 중...") {
+                                // 뒤로가기로 취소 시
+                                viewModel.onIntent(MusicListIntent.CancelAnalysis)
+                                ToastManager.showToast("분석이 취소되었습니다")
+                            }
+                        } else {
+                            progressDialog.updateMessage("${state.analysisProgress}% 분석 중...")
+                        }
                     } else {
                         if (progressDialog.isShowing()) {
                             progressDialog.dismiss()

@@ -17,7 +17,24 @@
         android:id="@+id/navigation_search"
         android:name="com.example.musicplayer.fragment.MusicDownloadFragment"
         android:label="검색"
-        tools:layout="@layout/fragment_music_download" />
+        tools:layout="@layout/fragment_music_download">
+
+        <action
+            android:id="@+id/action_search_to_musicPlayer"
+            app:destination="@id/musicPlayerFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+
+        <action
+            android:id="@+id/action_search_to_recording"
+            app:destination="@id/recordingFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
 
     <!-- 녹음 화면 -->
     <fragment

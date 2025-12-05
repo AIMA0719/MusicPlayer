@@ -13,7 +13,7 @@ import java.util.Date
 import java.util.Locale
 
 class DownloadedFileAdapter(
-    private val onPlayClick: (File) -> Unit,
+    private val onItemClick: (File) -> Unit,
     private val onDeleteClick: (File) -> Unit
 ) : ListAdapter<File, DownloadedFileAdapter.ViewHolder>(DiffCallback) {
 
@@ -36,15 +36,21 @@ class DownloadedFileAdapter(
 
         fun bind(file: File) {
             binding.apply {
-                tvFilename.text = file.name
+                tvFilename.text = file.nameWithoutExtension.replace("_", " ")
                 tvFilePath.text = file.parent?.substringAfterLast("/") ?: "Downloads"
                 tvFileSize.text = FileDownloadManager.formatFileSize(file.length())
-                
+
                 val dateFormat = SimpleDateFormat("yyyy.MM.dd", Locale.getDefault())
                 tvDateDownloaded.text = dateFormat.format(Date(file.lastModified()))
 
+                // 전체 아이템 클릭 시 다이얼로그 표시
+                root.setOnClickListener {
+                    onItemClick(file)
+                }
+
+                // 재생 버튼도 동일하게 다이얼로그 표시
                 btnPlay.setOnClickListener {
-                    onPlayClick(file)
+                    onItemClick(file)
                 }
 
                 btnDelete.setOnClickListener {

@@ -1,19 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F5F5F5">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/app_bar_layout"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        android:elevation="0dp"
-        app:elevation="0dp">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
+        <!-- 헤더 영역 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -58,7 +56,7 @@
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:contentDescription="검색"
                         android:src="@android:drawable/ic_menu_search"
-                        android:tint="#FF6B35" />
+                        app:tint="#FF6B35" />
 
                 </LinearLayout>
 
@@ -169,23 +167,17 @@
 
         </LinearLayout>
 
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <!-- ViewPager2 for tab content -->
-    <androidx.core.widget.NestedScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
+        <!-- 리스트 컨테이너 -->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="0dp"
+            android:layout_weight="1">
 
             <!-- 다운로드 가능한 음악 리스트 -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_download_list"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:clipToPadding="false"
                 android:paddingTop="8dp"
                 android:paddingBottom="80dp"
@@ -196,7 +188,7 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_downloaded_list"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:clipToPadding="false"
                 android:paddingTop="8dp"
                 android:paddingBottom="80dp"
@@ -210,7 +202,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginTop="100dp"
                 android:gravity="center"
                 android:orientation="vertical"
                 android:visibility="gone">
@@ -220,7 +211,7 @@
                     android:layout_height="80dp"
                     android:alpha="0.3"
                     android:src="@drawable/ic_microphone"
-                    android:tint="#CCCCCC" />
+                    app:tint="#CCCCCC" />
 
                 <TextView
                     android:id="@+id/tv_empty_message"
@@ -235,7 +226,7 @@
 
         </FrameLayout>
 
-    </androidx.core.widget.NestedScrollView>
+    </LinearLayout>
 
     <!-- 다운로드 진행률 표시 (Glassmorphism 스타일) -->
     <com.google.android.material.card.MaterialCardView
@@ -354,4 +345,4 @@
         app:backgroundTint="#FF6B35"
         app:tint="#FFFFFF" />
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</FrameLayout>

@@ -1,29 +1,26 @@
 package com.example.musicplayer.fragment
 
-import android.content.Intent
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import com.example.musicplayer.R
-import com.example.musicplayer.activity.LoginActivity
 import com.example.musicplayer.database.AppDatabase
 import com.example.musicplayer.database.entity.LoginType
-import com.example.musicplayer.entity.ScoreEntity
 import com.example.musicplayer.entity.Achievement
 import com.example.musicplayer.entity.LevelSystem
+import com.example.musicplayer.entity.ScoreEntity
 import com.example.musicplayer.manager.AuthManager
-import com.example.musicplayer.manager.ContextManager
 import com.example.musicplayer.repository.UserRepository
 import kotlinx.coroutines.launch
-import java.util.*
-import android.widget.ProgressBar
-import androidx.navigation.fragment.findNavController
+import java.util.Calendar
 
 class MainFragment : Fragment() {
 
@@ -70,6 +67,7 @@ class MainFragment : Fragment() {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun loadUserProfile(view: View) {
         val tvUserName = view.findViewById<TextView>(R.id.tvUserName)
         val tvUserEmail = view.findViewById<TextView>(R.id.tvUserEmail)
@@ -92,6 +90,7 @@ class MainFragment : Fragment() {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun loadGameData(view: View) {
         val tvLevelTitle = view.findViewById<TextView>(R.id.tvLevelTitle)
         val tvLevel = view.findViewById<TextView>(R.id.tvLevel)
@@ -128,7 +127,7 @@ class MainFragment : Fragment() {
                 val allAchievements = database.achievementDao().getAllByUser(userId)
                 allAchievements.collect { achievements ->
                     val unlockedCount = achievements.count { it.isUnlocked }
-                    val totalCount = Achievement.values().size
+                    val totalCount = Achievement.entries.size
                     tvAchievementProgress.text = "$unlockedCount / $totalCount"
 
                     // Show recent unlocked achievements
@@ -141,7 +140,7 @@ class MainFragment : Fragment() {
                         llRecentAchievements.addView(tvNoAchievements)
                     } else {
                         recentUnlocked.forEach { entity ->
-                            val achievement = Achievement.values().find { it.id == entity.achievementId }
+                            val achievement = Achievement.entries.find { it.id == entity.achievementId }
                             if (achievement != null) {
                                 val itemView = createAchievementItemView(achievement)
                                 llRecentAchievements.addView(itemView)
@@ -225,20 +224,7 @@ class MainFragment : Fragment() {
         return itemLayout
     }
 
-    private fun showLogoutConfirmDialog() {
-        android.app.AlertDialog.Builder(requireContext())
-            .setTitle("로그아웃")
-            .setMessage("로그아웃 하시겠습니까?")
-            .setPositiveButton("확인") { dialog, _ ->
-                performLogout()
-                dialog.dismiss()
-            }
-            .setNegativeButton("취소") { dialog, _ ->
-                dialog.dismiss()
-            }
-            .show()
-    }
-
+    @SuppressLint("SetTextI18n")
     private fun loadScoreData(view: View) {
         val tvMonthlyAverage = view.findViewById<TextView>(R.id.tvMonthlyAverage)
         val tvMonthlyAverageSubtext = view.findViewById<TextView>(R.id.tvMonthlyAverageSubtext)
@@ -294,6 +280,7 @@ class MainFragment : Fragment() {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun createTop3ItemView(rank: Int, score: ScoreEntity): View {
         val itemLayout = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -340,15 +327,18 @@ class MainFragment : Fragment() {
             setTextColor(resources.getColor(android.R.color.black, null))
         }
 
-        // 아티스트명
-        val artistText = TextView(requireContext()).apply {
-            text = if (score.songArtist.isNotEmpty()) score.songArtist else "알 수 없음"
-            textSize = 12f
-            setTextColor(resources.getColor(android.R.color.darker_gray, null))
-        }
-
         infoLayout.addView(songNameText)
-        infoLayout.addView(artistText)
+
+        // 아티스트명 - <unknown>이거나 비어있으면 표시하지 않음
+        val artistName = score.songArtist
+        if (artistName.isNotEmpty() && artistName != "<unknown>" && artistName.lowercase() != "unknown") {
+            val artistText = TextView(requireContext()).apply {
+                text = artistName
+                textSize = 12f
+                setTextColor(resources.getColor(android.R.color.darker_gray, null))
+            }
+            infoLayout.addView(artistText)
+        }
 
         // 점수 표시
         val scoreText = TextView(requireContext()).apply {
@@ -366,27 +356,5 @@ class MainFragment : Fragment() {
         itemLayout.addView(scoreText)
 
         return itemLayout
-    }
-
-    private fun performLogout() {
-        // Google 로그아웃
-        val user = lifecycleScope.launch {
-            val userId = AuthManager.getCurrentUserId()
-            if (userId != null) {
-                val userEntity = userRepository.getUserById(userId)
-                if (userEntity != null && userEntity.loginType == LoginType.GOOGLE) {
-                    com.example.musicplayer.manager.GoogleAuthManager.signOut {
-                        // Google 로그아웃 완료 후 처리
-                    }
-                }
-            }
-        }
-
-        AuthManager.logout()
-
-        val intent = Intent(requireContext(), LoginActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
-        requireActivity().finish()
     }
 }
