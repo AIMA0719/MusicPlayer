@@ -86,7 +86,7 @@
                     android:layout_width="14dp"
                     android:layout_height="14dp"
                     android:src="@android:drawable/ic_menu_recent_history"
-                    android:tint="#999999" />
+                    app:tint="#999999" />
 
                 <TextView
                     android:id="@+id/tv_duration"
@@ -131,7 +131,6 @@
             app:backgroundTint="#FF6B35"
             app:cornerRadius="24dp"
             app:icon="@android:drawable/stat_sys_download"
-            app:iconGravity="textStart"
             app:iconPadding="0dp"
             app:iconSize="24dp"
             app:iconTint="#FFFFFF"

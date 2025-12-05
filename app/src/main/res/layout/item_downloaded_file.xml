@@ -130,7 +130,6 @@
                 app:backgroundTint="#FF6B35"
                 app:cornerRadius="20dp"
                 app:icon="@android:drawable/ic_media_play"
-                app:iconGravity="textStart"
                 app:iconPadding="0dp"
                 app:iconSize="20dp"
                 app:iconTint="#FFFFFF" />
@@ -148,7 +147,6 @@
                 android:insetBottom="0dp"
                 app:cornerRadius="20dp"
                 app:icon="@android:drawable/ic_menu_delete"
-                app:iconGravity="textStart"
                 app:iconPadding="0dp"
                 app:iconSize="18dp"
                 app:iconTint="#FF5252"

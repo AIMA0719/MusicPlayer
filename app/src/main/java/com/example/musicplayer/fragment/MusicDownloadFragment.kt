@@ -129,10 +129,20 @@ class MusicDownloadFragment : Fragment() {
 
         downloadedAdapter = DownloadedFileAdapter(
             onItemClick = { file ->
-                showDownloadedMusicActionDialog(file)
+                // 다운로드 중인지 확인
+                if (downloadManager.isDownloading.value) {
+                    ToastManager.showToast("다운로드 중입니다. 완료 후 시도해주세요.")
+                } else {
+                    showDownloadedMusicActionDialog(file)
+                }
             },
             onDeleteClick = { file ->
-                deleteFile(file)
+                // 다운로드 중인지 확인
+                if (downloadManager.isDownloading.value) {
+                    ToastManager.showToast("다운로드 중입니다. 완료 후 시도해주세요.")
+                } else {
+                    deleteFile(file)
+                }
             }
         )
 
