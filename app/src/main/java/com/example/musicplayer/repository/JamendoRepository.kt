@@ -13,9 +13,7 @@ class JamendoRepository @Inject constructor(
     private val jamendoApiService: JamendoApiService
 ) {
     // Jamendo API Client ID
-    // Note: In production, this should be stored securely (e.g., in BuildConfig or secrets)
-    // todo Jamendo API KEY
-    private val clientId = "56d30c95"
+    private val clientId = "544328bb"
 
     /**
      * Search for tracks with a query string
