@@ -4,12 +4,18 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.Window
+import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SwitchCompat
+import androidx.core.content.edit
+import androidx.core.graphics.drawable.toDrawable
+import androidx.core.graphics.toColorInt
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -17,6 +23,7 @@ import com.example.musicplayer.R
 import com.example.musicplayer.activity.LoginActivity
 import com.example.musicplayer.database.entity.LoginType
 import com.example.musicplayer.manager.AuthManager
+import com.example.musicplayer.manager.ScoreFeedbackDialogManager
 import com.example.musicplayer.manager.ToastManager
 import com.example.musicplayer.repository.UserRepository
 import kotlinx.coroutines.launch
@@ -29,7 +36,7 @@ class SettingsFragment : Fragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         return inflater.inflate(R.layout.fragment_settings, container, false)
     }
@@ -58,13 +65,13 @@ class SettingsFragment : Fragment() {
     private fun setupViews(view: View) {
         // Dark Mode Switch - App-level theme only
         view.findViewById<SwitchCompat>(R.id.switchDarkMode).setOnCheckedChangeListener { _, isChecked ->
-            sharedPrefs.edit().putBoolean("dark_mode", isChecked).apply()
+            sharedPrefs.edit { putBoolean("dark_mode", isChecked) }
             ToastManager.showToast("앱을 재시작하면 테마가 적용됩니다")
         }
 
         // Notifications Switch
         view.findViewById<SwitchCompat>(R.id.switchNotifications).setOnCheckedChangeListener { _, isChecked ->
-            sharedPrefs.edit().putBoolean("notifications", isChecked).apply()
+            sharedPrefs.edit { putBoolean("notifications", isChecked) }
             ToastManager.showToast(if (isChecked) "알림이 켜졌습니다" else "알림이 꺼졌습니다")
         }
 
@@ -130,18 +137,72 @@ class SettingsFragment : Fragment() {
     }
 
     private fun showDifficultySelectionDialog() {
-        val difficulties = arrayOf("피스 오브 케익 모드", "이지 모드", "노말 모드 (권장)", "고수 모드", "초고수 모드")
-        val currentDifficulty = sharedPrefs.getInt("default_difficulty", 2)
+        val dialog = android.app.Dialog(requireContext())
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_difficulty_select, null)
+        dialog.setContentView(dialogView)
+        dialog.window?.setBackgroundDrawable(android.graphics.Color.TRANSPARENT.toDrawable())
 
-        android.app.AlertDialog.Builder(requireContext())
-            .setTitle("기본 채점 난이도")
-            .setSingleChoiceItems(difficulties, currentDifficulty) { dialog, which ->
-                sharedPrefs.edit().putInt("default_difficulty", which).apply()
-                ToastManager.showToast("${difficulties[which]} 선택됨")
+        val currentDifficultyIndex = sharedPrefs.getInt("default_difficulty", 2)
+
+        val difficultyViews = mapOf(
+            0 to dialogView.findViewById<LinearLayout>(R.id.difficulty_very_easy),
+            1 to dialogView.findViewById<LinearLayout>(R.id.difficulty_easy),
+            2 to dialogView.findViewById<LinearLayout>(R.id.difficulty_normal),
+            3 to dialogView.findViewById<LinearLayout>(R.id.difficulty_hard),
+            4 to dialogView.findViewById<LinearLayout>(R.id.difficulty_very_hard)
+        )
+
+        val difficultyEnums = ScoreFeedbackDialogManager.ScoringDifficulty.entries.toTypedArray()
+
+        fun updateSelection(selectedIndex: Int) {
+            difficultyViews.forEach { (index, view) ->
+                val titleTextView = view.getChildAt(0) as TextView
+                val descriptionTextView = view.getChildAt(1) as TextView
+
+                if (index == selectedIndex) {
+                    view.setBackgroundResource(R.drawable.bg_button_primary)
+                    titleTextView.setTextColor(android.graphics.Color.WHITE)
+                    descriptionTextView.setTextColor("#E3F2FD".toColorInt())
+                } else {
+                    view.setBackgroundResource(R.drawable.bg_button_secondary)
+                    titleTextView.setTextColor("#212121".toColorInt())
+                    descriptionTextView.setTextColor("#757575".toColorInt())
+                }
+            }
+        }
+
+        updateSelection(currentDifficultyIndex)
+
+        difficultyViews.forEach { (index, view) ->
+            view.setOnClickListener {
+                sharedPrefs.edit { putInt("default_difficulty", index) }
+                val selectedDifficulty = difficultyEnums[index]
+                ToastManager.showToast("${selectedDifficulty.displayName} 선택됨")
                 dialog.dismiss()
             }
-            .setNegativeButton("취소", null)
-            .show()
+        }
+
+        dialogView.findViewById<TextView>(R.id.btn_cancel).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+
+        // 다이얼로그 너비 설정: 화면 너비 - 좌우 각 10dp
+        dialog.window?.let { window ->
+            val displayMetrics = requireContext().resources.displayMetrics
+            val marginDp = 10f
+            val marginPx = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                marginDp,
+                displayMetrics
+            ).toInt()
+
+            val params = window.attributes
+            params.width = displayMetrics.widthPixels - (marginPx * 2)
+            window.attributes = params
+        }
     }
 
     private fun showClearCacheDialog() {
@@ -158,9 +219,9 @@ class SettingsFragment : Fragment() {
     private fun clearCache() {
         try {
             val cacheDir = requireContext().cacheDir
-            val size = deleteDir(cacheDir)
+            deleteDir(cacheDir)
             ToastManager.showToast("캐시가 삭제되었습니다")
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             ToastManager.showToast("캐시 삭제 실패")
         }
     }
@@ -185,7 +246,7 @@ class SettingsFragment : Fragment() {
 
     private fun sendEmailToSupport() {
         val intent = Intent(Intent.ACTION_SENDTO).apply {
-            data = Uri.parse("mailto:")
+            data = "mailto:".toUri()
             putExtra(Intent.EXTRA_EMAIL, arrayOf("support@example.com"))
             putExtra(Intent.EXTRA_SUBJECT, "[Music Player] 문의")
         }

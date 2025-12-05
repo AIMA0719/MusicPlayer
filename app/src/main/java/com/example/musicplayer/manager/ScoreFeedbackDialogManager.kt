@@ -6,12 +6,10 @@ import android.content.Context
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.view.Window
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.example.musicplayer.R
-import com.example.musicplayer.manager.GameReward
 import com.example.musicplayer.scoreAlgorythm.ScoreAnalyzer
 
 /**
@@ -30,81 +28,6 @@ object ScoreFeedbackDialogManager {
         NORMAL("노말 모드", 1.0),
         HARD("고수 모드", 0.85),
         VERY_HARD("초고수 모드", 0.7)
-    }
-
-    /**
-     * 채점 난이도 선택 다이얼로그 표시
-     *
-     * @param context Context
-     * @param baseScore 기본 점수
-     * @param onScoreSelected 난이도 선택 콜백 (조정된 점수, 난이도 반환)
-     */
-    @SuppressLint("InflateParams", "SetTextI18n")
-    fun showDifficultySelectDialog(
-        context: Context,
-        baseScore: Int,
-        onScoreSelected: (Int, ScoringDifficulty) -> Unit
-    ) {
-        val dialog = Dialog(context)
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        dialog.setContentView(
-            LayoutInflater.from(context).inflate(R.layout.dialog_difficulty_select, null)
-        )
-        dialog.setCancelable(true)
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-
-        // 각 난이도별 클릭 리스너
-        dialog.findViewById<LinearLayout>(R.id.difficulty_very_easy).setOnClickListener {
-            val adjustedScore = calculateAdjustedScore(baseScore, ScoringDifficulty.VERY_EASY)
-            onScoreSelected(adjustedScore, ScoringDifficulty.VERY_EASY)
-            dialog.dismiss()
-        }
-
-        dialog.findViewById<LinearLayout>(R.id.difficulty_easy).setOnClickListener {
-            val adjustedScore = calculateAdjustedScore(baseScore, ScoringDifficulty.EASY)
-            onScoreSelected(adjustedScore, ScoringDifficulty.EASY)
-            dialog.dismiss()
-        }
-
-        dialog.findViewById<LinearLayout>(R.id.difficulty_normal).setOnClickListener {
-            val adjustedScore = calculateAdjustedScore(baseScore, ScoringDifficulty.NORMAL)
-            onScoreSelected(adjustedScore, ScoringDifficulty.NORMAL)
-            dialog.dismiss()
-        }
-
-        dialog.findViewById<LinearLayout>(R.id.difficulty_hard).setOnClickListener {
-            val adjustedScore = calculateAdjustedScore(baseScore, ScoringDifficulty.HARD)
-            onScoreSelected(adjustedScore, ScoringDifficulty.HARD)
-            dialog.dismiss()
-        }
-
-        dialog.findViewById<LinearLayout>(R.id.difficulty_very_hard).setOnClickListener {
-            val adjustedScore = calculateAdjustedScore(baseScore, ScoringDifficulty.VERY_HARD)
-            onScoreSelected(adjustedScore, ScoringDifficulty.VERY_HARD)
-            dialog.dismiss()
-        }
-
-        // 취소
-        dialog.findViewById<TextView>(R.id.btn_cancel).setOnClickListener {
-            dialog.dismiss()
-        }
-
-        dialog.show()
-
-        // 다이얼로그 너비 설정: 화면 너비 - 좌우 각 10dp
-        dialog.window?.let { window ->
-            val displayMetrics = context.resources.displayMetrics
-            val marginDp = 10f
-            val marginPx = TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP,
-                marginDp,
-                displayMetrics
-            ).toInt()
-
-            val params = window.attributes
-            params.width = displayMetrics.widthPixels - (marginPx * 2)
-            window.attributes = params
-        }
     }
 
     /**
