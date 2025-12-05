@@ -145,7 +145,7 @@ class MusicListViewModel(
             "${MediaStore.Audio.Media.DATE_ADDED} DESC"
         )
 
-        LogManager.e("전체 오디오 파일 수: ${cursor?.count}")
+        //LogManager.e("전체 오디오 파일 수: ${cursor?.count}")
 
         cursor?.use {
             val idCol = it.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
