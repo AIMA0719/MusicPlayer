@@ -1,8 +1,8 @@
 package com.example.musicplayer.fragment
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -117,12 +117,12 @@ class SettingsFragment : Fragment() {
 
         // Terms of Service
         view.findViewById<TextView>(R.id.btnTermsOfService).setOnClickListener {
-            showWebView("https://example.com/terms", "이용약관")
+            showWebView("https://example.com/terms")
         }
 
         // Privacy Policy
         view.findViewById<TextView>(R.id.btnPrivacyPolicy).setOnClickListener {
-            showWebView("https://example.com/privacy", "개인정보 처리방침")
+            showWebView("https://example.com/privacy")
         }
 
         // Version Info
@@ -136,6 +136,7 @@ class SettingsFragment : Fragment() {
         }
     }
 
+    @SuppressLint("InflateParams")
     private fun showDifficultySelectionDialog() {
         val dialog = android.app.Dialog(requireContext())
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -146,10 +147,10 @@ class SettingsFragment : Fragment() {
         val currentDifficultyIndex = sharedPrefs.getInt("default_difficulty", 2)
 
         val difficultyViews = mapOf(
-            0 to dialogView.findViewById<LinearLayout>(R.id.difficulty_very_easy),
-            1 to dialogView.findViewById<LinearLayout>(R.id.difficulty_easy),
-            2 to dialogView.findViewById<LinearLayout>(R.id.difficulty_normal),
-            3 to dialogView.findViewById<LinearLayout>(R.id.difficulty_hard),
+            0 to dialogView.findViewById(R.id.difficulty_very_easy),
+            1 to dialogView.findViewById(R.id.difficulty_easy),
+            2 to dialogView.findViewById(R.id.difficulty_normal),
+            3 to dialogView.findViewById(R.id.difficulty_hard),
             4 to dialogView.findViewById<LinearLayout>(R.id.difficulty_very_hard)
         )
 
@@ -247,12 +248,12 @@ class SettingsFragment : Fragment() {
     private fun sendEmailToSupport() {
         val intent = Intent(Intent.ACTION_SENDTO).apply {
             data = "mailto:".toUri()
-            putExtra(Intent.EXTRA_EMAIL, arrayOf("support@example.com"))
+            putExtra(Intent.EXTRA_EMAIL, arrayOf("msizaplayer@gmail.com"))
             putExtra(Intent.EXTRA_SUBJECT, "[Music Player] 문의")
         }
         try {
             startActivity(Intent.createChooser(intent, "이메일 앱 선택"))
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             ToastManager.showToast("이메일 앱이 설치되어 있지 않습니다")
         }
     }
@@ -260,9 +261,10 @@ class SettingsFragment : Fragment() {
     private fun openPlayStore() {
         val packageName = requireContext().packageName
         try {
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")))
-        } catch (e: Exception) {
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName")))
+            startActivity(Intent(Intent.ACTION_VIEW, "market://details?id=$packageName".toUri()))
+        } catch (_: Exception) {
+            startActivity(Intent(Intent.ACTION_VIEW,
+                "https://play.google.com/store/apps/details?id=$packageName".toUri()))
         }
     }
 
@@ -275,11 +277,11 @@ class SettingsFragment : Fragment() {
         startActivity(Intent.createChooser(shareIntent, "앱 공유"))
     }
 
-    private fun showWebView(url: String, title: String) {
+    private fun showWebView(url: String) {
         try {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            val intent = Intent(Intent.ACTION_VIEW, url.toUri())
             startActivity(intent)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             ToastManager.showToast("웹 브라우저를 열 수 없습니다")
         }
     }
