@@ -118,42 +118,29 @@ class RecordingFragment : Fragment() {
     }
 
     /**
-     * 난이도 선택 다이얼로그를 표시하고 선택 후 카운트다운 & 녹음 시작
-     * 설정에서 기본 난이도가 설정되어 있으면 다이얼로그를 건너뛰고 바로 시작
+     * 설정된 난이도로 카운트다운 & 녹음 시작
+     * 난이도 변경은 설정 화면에서만 가능
      */
     private fun showDifficultySelectAndStartRecording() {
-        // SharedPreferences에서 기본 난이도 확인
+        // SharedPreferences에서 기본 난이도 확인 (기본값: NORMAL = 2)
         val sharedPrefs = requireContext().getSharedPreferences("app_settings", android.content.Context.MODE_PRIVATE)
-        val defaultDifficultyIndex = sharedPrefs.getInt("default_difficulty", -1)
+        val defaultDifficultyIndex = sharedPrefs.getInt("default_difficulty", 2)
 
-        if (defaultDifficultyIndex != -1) {
-            // 설정에서 기본 난이도가 설정되어 있으면 다이얼로그 건너뛰기
-            selectedDifficulty = when (defaultDifficultyIndex) {
-                0 -> ScoreFeedbackDialogManager.ScoringDifficulty.VERY_EASY
-                1 -> ScoreFeedbackDialogManager.ScoringDifficulty.EASY
-                2 -> ScoreFeedbackDialogManager.ScoringDifficulty.NORMAL
-                3 -> ScoreFeedbackDialogManager.ScoringDifficulty.HARD
-                4 -> ScoreFeedbackDialogManager.ScoringDifficulty.VERY_HARD
-                else -> ScoreFeedbackDialogManager.ScoringDifficulty.NORMAL
-            }
-            // 피드백 표시 플래그 리셋
-            hasFeedbackShown = false
-            // 카운트다운 후 녹음 시작
-            showCountdownAndStartRecording()
-        } else {
-            // 기본 난이도가 설정되지 않았으면 다이얼로그 표시
-            ScoreFeedbackDialogManager.showDifficultySelectDialog(
-                requireContext(),
-                baseScore = 0  // 녹음 시작 시에는 점수가 없으므로 0
-            ) { _, difficulty ->
-                // 선택한 난이도 저장
-                selectedDifficulty = difficulty
-                // 피드백 표시 플래그 리셋
-                hasFeedbackShown = false
-                // 카운트다운 후 녹음 시작
-                showCountdownAndStartRecording()
-            }
+        // 설정된 난이도 적용
+        selectedDifficulty = when (defaultDifficultyIndex) {
+            0 -> ScoreFeedbackDialogManager.ScoringDifficulty.VERY_EASY
+            1 -> ScoreFeedbackDialogManager.ScoringDifficulty.EASY
+            2 -> ScoreFeedbackDialogManager.ScoringDifficulty.NORMAL
+            3 -> ScoreFeedbackDialogManager.ScoringDifficulty.HARD
+            4 -> ScoreFeedbackDialogManager.ScoringDifficulty.VERY_HARD
+            else -> ScoreFeedbackDialogManager.ScoringDifficulty.NORMAL
         }
+
+        // 피드백 표시 플래그 리셋
+        hasFeedbackShown = false
+
+        // 다이얼로그 없이 바로 카운트다운 후 녹음 시작
+        showCountdownAndStartRecording()
     }
 
     /**
@@ -170,7 +157,7 @@ class RecordingFragment : Fragment() {
 
         dialog.show()
 
-        // 카운트다운: 3 -> 2 -> 1 -> 시작!
+        // 카운트다운: 3 -> 2 -> 1
         lifecycleScope.launch {
             tvCountdown.text = "3"
             delay(1000)
@@ -178,8 +165,6 @@ class RecordingFragment : Fragment() {
             delay(1000)
             tvCountdown.text = "1"
             delay(1000)
-            tvCountdown.text = "시작!"
-            delay(500)
             dialog.dismiss()
 
             // 녹음 시작
@@ -279,8 +264,9 @@ class RecordingFragment : Fragment() {
                                 val vibratoInfo = analyzer.detectVibrato()
 
                                 // RecordingHistoryEntity 생성
+                                val userId = com.example.musicplayer.manager.AuthManager.getCurrentUserId() ?: "guest"
                                 val recordingHistory = RecordingHistoryEntity(
-                                    userId = "guest",
+                                    userId = userId,
                                     songName = music.title,
                                     songArtist = music.artist,
                                     songDuration = durationMillis,
@@ -404,8 +390,11 @@ class RecordingFragment : Fragment() {
         val chart = binding.pitchChart
         val axis = chart.axisLeft
         if (newPitch > axis.axisMaximum) {
-            axis.axisMaximum = (newPitch * 1.1f).coerceAtLeast(100f)
-            chart.invalidate() // Y축 변경 즉시 반영
+            val newMax = (newPitch * 1.1f).coerceAtLeast(100f)
+            axis.axisMaximum = newMax
+
+            // Y축 변경 시 부드러운 애니메이션
+            chart.animateY(500, com.github.mikephil.charting.animation.Easing.EaseOutCubic)
         }
     }
 
@@ -426,10 +415,13 @@ class RecordingFragment : Fragment() {
         // 화면에 보이는 범위를 10초로 설정
         chart.setVisibleXRangeMaximum(10f)
 
-        // 현재 시간을 따라가도록 차트 이동
+        // 현재 시간을 따라가도록 차트 이동 (부드러운 스크롤)
         if (userDataSet.entryCount > 0) {
             val lastX = userDataSet.getEntryForIndex(userDataSet.entryCount - 1).x
-            chart.moveViewToX((lastX - 5f).coerceAtLeast(0f)) // 중앙에 현재 시간 배치
+            val targetX = (lastX - 5f).coerceAtLeast(0f) // 중앙에 현재 시간 배치
+
+            // 부드러운 애니메이션으로 이동
+            chart.moveViewToAnimated(targetX, 0f, com.github.mikephil.charting.components.YAxis.AxisDependency.LEFT, 300)
         }
 
         chart.invalidate()
@@ -437,64 +429,108 @@ class RecordingFragment : Fragment() {
 
     private fun initPitchChart() {
         val chart = binding.pitchChart
+
+        // 차트 기본 설정
         chart.description.isEnabled = false
         chart.setTouchEnabled(true)
         chart.setScaleEnabled(false)
-        chart.setDrawGridBackground(true)
-        chart.setGridBackgroundColor(android.graphics.Color.parseColor("#F5F5F5"))
-        chart.setDrawBorders(true)
-        chart.setBorderColor(android.graphics.Color.parseColor("#E0E0E0"))
-        chart.setBorderWidth(1f)
+        chart.setPinchZoom(false)
+        chart.setDrawGridBackground(false) // 그리드 배경 제거 (더 깔끔하게)
+        chart.setDrawBorders(false) // 테두리 제거
         chart.axisRight.isEnabled = false
-        chart.legend.isEnabled = true
-        chart.legend.textSize = 12f
-        chart.legend.textColor = android.graphics.Color.parseColor("#666666")
+        chart.setExtraOffsets(10f, 20f, 10f, 10f) // 여백 추가
 
-        // Y축 설정 - 초기값을 작게 시작 (동적으로 증가)
+        // 범례 스타일 개선
+        chart.legend.isEnabled = true
+        chart.legend.textSize = 13f
+        chart.legend.textColor = android.graphics.Color.parseColor("#37474F")
+        chart.legend.form = com.github.mikephil.charting.components.Legend.LegendForm.LINE
+        chart.legend.formSize = 16f
+        chart.legend.formLineWidth = 3f
+        chart.legend.xEntrySpace = 12f
+        chart.legend.yEntrySpace = 8f
+        chart.legend.formToTextSpace = 8f
+
+        // Y축 설정 - 더 세련된 스타일
         val leftAxis = chart.axisLeft
         leftAxis.axisMinimum = 0f
-        leftAxis.axisMaximum = 300f // 초기 최대값을 300으로 시작
-        leftAxis.textColor = android.graphics.Color.parseColor("#666666")
-        leftAxis.gridColor = android.graphics.Color.parseColor("#E0E0E0")
+        leftAxis.axisMaximum = 300f // 초기 최대값
+        leftAxis.textColor = android.graphics.Color.parseColor("#78909C")
+        leftAxis.gridColor = android.graphics.Color.parseColor("#ECEFF1")
+        leftAxis.gridLineWidth = 1f
         leftAxis.setDrawGridLines(true)
+        leftAxis.setDrawAxisLine(false) // 축 라인 제거
+        leftAxis.textSize = 11f
+        leftAxis.granularity = 50f
+        leftAxis.setLabelCount(6, false)
 
-        // X축 설정
+        // X축 설정 - 더 세련된 스타일
         val xAxis = chart.xAxis
         xAxis.isEnabled = true
         xAxis.position = com.github.mikephil.charting.components.XAxis.XAxisPosition.BOTTOM
         xAxis.setDrawGridLines(true)
-        xAxis.gridColor = android.graphics.Color.parseColor("#E0E0E0")
-        xAxis.textColor = android.graphics.Color.parseColor("#666666")
+        xAxis.gridColor = android.graphics.Color.parseColor("#ECEFF1")
+        xAxis.gridLineWidth = 1f
+        xAxis.textColor = android.graphics.Color.parseColor("#78909C")
+        xAxis.setDrawAxisLine(false) // 축 라인 제거
         xAxis.granularity = 1f
         xAxis.labelCount = 5
+        xAxis.textSize = 11f
         xAxis.valueFormatter = object : com.github.mikephil.charting.formatter.ValueFormatter() {
             override fun getFormattedValue(value: Float): String = "%.0f초".format(value)
         }
 
-        // 사용자 피치 데이터셋 (진한 파란색, 실시간 추가)
+        // 사용자 피치 데이터셋 - 부드러운 곡선과 그라디언트
         val userDataSet = LineDataSet(mutableListOf(), "내 음정").apply {
-            color = android.graphics.Color.parseColor("#2196F3")
+            // 색상 - 더 선명한 파란색
+            color = android.graphics.Color.parseColor("#1976D2")
             setDrawCircles(false)
             setDrawValues(false)
-            lineWidth = 3f
-            setDrawFilled(false)
-            mode = LineDataSet.Mode.LINEAR
+            lineWidth = 3.5f
+
+            // 부드러운 곡선 (Cubic Bezier)
+            mode = LineDataSet.Mode.CUBIC_BEZIER
+            cubicIntensity = 0.2f
+
+            // 그라디언트 채우기
+            setDrawFilled(true)
+            fillColor = android.graphics.Color.parseColor("#1976D2")
+            fillAlpha = 40
+
+            // 그림자 효과 (하이라이트)
+            setDrawHighlightIndicators(false)
+            isHighlightEnabled = false
         }
 
-        // 원본 피치 데이터셋 (시간에 맞춰 추가될 예정, 빈 상태로 시작)
+        // 원본 피치 데이터셋 - 부드러운 곡선과 그라디언트
         val originalDataSet = LineDataSet(mutableListOf(), "원곡 멜로디").apply {
-            color = android.graphics.Color.parseColor("#FF9800")
+            // 색상 - 더 선명한 오렌지
+            color = android.graphics.Color.parseColor("#F57C00")
             setDrawCircles(false)
             setDrawValues(false)
-            lineWidth = 2f
+            lineWidth = 2.5f
+
+            // 부드러운 곡선 (Cubic Bezier)
+            mode = LineDataSet.Mode.CUBIC_BEZIER
+            cubicIntensity = 0.2f
+
+            // 그라디언트 채우기
             setDrawFilled(true)
-            fillColor = android.graphics.Color.parseColor("#FFECB3")
-            fillAlpha = 50
-            mode = LineDataSet.Mode.LINEAR
+            fillColor = android.graphics.Color.parseColor("#FFB74D")
+            fillAlpha = 60
+
+            // 점선 스타일 (원곡은 점선으로)
+            enableDashedLine(10f, 5f, 0f)
+
+            // 그림자 효과 (하이라이트)
+            setDrawHighlightIndicators(false)
+            isHighlightEnabled = false
         }
 
         chart.data = LineData(userDataSet, originalDataSet)
-        chart.invalidate()
+
+        // 초기 애니메이션 추가 (부드럽게 나타남)
+        chart.animateXY(1000, 1000, com.github.mikephil.charting.animation.Easing.EaseOutCubic)
     }
 
     @SuppressLint("DefaultLocale")

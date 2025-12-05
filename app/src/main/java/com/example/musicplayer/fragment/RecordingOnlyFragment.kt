@@ -278,8 +278,9 @@ class RecordingOnlyFragment : Fragment() {
                 val duration = recordingEndTime - recordingStartTime
 
                 // RecordingHistoryEntity 생성 (단순 녹음이므로 점수는 0)
+                val userId = com.example.musicplayer.manager.AuthManager.getCurrentUserId() ?: "guest"
                 val recordingHistory = RecordingHistoryEntity(
-                    userId = "guest",
+                    userId = userId,
                     songName = "녹음 파일",
                     songArtist = "",
                     songDuration = duration,

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
+    android:background="#FAFAFA"
     android:fillViewport="true">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -59,15 +59,27 @@
             app:layout_constraintTop_toBottomOf="@id/timeDisplay" />
 
         <!-- 피치 그래프 -->
-        <com.github.mikephil.charting.charts.LineChart
-            android:id="@+id/pitchChart"
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/chartCard"
             android:layout_width="0dp"
-            android:layout_height="280dp"
-            android:layout_marginHorizontal="16dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="12dp"
             android:layout_marginTop="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            app:strokeWidth="0dp"
+            app:cardBackgroundColor="#FFFFFF"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/recordingStatus" />
+            app:layout_constraintTop_toBottomOf="@id/recordingStatus">
+
+            <com.github.mikephil.charting.charts.LineChart
+                android:id="@+id/pitchChart"
+                android:layout_width="match_parent"
+                android:layout_height="320dp"
+                android:padding="8dp" />
+
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- 실시간 점수 카드 (크기 축소) -->
         <com.google.android.material.card.MaterialCardView
@@ -81,7 +93,7 @@
             app:cardElevation="2dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/pitchChart"
+            app:layout_constraintTop_toBottomOf="@id/chartCard"
             tools:visibility="visible">
 
             <LinearLayout

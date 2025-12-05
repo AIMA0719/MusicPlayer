@@ -31,8 +31,15 @@ class UserRepository(context: Context) {
     }
 
     suspend fun createGuestUser(): User {
+        // guest 계정은 항상 "guest"라는 고정 userId 사용
+        // 기존 guest 계정이 있으면 재사용, 없으면 새로 생성
+        val existingGuest = getUserById("guest")
+        if (existingGuest != null) {
+            return existingGuest
+        }
+
         val guestUser = User(
-            userId = "guest_${UUID.randomUUID()}",
+            userId = "guest",
             email = null,
             displayName = "게스트",
             profileImageUrl = null,
