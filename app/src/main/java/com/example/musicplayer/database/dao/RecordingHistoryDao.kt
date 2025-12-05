@@ -100,6 +100,7 @@ interface RecordingHistoryDao {
     @Query("""
         SELECT COUNT(DISTINCT difficulty) FROM recording_history
         WHERE userId = :userId
+        AND difficulty != 'NONE'
     """)
     suspend fun getTriedDifficultyCount(userId: String): Int
 }

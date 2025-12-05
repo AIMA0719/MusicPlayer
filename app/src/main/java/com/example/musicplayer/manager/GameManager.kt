@@ -218,6 +218,7 @@ class GameManager(private val context: Context) {
         // === 난이도 도전과제 ===
         // 모든 난이도 시도
         val triedDifficultyCount = recordingHistoryDao.getTriedDifficultyCount(userId)
+        android.util.Log.d("GameManager", "TRY_ALL_DIFFICULTY: userId=$userId, triedCount=$triedDifficultyCount, currentDifficulty=${recordingHistory.difficulty}")
         checkAndUnlock(userId, Achievement.TRY_ALL_DIFFICULTY, triedDifficultyCount)?.let { unlocked.add(it) }
 
         // 고수 모드로 80점 이상
@@ -411,14 +412,34 @@ class GameManager(private val context: Context) {
 
     /**
      * 도전과제 달성 체크 (현재 진행도로)
+     * - 진행도가 변경되면 항상 업데이트
+     * - 달성 조건 충족 시 unlock
      */
     private suspend fun checkAndUnlock(userId: String, achievement: Achievement, currentProgress: Int): AchievementEntity? {
         val entity = achievementDao.getById(userId, achievement.id)
-        if (entity != null && !entity.isUnlocked && currentProgress >= entity.maxProgress) {
-            achievementDao.updateProgress(userId, achievement.id, currentProgress)
-            achievementDao.unlock(userId, achievement.id)
-            return entity.copy(isUnlocked = true, progress = currentProgress)
+        if (entity == null) {
+            android.util.Log.w("GameManager", "Achievement entity not found: ${achievement.id} for user: $userId")
+            return null
         }
+
+        android.util.Log.d("GameManager", "checkAndUnlock: ${achievement.id} - current=$currentProgress, saved=${entity.progress}, max=${entity.maxProgress}, unlocked=${entity.isUnlocked}")
+
+        // 이미 해금된 경우 스킵
+        if (entity.isUnlocked) return null
+
+        // 진행도가 변경된 경우 업데이트 (최대치를 넘지 않도록)
+        val clampedProgress = currentProgress.coerceIn(0, entity.maxProgress)
+        if (clampedProgress != entity.progress) {
+            android.util.Log.d("GameManager", "Updating progress: ${achievement.id} from ${entity.progress} to $clampedProgress")
+            achievementDao.updateProgress(userId, achievement.id, clampedProgress)
+        }
+
+        // 달성 조건 충족 시 unlock
+        if (currentProgress >= entity.maxProgress) {
+            achievementDao.unlock(userId, achievement.id)
+            return entity.copy(isUnlocked = true, progress = clampedProgress)
+        }
+
         return null
     }
 
