@@ -19,12 +19,16 @@ import com.example.musicplayer.entity.LevelSystem
 import com.example.musicplayer.entity.ScoreEntity
 import com.example.musicplayer.manager.AuthManager
 import com.example.musicplayer.repository.UserRepository
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainFragment : Fragment() {
 
-    private lateinit var userRepository: UserRepository
+    @Inject
+    lateinit var userRepository: UserRepository
     private lateinit var database: AppDatabase
 
     companion object {
@@ -42,7 +46,6 @@ class MainFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        userRepository = UserRepository(requireContext())
         database = AppDatabase.getDatabase(requireContext())
 
         setupViews(view)

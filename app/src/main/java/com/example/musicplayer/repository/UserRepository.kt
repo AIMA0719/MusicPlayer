@@ -1,16 +1,19 @@
 package com.example.musicplayer.repository
 
-import android.content.Context
-import com.example.musicplayer.database.AppDatabase
+import android.content.SharedPreferences
+import com.example.musicplayer.database.dao.UserDao
 import com.example.musicplayer.database.entity.LoginType
 import com.example.musicplayer.database.entity.User
+import com.example.musicplayer.di.UserPreferences
 import kotlinx.coroutines.flow.Flow
-import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class UserRepository(private val context: Context) {
-    private val userDao = AppDatabase.getDatabase(context).userDao()
-    private val prefs = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
-
+@Singleton
+class UserRepository @Inject constructor(
+    private val userDao: UserDao,
+    @UserPreferences private val prefs: SharedPreferences
+) {
     companion object {
         private const val KEY_GUEST_USER_ID = "guest_user_id"
     }

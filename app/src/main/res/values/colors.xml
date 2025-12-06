@@ -34,4 +34,9 @@
     <color name="chip_unselected">#E0E0E0</color>
     <color name="chip_text_selected">#FFFFFF</color>
     <color name="chip_text_unselected">#666666</color>
+
+    <!-- 앱 전체 배경 색상 -->
+    <color name="app_background">#F2F4F6</color>
+    <color name="card_background">#FFFFFF</color>
+    <color name="divider_color">#F2F4F6</color>
 </resources>

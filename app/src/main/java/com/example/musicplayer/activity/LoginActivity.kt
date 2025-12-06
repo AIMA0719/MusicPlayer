@@ -18,12 +18,15 @@ import com.example.musicplayer.repository.UserRepository
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
-    private lateinit var userRepository: UserRepository
+
+    @Inject
+    lateinit var userRepository: UserRepository
 
     private val signInLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -49,7 +52,6 @@ class LoginActivity : AppCompatActivity() {
         // 초기화
         AuthManager.init(this)
         GoogleAuthManager.init(this)
-        userRepository = UserRepository(this)
 
         // 이미 로그인되어 있는지 확인
         checkExistingLogin()

@@ -135,6 +135,22 @@
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right" />
+
+        <action
+            android:id="@+id/action_settings_to_recording_history"
+            app:destination="@id/recordingHistoryFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+
+        <action
+            android:id="@+id/action_settings_to_statistics"
+            app:destination="@id/statisticsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
 
     <!-- 도전과제 화면 -->
@@ -157,5 +173,19 @@
         android:name="com.example.musicplayer.fragment.LibraryInfoFragment"
         android:label="오픈소스 라이선스"
         tools:layout="@layout/fragment_library_info" />
+
+    <!-- 녹음 기록 화면 -->
+    <fragment
+        android:id="@+id/recordingHistoryFragment"
+        android:name="com.example.musicplayer.fragment.RecordingHistoryFragment"
+        android:label="녹음 기록"
+        tools:layout="@layout/fragment_recording_history" />
+
+    <!-- 통계 화면 -->
+    <fragment
+        android:id="@+id/statisticsFragment"
+        android:name="com.example.musicplayer.fragment.StatisticsFragment"
+        android:label="통계"
+        tools:layout="@layout/fragment_statistics" />
 
 </navigation>

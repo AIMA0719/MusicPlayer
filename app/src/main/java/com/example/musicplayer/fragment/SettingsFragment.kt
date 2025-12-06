@@ -26,12 +26,16 @@ import com.example.musicplayer.manager.AuthManager
 import com.example.musicplayer.manager.ScoreFeedbackDialogManager
 import com.example.musicplayer.manager.ToastManager
 import com.example.musicplayer.repository.UserRepository
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.io.File
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class SettingsFragment : Fragment() {
 
-    private lateinit var userRepository: UserRepository
+    @Inject
+    lateinit var userRepository: UserRepository
     private lateinit var sharedPrefs: android.content.SharedPreferences
 
     override fun onCreateView(
@@ -44,7 +48,6 @@ class SettingsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        userRepository = UserRepository(requireContext())
         sharedPrefs = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
 
         // 순서 중요: 값을 먼저 설정하고 리스너를 나중에 설정
@@ -63,10 +66,10 @@ class SettingsFragment : Fragment() {
     }
 
     private fun setupViews(view: View) {
-        // Dark Mode Switch - App-level theme only
+        // Dark Mode Switch (현재 미지원)
         view.findViewById<SwitchCompat>(R.id.switchDarkMode).setOnCheckedChangeListener { _, isChecked ->
             sharedPrefs.edit { putBoolean("dark_mode", isChecked) }
-            ToastManager.showToast("앱을 재시작하면 테마가 적용됩니다")
+            ToastManager.showToast("다크 모드는 추후 업데이트 예정입니다")
         }
 
         // Notifications Switch
@@ -85,6 +88,11 @@ class SettingsFragment : Fragment() {
             findNavController().navigate(R.id.action_settings_to_achievements)
         }
 
+        // Statistics
+        view.findViewById<TextView>(R.id.btnStatistics).setOnClickListener {
+            findNavController().navigate(R.id.action_settings_to_statistics)
+        }
+
         // Default Difficulty
         view.findViewById<TextView>(R.id.btnDefaultDifficulty).setOnClickListener {
             showDifficultySelectionDialog()
@@ -95,9 +103,9 @@ class SettingsFragment : Fragment() {
             showClearCacheDialog()
         }
 
-        // Manage Recordings
+        // Manage Recordings (Recording History)
         view.findViewById<TextView>(R.id.btnManageRecordings).setOnClickListener {
-            ToastManager.showToast("녹음 파일 관리 기능은 준비 중입니다")
+            findNavController().navigate(R.id.action_settings_to_recording_history)
         }
 
         // Contact

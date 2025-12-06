@@ -58,6 +58,27 @@
                     android:background="?attr/selectableItemBackground"
                     android:drawableEnd="@android:drawable/ic_menu_send" />
 
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#F2F4F6"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp" />
+
+                <TextView
+                    android:id="@+id/btnStatistics"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="내 통계"
+                    android:textSize="16sp"
+                    android:textColor="#191F28"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:paddingTop="16dp"
+                    android:paddingBottom="16dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawableEnd="@android:drawable/ic_menu_send" />
+
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
