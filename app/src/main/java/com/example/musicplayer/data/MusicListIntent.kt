@@ -6,5 +6,6 @@ sealed interface MusicListIntent {
     data class AnalysisCompleted(val originalPitch: List<Float>, val music: MusicFile) : MusicListIntent // 피치 분석이 완료되었을 때 호출되는 Intent
     data object MarkAsNavigated : MusicListIntent // 페이지 이동 완료 표시
     data object ResetAnalysisState : MusicListIntent // 분석 상태 초기화 (다른 탭에서 돌아올 때)
+    data object CancelAnalysis : MusicListIntent // 분석 취소
 }
 

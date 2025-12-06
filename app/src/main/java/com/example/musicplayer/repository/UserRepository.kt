@@ -49,7 +49,7 @@ class UserRepository(private val context: Context) {
         }
 
         // 새로운 게스트 사용자 생성
-        val guestUserId = "guest_${UUID.randomUUID()}"
+        val guestUserId = "guest"
         val guestUser = User(
             userId = guestUserId,
             email = null,

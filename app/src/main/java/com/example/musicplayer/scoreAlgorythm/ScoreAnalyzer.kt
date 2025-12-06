@@ -6,10 +6,11 @@ import kotlin.math.min
 import kotlin.math.sqrt
 
 /**
- * 개선된 점수 계산 알고리즘
+ * 개선된 점수 계산 알고리즘 (최적화 버전)
  *
  * 주요 개선사항:
  * - DTW(Dynamic Time Warping) 기반 시간 정렬
+ * - Sakoe-Chiba band constraint로 O(n*k) 복잡도 최적화
  * - 리듬/타이밍 평가 추가
  * - 볼륨 안정성 평가
  * - 무음 구간 처리
@@ -27,6 +28,13 @@ class ScoreAnalyzer(
     private val toleranceHz: Float = 50f,
     private val silenceThreshold: Float = 80f
 ) {
+
+    companion object {
+        // Sakoe-Chiba band 폭 비율 (시퀀스 길이의 비율)
+        private const val BAND_WIDTH_RATIO = 0.15  // 15% 범위 허용
+        private const val MIN_BAND_WIDTH = 10       // 최소 밴드 폭
+        private const val MAX_BAND_WIDTH = 100      // 최대 밴드 폭
+    }
 
     /**
      * 전체 점수 계산 (개선된 알고리즘)
@@ -96,7 +104,12 @@ class ScoreAnalyzer(
     }
 
     /**
-     * DTW 알고리즘으로 두 시퀀스를 정렬
+     * DTW 알고리즘으로 두 시퀀스를 정렬 (Sakoe-Chiba band 최적화)
+     *
+     * Sakoe-Chiba band constraint:
+     * - 대각선 근처의 셀만 계산하여 O(n*m) → O(n*k) 복잡도 감소
+     * - k = band width (시퀀스 길이의 15% 또는 고정값)
+     *
      * @return 정렬된 인덱스 쌍의 리스트 (원곡 인덱스, 사용자 인덱스)
      */
     private fun calculateDTWAlignment(seq1: List<Float>, seq2: List<Float>): List<Pair<Int, Int>> {
@@ -105,23 +118,92 @@ class ScoreAnalyzer(
 
         if (n == 0 || m == 0) return emptyList()
 
-        // DTW 거리 행렬 초기화
-        val dtw = Array(n + 1) { DoubleArray(m + 1) { Double.POSITIVE_INFINITY } }
-        dtw[0][0] = 0.0
+        // Sakoe-Chiba band 폭 계산
+        val bandWidth = calculateBandWidth(n, m)
 
-        // DTW 거리 계산
+        // 스케일 비율 (시퀀스 길이가 다를 때 대각선 조정)
+        val scale = m.toDouble() / n
+
+        // DTW 거리 행렬 (band 내부만 저장하여 메모리 절약)
+        // 현재 행과 이전 행만 유지 (공간 복잡도 O(m) → O(2*bandWidth))
+        val bandSize = 2 * bandWidth + 1
+        var prevRow = DoubleArray(bandSize) { Double.POSITIVE_INFINITY }
+        var currRow = DoubleArray(bandSize) { Double.POSITIVE_INFINITY }
+
+        // 백트래킹을 위한 경로 저장 (필요시에만)
+        val path = Array(n) { IntArray(bandSize) { -1 } }  // -1: diagonal, 0: up, 1: left
+
+        // 초기값
+        prevRow[bandWidth] = 0.0
+
+        // DTW 거리 계산 (band 내부만)
         for (i in 1..n) {
-            for (j in 1..m) {
+            currRow.fill(Double.POSITIVE_INFINITY)
+
+            // band 범위 계산 (대각선 기준)
+            val jCenter = (i * scale).toInt()
+            val jStart = max(1, jCenter - bandWidth)
+            val jEnd = min(m, jCenter + bandWidth)
+
+            for (j in jStart..jEnd) {
+                val bandIdx = j - jCenter + bandWidth
+
+                // band 범위 체크
+                if (bandIdx < 0 || bandIdx >= bandSize) continue
+
                 val cost = calculatePitchDistance(seq1[i - 1], seq2[j - 1])
-                dtw[i][j] = cost + minOf(
-                    dtw[i - 1][j],     // 삽입
-                    dtw[i][j - 1],     // 삭제
-                    dtw[i - 1][j - 1]  // 매칭
-                )
+
+                // 이전 셀들의 값 가져오기 (band 인덱스 변환)
+                val prevJCenter = ((i - 1) * scale).toInt()
+
+                val diagBandIdx = (j - 1) - prevJCenter + bandWidth
+                val upBandIdx = j - prevJCenter + bandWidth
+                val leftBandIdx = bandIdx
+
+                val diagonal = if (diagBandIdx in 0 until bandSize) prevRow[diagBandIdx] else Double.POSITIVE_INFINITY
+                val up = if (upBandIdx in 0 until bandSize) prevRow[upBandIdx] else Double.POSITIVE_INFINITY
+                val left = if (leftBandIdx in 0 until bandSize) currRow[leftBandIdx] else Double.POSITIVE_INFINITY
+
+                val minPrev = minOf(diagonal, up, left)
+                currRow[bandIdx] = cost + minPrev
+
+                // 경로 저장
+                path[i - 1][bandIdx] = when (minPrev) {
+                    diagonal -> -1
+                    up -> 0
+                    else -> 1
+                }
             }
+
+            // 행 스왑
+            val temp = prevRow
+            prevRow = currRow
+            currRow = temp
         }
 
         // 백트래킹으로 정렬 경로 추출
+        return backtrackAlignment(path, n, m, bandWidth, scale)
+    }
+
+    /**
+     * Sakoe-Chiba band 폭 계산
+     */
+    private fun calculateBandWidth(n: Int, m: Int): Int {
+        val maxLen = max(n, m)
+        val calculatedWidth = (maxLen * BAND_WIDTH_RATIO).toInt()
+        return calculatedWidth.coerceIn(MIN_BAND_WIDTH, MAX_BAND_WIDTH)
+    }
+
+    /**
+     * 백트래킹으로 정렬 경로 추출
+     */
+    private fun backtrackAlignment(
+        path: Array<IntArray>,
+        n: Int,
+        m: Int,
+        bandWidth: Int,
+        scale: Double
+    ): List<Pair<Int, Int>> {
         val alignment = mutableListOf<Pair<Int, Int>>()
         var i = n
         var j = m
@@ -129,17 +211,15 @@ class ScoreAnalyzer(
         while (i > 0 && j > 0) {
             alignment.add(0, Pair(i - 1, j - 1))
 
-            val diagonal = dtw[i - 1][j - 1]
-            val left = dtw[i][j - 1]
-            val up = dtw[i - 1][j]
+            val jCenter = (i * scale).toInt()
+            val bandIdx = j - jCenter + bandWidth
 
-            when (minOf(diagonal, left, up)) {
-                diagonal -> {
-                    i--
-                    j--
-                }
-                up -> i--
-                else -> j--
+            if (bandIdx < 0 || bandIdx >= path[0].size || i - 1 < 0) break
+
+            when (path[i - 1][bandIdx]) {
+                -1 -> { i--; j-- }  // diagonal
+                0 -> i--             // up
+                else -> j--          // left
             }
         }
 
@@ -217,7 +297,7 @@ class ScoreAnalyzer(
     }
 
     /**
-     * 두 온셋 시퀀스를 정렬
+     * 두 온셋 시퀀스를 정렬 (Sakoe-Chiba band 최적화)
      */
     private fun alignOnsets(onsets1: List<Int>, onsets2: List<Int>): List<Pair<Int, Int>> {
         val n = onsets1.size
@@ -225,18 +305,66 @@ class ScoreAnalyzer(
 
         if (n == 0 || m == 0) return emptyList()
 
-        // 간단한 DTW
-        val dtw = Array(n + 1) { DoubleArray(m + 1) { Double.POSITIVE_INFINITY } }
-        dtw[0][0] = 0.0
+        // 온셋 시퀀스는 일반적으로 짧으므로 band width를 좀 더 넓게 설정
+        val bandWidth = max(5, min(max(n, m) / 2, 20))
+        val scale = if (n > 0) m.toDouble() / n else 1.0
+        val bandSize = 2 * bandWidth + 1
+
+        var prevRow = DoubleArray(bandSize) { Double.POSITIVE_INFINITY }
+        var currRow = DoubleArray(bandSize) { Double.POSITIVE_INFINITY }
+        val path = Array(n) { IntArray(bandSize) { -1 } }
+
+        prevRow[bandWidth] = 0.0
 
         for (i in 1..n) {
-            for (j in 1..m) {
+            currRow.fill(Double.POSITIVE_INFINITY)
+
+            val jCenter = (i * scale).toInt()
+            val jStart = max(1, jCenter - bandWidth)
+            val jEnd = min(m, jCenter + bandWidth)
+
+            for (j in jStart..jEnd) {
+                val bandIdx = j - jCenter + bandWidth
+                if (bandIdx < 0 || bandIdx >= bandSize) continue
+
                 val cost = abs(onsets1[i - 1] - onsets2[j - 1]).toDouble()
-                dtw[i][j] = cost + minOf(dtw[i - 1][j], dtw[i][j - 1], dtw[i - 1][j - 1])
+
+                val prevJCenter = ((i - 1) * scale).toInt()
+                val diagBandIdx = (j - 1) - prevJCenter + bandWidth
+                val upBandIdx = j - prevJCenter + bandWidth
+
+                val diagonal = if (diagBandIdx in 0 until bandSize) prevRow[diagBandIdx] else Double.POSITIVE_INFINITY
+                val up = if (upBandIdx in 0 until bandSize) prevRow[upBandIdx] else Double.POSITIVE_INFINITY
+                val left = if (bandIdx in 0 until bandSize) currRow[bandIdx] else Double.POSITIVE_INFINITY
+
+                val minPrev = minOf(diagonal, up, left)
+                currRow[bandIdx] = cost + minPrev
+
+                path[i - 1][bandIdx] = when (minPrev) {
+                    diagonal -> -1
+                    up -> 0
+                    else -> 1
+                }
             }
+
+            val temp = prevRow
+            prevRow = currRow
+            currRow = temp
         }
 
-        // 백트래킹
+        return backtrackOnsetAlignment(path, n, m, bandWidth, scale)
+    }
+
+    /**
+     * 온셋 정렬 백트래킹
+     */
+    private fun backtrackOnsetAlignment(
+        path: Array<IntArray>,
+        n: Int,
+        m: Int,
+        bandWidth: Int,
+        scale: Double
+    ): List<Pair<Int, Int>> {
         val alignment = mutableListOf<Pair<Int, Int>>()
         var i = n
         var j = m
@@ -244,13 +372,14 @@ class ScoreAnalyzer(
         while (i > 0 && j > 0) {
             alignment.add(0, Pair(i - 1, j - 1))
 
-            val diagonal = dtw[i - 1][j - 1]
-            val left = dtw[i][j - 1]
-            val up = dtw[i - 1][j]
+            val jCenter = (i * scale).toInt()
+            val bandIdx = j - jCenter + bandWidth
 
-            when (minOf(diagonal, left, up)) {
-                diagonal -> { i--; j-- }
-                up -> i--
+            if (bandIdx < 0 || bandIdx >= path[0].size || i - 1 < 0) break
+
+            when (path[i - 1][bandIdx]) {
+                -1 -> { i--; j-- }
+                0 -> i--
                 else -> j--
             }
         }

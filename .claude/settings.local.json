@@ -3,7 +3,10 @@
     "allow": [
       "Bash(./gradlew:*)",
       "WebSearch",
-      "WebFetch(domain:api.jamendo.com)"
+      "WebFetch(domain:api.jamendo.com)",
+      "Bash(adb logcat:*)",
+      "Bash(adb install:*)",
+      "Bash(adb shell:*)"
     ],
     "deny": []
   }
