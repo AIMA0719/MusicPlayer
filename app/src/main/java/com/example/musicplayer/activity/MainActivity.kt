@@ -130,6 +130,8 @@ class MainActivity : AppCompatActivity() {
                 R.id.achievementsFragment -> "도전과제"
                 R.id.versionInfoFragment -> "버전 정보"
                 R.id.libraryInfoFragment -> "오픈소스 라이선스"
+                R.id.recordingHistoryFragment -> "녹음 기록"
+                R.id.statisticsFragment -> "통계"
                 else -> ""
             }
 

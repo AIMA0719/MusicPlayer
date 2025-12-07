@@ -1,0 +1,475 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F2F4F6"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- 요약 카드 -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="@android:color/white">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="내 노래방 기록"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="#191F28" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="20dp">
+
+                    <!-- 총 녹음 -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/tvTotalRecordings"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textSize="28sp"
+                            android:textStyle="bold"
+                            android:textColor="#2196F3" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="총 녹음"
+                            android:textSize="12sp"
+                            android:textColor="#8B95A1"
+                            android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
+                    <!-- 평균 점수 -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/tvAverageScore"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0.0"
+                            android:textSize="28sp"
+                            android:textStyle="bold"
+                            android:textColor="#4CAF50" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="평균 점수"
+                            android:textSize="12sp"
+                            android:textColor="#8B95A1"
+                            android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
+                    <!-- 최고 점수 -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/tvHighestScore"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textSize="28sp"
+                            android:textStyle="bold"
+                            android:textColor="#FF9800" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="최고 점수"
+                            android:textSize="12sp"
+                            android:textColor="#8B95A1"
+                            android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
+                    <!-- 녹음한 곡 -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/tvUniqueSongs"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textSize="28sp"
+                            android:textStyle="bold"
+                            android:textColor="#9C27B0" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="곡 수"
+                            android:textSize="12sp"
+                            android:textColor="#8B95A1"
+                            android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 점수 분포 카드 -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="@android:color/white">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="점수 분포"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#191F28" />
+
+                <!-- 점수 분포 바 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="16dp">
+
+                    <!-- 90점 이상 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="80dp"
+                            android:layout_height="wrap_content"
+                            android:text="90점 이상"
+                            android:textSize="13sp"
+                            android:textColor="#666666" />
+
+                        <FrameLayout
+                            android:layout_width="0dp"
+                            android:layout_height="20dp"
+                            android:layout_weight="1"
+                            android:background="#E0E0E0">
+
+                            <View
+                                android:id="@+id/barExcellent"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:background="#4CAF50" />
+
+                        </FrameLayout>
+
+                        <TextView
+                            android:id="@+id/tvExcellentCount"
+                            android:layout_width="50dp"
+                            android:layout_height="wrap_content"
+                            android:text="0회"
+                            android:textSize="12sp"
+                            android:textColor="#666666"
+                            android:gravity="end" />
+
+                    </LinearLayout>
+
+                    <!-- 70-89점 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="80dp"
+                            android:layout_height="wrap_content"
+                            android:text="70-89점"
+                            android:textSize="13sp"
+                            android:textColor="#666666" />
+
+                        <FrameLayout
+                            android:layout_width="0dp"
+                            android:layout_height="20dp"
+                            android:layout_weight="1"
+                            android:background="#E0E0E0">
+
+                            <View
+                                android:id="@+id/barGood"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:background="#2196F3" />
+
+                        </FrameLayout>
+
+                        <TextView
+                            android:id="@+id/tvGoodCount"
+                            android:layout_width="50dp"
+                            android:layout_height="wrap_content"
+                            android:text="0회"
+                            android:textSize="12sp"
+                            android:textColor="#666666"
+                            android:gravity="end" />
+
+                    </LinearLayout>
+
+                    <!-- 50-69점 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="80dp"
+                            android:layout_height="wrap_content"
+                            android:text="50-69점"
+                            android:textSize="13sp"
+                            android:textColor="#666666" />
+
+                        <FrameLayout
+                            android:layout_width="0dp"
+                            android:layout_height="20dp"
+                            android:layout_weight="1"
+                            android:background="#E0E0E0">
+
+                            <View
+                                android:id="@+id/barAverage"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:background="#FF9800" />
+
+                        </FrameLayout>
+
+                        <TextView
+                            android:id="@+id/tvAverageCount"
+                            android:layout_width="50dp"
+                            android:layout_height="wrap_content"
+                            android:text="0회"
+                            android:textSize="12sp"
+                            android:textColor="#666666"
+                            android:gravity="end" />
+
+                    </LinearLayout>
+
+                    <!-- 50점 미만 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="80dp"
+                            android:layout_height="wrap_content"
+                            android:text="50점 미만"
+                            android:textSize="13sp"
+                            android:textColor="#666666" />
+
+                        <FrameLayout
+                            android:layout_width="0dp"
+                            android:layout_height="20dp"
+                            android:layout_weight="1"
+                            android:background="#E0E0E0">
+
+                            <View
+                                android:id="@+id/barNeedsWork"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:background="#F44336" />
+
+                        </FrameLayout>
+
+                        <TextView
+                            android:id="@+id/tvNeedsWorkCount"
+                            android:layout_width="50dp"
+                            android:layout_height="wrap_content"
+                            android:text="0회"
+                            android:textSize="12sp"
+                            android:textColor="#666666"
+                            android:gravity="end" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 주간 트렌드 카드 -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="@android:color/white">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="이번 주 연습량"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#191F28" />
+
+                <!-- 요일별 바 차트 -->
+                <LinearLayout
+                    android:id="@+id/llWeeklyChart"
+                    android:layout_width="match_parent"
+                    android:layout_height="100dp"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="16dp"
+                    android:gravity="bottom" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 난이도별 통계 카드 -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="@android:color/white">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="난이도별 성적"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#191F28" />
+
+                <LinearLayout
+                    android:id="@+id/llDifficultyStats"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="12dp" />
+
+                <TextView
+                    android:id="@+id/tvNoDifficultyData"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="아직 데이터가 없습니다"
+                    android:textSize="14sp"
+                    android:textColor="#8B95A1"
+                    android:gravity="center"
+                    android:layout_marginTop="16dp"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Empty State -->
+        <LinearLayout
+            android:id="@+id/layoutEmpty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="40dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📊"
+                android:textSize="64sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="아직 통계 데이터가 없습니다"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#191F28"
+                android:layout_marginTop="16dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="노래를 부르면 통계가 생성됩니다!"
+                android:textSize="14sp"
+                android:textColor="#8B95A1"
+                android:layout_marginTop="8dp" />
+
+        </LinearLayout>
+
+        <!-- Loading -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+</ScrollView>

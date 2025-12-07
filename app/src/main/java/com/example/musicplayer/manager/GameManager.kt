@@ -85,6 +85,7 @@ class GameManager(
         val reward = GameReward()
 
         // RecordingHistory 저장
+        android.util.Log.d("GameManager", "Saving recording history - userId in entity: ${recordingHistory.userId}, getCurrentUserId: $userId")
         recordingHistoryDao.insert(recordingHistory)
 
         // 경험치 계산 및 부여

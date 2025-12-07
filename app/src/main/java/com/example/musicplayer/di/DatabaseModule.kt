@@ -2,7 +2,6 @@ package com.example.musicplayer.di
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.room.Room
 import com.example.musicplayer.database.AppDatabase
 import com.example.musicplayer.database.ScoreDao
 import com.example.musicplayer.database.dao.AchievementDao
@@ -29,14 +28,8 @@ object DatabaseModule {
     fun provideAppDatabase(
         @ApplicationContext context: Context
     ): AppDatabase {
-        return Room.databaseBuilder(
-            context,
-            AppDatabase::class.java,
-            "music_player_database"
-        )
-            .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4)
-            .fallbackToDestructiveMigration(dropAllTables = true)
-            .build()
+        // AppDatabase.getDatabase()와 동일한 싱글톤 인스턴스 사용
+        return AppDatabase.getDatabase(context)
     }
 
     @Provides
