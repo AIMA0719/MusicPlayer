@@ -17,10 +17,6 @@ import com.example.musicplayer.databinding.MusicPlayerMainActivityBinding
 import com.example.musicplayer.manager.ToastManager
 import com.example.musicplayer.viewModel.MainActivityViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -206,14 +202,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private val job = Job()
-    private val scope = CoroutineScope(Dispatchers.Main + job)
-
     override fun onDestroy() {
         super.onDestroy()
         ProgressDialogManager.dismiss()
         ScoreDialogManager.dismiss()
-        scope.cancel()
-        job.cancel()
     }
 }

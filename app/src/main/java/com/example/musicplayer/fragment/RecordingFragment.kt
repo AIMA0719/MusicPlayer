@@ -542,9 +542,10 @@ class RecordingFragment : Fragment() {
         return String.format("%02d:%02d", minutes, seconds)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onDestroyView() {
+        super.onDestroyView()
         viewModel.stopRecording()
+        gameManager.release()
         _binding = null
     }
 

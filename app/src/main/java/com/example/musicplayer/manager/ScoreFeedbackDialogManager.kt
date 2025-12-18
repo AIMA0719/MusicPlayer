@@ -10,7 +10,7 @@ import android.view.Window
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.example.musicplayer.R
-import com.example.musicplayer.scoreAlgorythm.ScoreAnalyzer
+import com.example.musicplayer.scoreAlgorithm.ScoreAnalyzer
 
 /**
  * 점수 피드백 다이얼로그 매니저

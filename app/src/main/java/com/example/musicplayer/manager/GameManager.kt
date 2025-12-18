@@ -9,6 +9,7 @@ import com.example.musicplayer.entity.RecordingHistoryEntity
 import com.example.musicplayer.entity.UserLevelEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -461,6 +462,14 @@ class GameManager(
     suspend fun changeTheme(theme: String) = withContext(Dispatchers.IO) {
         val userId = getCurrentUserId()
         userLevelDao.updateTheme(userId, theme)
+    }
+
+    /**
+     * 리소스 해제 - CoroutineScope 취소
+     * GameManager를 더 이상 사용하지 않을 때 호출해야 함
+     */
+    fun release() {
+        scope.cancel()
     }
 }
 

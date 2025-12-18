@@ -7,7 +7,7 @@ import be.tarsos.dsp.io.android.AudioDispatcherFactory
 import be.tarsos.dsp.pitch.PitchProcessor
 import com.example.musicplayer.error.AppException
 import com.example.musicplayer.manager.LogManager
-import com.example.musicplayer.scoreAlgorythm.ScoreAnalyzer
+import com.example.musicplayer.scoreAlgorithm.ScoreAnalyzer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

@@ -1,4 +1,4 @@
-package com.example.musicplayer.scoreAlgorythm
+package com.example.musicplayer.scoreAlgorithm
 
 import kotlin.math.abs
 import kotlin.math.max
