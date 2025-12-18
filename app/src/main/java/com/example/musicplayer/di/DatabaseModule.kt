@@ -28,7 +28,6 @@ object DatabaseModule {
     fun provideAppDatabase(
         @ApplicationContext context: Context
     ): AppDatabase {
-        // AppDatabase.getDatabase()와 동일한 싱글톤 인스턴스 사용
         return AppDatabase.getDatabase(context)
     }
 
@@ -80,9 +79,6 @@ object DatabaseModule {
     }
 }
 
-/**
- * SharedPreferences Qualifier
- */
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class UserPreferences
