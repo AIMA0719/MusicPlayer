@@ -12,7 +12,38 @@
         android:label="홈"
         tools:layout="@layout/fragment_main" />
 
-    <!-- 검색/다운로드 화면 -->
+    <!-- 노래방 화면 (통합) -->
+    <fragment
+        android:id="@+id/navigation_karaoke"
+        android:name="com.example.musicplayer.fragment.KaraokeFragment"
+        android:label="노래방"
+        tools:layout="@layout/fragment_karaoke">
+
+        <action
+            android:id="@+id/action_karaoke_to_musicPlayer"
+            app:destination="@id/musicPlayerFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+
+        <action
+            android:id="@+id/action_karaoke_to_recording"
+            app:destination="@id/recordingFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+
+    <!-- 마이룸 화면 -->
+    <fragment
+        android:id="@+id/navigation_myroom"
+        android:name="com.example.musicplayer.fragment.MyRoomFragment"
+        android:label="마이룸"
+        tools:layout="@layout/fragment_myroom" />
+
+    <!-- 레거시: 검색/다운로드 화면 (숨김) -->
     <fragment
         android:id="@+id/navigation_search"
         android:name="com.example.musicplayer.fragment.MusicDownloadFragment"
@@ -36,14 +67,7 @@
             app:popExitAnim="@anim/slide_out_right" />
     </fragment>
 
-    <!-- 녹음 화면 -->
-    <fragment
-        android:id="@+id/navigation_record"
-        android:name="com.example.musicplayer.fragment.RecordingOnlyFragment"
-        android:label="녹음"
-        tools:layout="@layout/fragment_recording_only" />
-
-    <!-- 음악 리스트 화면 -->
+    <!-- 레거시: 음악 리스트 화면 (숨김) -->
     <fragment
         android:id="@+id/navigation_music_list"
         android:name="com.example.musicplayer.fragment.MusicListFragment"
@@ -67,7 +91,7 @@
             app:popExitAnim="@anim/slide_out_right" />
     </fragment>
 
-    <!-- 피치 매칭 녹음 화면 (MusicListFragment에서 진입) -->
+    <!-- 피치 매칭 녹음 화면 -->
     <fragment
         android:id="@+id/recordingFragment"
         android:name="com.example.musicplayer.fragment.RecordingFragment"
@@ -85,7 +109,22 @@
         <argument
             android:name="durationMillis"
             app:argType="long" />
+
+        <action
+            android:id="@+id/action_recording_to_scoreResult"
+            app:destination="@id/scoreResultFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
+
+    <!-- 결과 화면 -->
+    <fragment
+        android:id="@+id/scoreResultFragment"
+        android:name="com.example.musicplayer.fragment.ScoreResultFragment"
+        android:label="결과"
+        tools:layout="@layout/fragment_score_result" />
 
     <!-- 음악 재생 화면 (MusicListFragment에서 진입) -->
     <fragment
@@ -151,6 +190,14 @@
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right" />
+
+        <action
+            android:id="@+id/action_settings_to_mic_test"
+            app:destination="@id/micTestFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
 
     <!-- 도전과제 화면 -->
@@ -187,5 +234,12 @@
         android:name="com.example.musicplayer.fragment.StatisticsFragment"
         android:label="통계"
         tools:layout="@layout/fragment_statistics" />
+
+    <!-- 마이크 테스트 화면 -->
+    <fragment
+        android:id="@+id/micTestFragment"
+        android:name="com.example.musicplayer.fragment.MicTestFragment"
+        android:label="마이크 테스트"
+        tools:layout="@layout/fragment_mic_test" />
 
 </navigation>

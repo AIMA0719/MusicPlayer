@@ -26,7 +26,8 @@ data class DownloadProgress(
     val totalBytes: Long,
     val isCompleted: Boolean = false,
     val isError: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val hasBeenHandled: Boolean = false  // 토스트 등 UI 처리 여부
 )
 
 class FileDownloadManager {
@@ -171,12 +172,40 @@ class FileDownloadManager {
         val currentMap = _downloadProgress.value.toMutableMap()
         currentMap.remove(downloadId)
         _downloadProgress.value = currentMap
+        _isDownloading.value = false
+    }
+
+    /**
+     * 다운로드 완료/에러 처리 완료 표시
+     * 토스트 등 UI 처리 후 호출하여 중복 처리 방지
+     */
+    fun markAsHandled(downloadId: String) {
+        val currentMap = _downloadProgress.value.toMutableMap()
+        currentMap[downloadId]?.let { progress ->
+            currentMap[downloadId] = progress.copy(hasBeenHandled = true)
+            _downloadProgress.value = currentMap
+        }
+    }
+
+    /**
+     * 완료된 다운로드 제거
+     */
+    fun removeDownload(downloadId: String) {
+        val currentMap = _downloadProgress.value.toMutableMap()
+        currentMap.remove(downloadId)
+        _downloadProgress.value = currentMap
     }
 
     fun clearCompletedDownloads() {
         val currentMap = _downloadProgress.value.toMutableMap()
-        currentMap.values.removeIf { it.isCompleted || it.isError }
-        _downloadProgress.value = currentMap.toMap()
+        val iterator = currentMap.iterator()
+        while (iterator.hasNext()) {
+            val entry = iterator.next()
+            if (entry.value.isCompleted || entry.value.isError) {
+                iterator.remove()
+            }
+        }
+        _downloadProgress.value = currentMap
     }
 
     fun getDownloadedFiles(context: Context): List<File> {

@@ -6,19 +6,14 @@
         android:title="홈" />
 
     <item
-        android:id="@+id/navigation_search"
-        android:icon="@drawable/ic_search"
-        android:title="검색" />
+        android:id="@+id/navigation_karaoke"
+        android:icon="@drawable/ic_karaoke"
+        android:title="노래방" />
 
     <item
-        android:id="@+id/navigation_record"
-        android:icon="@drawable/ic_microphone"
-        android:title="녹음" />
-
-    <item
-        android:id="@+id/navigation_music_list"
-        android:icon="@drawable/ic_favorite"
-        android:title="음악" />
+        android:id="@+id/navigation_myroom"
+        android:icon="@drawable/ic_person"
+        android:title="마이룸" />
 
     <item
         android:id="@+id/navigation_settings"

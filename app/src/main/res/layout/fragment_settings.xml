@@ -173,6 +173,146 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Audio Settings Section -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="@android:color/white">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="오디오 설정"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#8B95A1"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:paddingTop="16dp"
+                    android:paddingBottom="8dp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#F2F4F6" />
+
+                <!-- 리버브 설정 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:paddingTop="16dp"
+                    android:paddingBottom="16dp"
+                    android:gravity="center_vertical">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="리버브 (잔향)"
+                            android:textSize="16sp"
+                            android:textColor="#191F28" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="노래방 분위기 효과"
+                            android:textSize="12sp"
+                            android:textColor="#8B95A1"
+                            android:layout_marginTop="2dp" />
+
+                    </LinearLayout>
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/switchReverb"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#F2F4F6"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp" />
+
+                <!-- 리버브 프리셋 -->
+                <TextView
+                    android:id="@+id/btnReverbPreset"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="리버브 프리셋"
+                    android:textSize="16sp"
+                    android:textColor="#191F28"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:paddingTop="16dp"
+                    android:paddingBottom="16dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawableEnd="@android:drawable/ic_menu_send" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#F2F4F6"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp" />
+
+                <!-- 기본 키 설정 -->
+                <TextView
+                    android:id="@+id/btnDefaultKey"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="기본 키 설정"
+                    android:textSize="16sp"
+                    android:textColor="#191F28"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:paddingTop="16dp"
+                    android:paddingBottom="16dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawableEnd="@android:drawable/ic_menu_send" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#F2F4F6"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp" />
+
+                <!-- 마이크 테스트 -->
+                <TextView
+                    android:id="@+id/btnMicTest"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="마이크 테스트"
+                    android:textSize="16sp"
+                    android:textColor="#191F28"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:paddingTop="16dp"
+                    android:paddingBottom="16dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawableEnd="@android:drawable/ic_menu_send" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- Recording Settings Section -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"

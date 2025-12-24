@@ -69,60 +69,30 @@ class MainActivity : AppCompatActivity() {
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
 
-        // BottomNavigationView와 NavController 연결
+        // BottomNavigationView와 NavController 연결 (기본 동작 사용)
         binding.bottomNavigation.setupWithNavController(navController)
 
-        // 하단 네비게이션 아이템 선택 리스너 (백스택 초기화용)
-        binding.bottomNavigation.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.navigation_music_list -> {
-                    // 음악 탭 클릭 시 백스택 모두 제거하고 MusicListFragment로 이동
-                    if (navController.currentDestination?.id != R.id.navigation_music_list) {
-                        navController.navigate(R.id.navigation_music_list, null,
-                            androidx.navigation.NavOptions.Builder()
-                                .setPopUpTo(R.id.navigation_music_list, true)
-                                .build()
-                        )
-                    }
-                    true
-                }
-                R.id.navigation_home -> {
-                    if (navController.currentDestination?.id != R.id.navigation_home) {
-                        navController.navigate(R.id.navigation_home)
-                    }
-                    true
-                }
-                R.id.navigation_search -> {
-                    if (navController.currentDestination?.id != R.id.navigation_search) {
-                        navController.navigate(R.id.navigation_search)
-                    }
-                    true
-                }
-                R.id.navigation_record -> {
-                    if (navController.currentDestination?.id != R.id.navigation_record) {
-                        navController.navigate(R.id.navigation_record)
-                    }
-                    true
-                }
-                R.id.navigation_settings -> {
-                    if (navController.currentDestination?.id != R.id.navigation_settings) {
-                        navController.navigate(R.id.navigation_settings)
-                    }
-                    true
-                }
-                else -> false
+        // 하단 네비게이션 아이템 재선택 시 - 해당 탭의 루트로 이동
+        binding.bottomNavigation.setOnItemReselectedListener { item ->
+            val destinationId = when (item.itemId) {
+                R.id.navigation_home -> R.id.navigation_home
+                R.id.navigation_karaoke -> R.id.navigation_karaoke
+                R.id.navigation_myroom -> R.id.navigation_myroom
+                R.id.navigation_settings -> R.id.navigation_settings
+                else -> return@setOnItemReselectedListener
             }
+            navController.popBackStack(destinationId, inclusive = false)
         }
 
         // Destination 변경 리스너 설정
         navController.addOnDestinationChangedListener { _, destination, _ ->
             val title = when (destination.id) {
                 R.id.navigation_home -> "홈"
-                R.id.navigation_search -> "검색"
-                R.id.navigation_record -> "녹음"
-                R.id.navigation_music_list -> "음악"
+                R.id.navigation_karaoke -> "노래방"
+                R.id.navigation_myroom -> "마이룸"
                 R.id.navigation_settings -> "설정"
-                R.id.recordingFragment -> "피치 매칭 녹음"
+                R.id.recordingFragment -> "노래방"
+                R.id.musicPlayerFragment -> "음악 재생"
                 R.id.achievementsFragment -> "도전과제"
                 R.id.versionInfoFragment -> "버전 정보"
                 R.id.libraryInfoFragment -> "오픈소스 라이선스"
@@ -137,9 +107,8 @@ class MainActivity : AppCompatActivity() {
             // 하단 네비게이션에 포함되지 않은 화면에서는 뒤로가기 버튼 표시
             val isTopLevelDestination = destination.id in setOf(
                 R.id.navigation_home,
-                R.id.navigation_search,
-                R.id.navigation_record,
-                R.id.navigation_music_list,
+                R.id.navigation_karaoke,
+                R.id.navigation_myroom,
                 R.id.navigation_settings
             )
 
@@ -166,9 +135,8 @@ class MainActivity : AppCompatActivity() {
                 val currentDestination = navController.currentDestination?.id
                 val isTopLevelDestination = currentDestination in setOf(
                     R.id.navigation_home,
-                    R.id.navigation_search,
-                    R.id.navigation_record,
-                    R.id.navigation_music_list,
+                    R.id.navigation_karaoke,
+                    R.id.navigation_myroom,
                     R.id.navigation_settings
                 )
 

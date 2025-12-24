@@ -20,9 +20,10 @@ import com.example.musicplayer.data.local.database.entity.*
         PlaylistItemEntity::class,
         RecordingHistoryEntity::class,
         AchievementEntity::class,
-        UserLevelEntity::class
+        UserLevelEntity::class,
+        WeeklyChallengeEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -35,6 +36,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun recordingHistoryDao(): RecordingHistoryDao
     abstract fun achievementDao(): AchievementDao
     abstract fun userLevelDao(): UserLevelDao
+    abstract fun weeklyChallengeDao(): WeeklyChallengeDao
 
     companion object {
         const val DATABASE_NAME = "karaoke_db"
@@ -186,8 +188,35 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS weekly_challenges (
+                        id TEXT NOT NULL PRIMARY KEY,
+                        userId TEXT NOT NULL,
+                        type TEXT NOT NULL,
+                        title TEXT NOT NULL,
+                        description TEXT NOT NULL,
+                        targetValue INTEGER NOT NULL,
+                        currentValue INTEGER NOT NULL DEFAULT 0,
+                        rewardExp INTEGER NOT NULL,
+                        rewardPoints INTEGER NOT NULL DEFAULT 0,
+                        startDate TEXT NOT NULL,
+                        endDate TEXT NOT NULL,
+                        isCompleted INTEGER NOT NULL DEFAULT 0,
+                        isRewardClaimed INTEGER NOT NULL DEFAULT 0,
+                        completedAt INTEGER,
+                        claimedAt INTEGER
+                    )
+                """.trimIndent())
+
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_weekly_challenges_userId ON weekly_challenges(userId)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_weekly_challenges_startDate ON weekly_challenges(startDate)")
+            }
+        }
+
         val ALL_MIGRATIONS = arrayOf(
-            MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6
+            MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7
         )
 
         @Volatile

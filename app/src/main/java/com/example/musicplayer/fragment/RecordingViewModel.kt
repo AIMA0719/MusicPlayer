@@ -39,7 +39,18 @@ class RecordingViewModel : ViewModel(), ContainerHost<RecordingState, RecordingS
     // ScoreAnalyzer 저장
     private var scoreAnalyzer: ScoreAnalyzer? = null
 
-    fun startRecording(pitchArray: FloatArray) = intent {
+    // 피치 시프트 비율 (1.0 = 원본, > 1.0 = 높은 키, < 1.0 = 낮은 키)
+    private var pitchShiftRatio: Float = 1.0f
+
+    /**
+     * 피치 시프트 비율 설정
+     * @param ratio 피치 비율 (예: 1.0594631 = +1 반음)
+     */
+    fun setPitchShiftRatio(ratio: Float) {
+        pitchShiftRatio = ratio
+    }
+
+    fun startRecording(pitchArray: FloatArray, pitchRatio: Float = 1.0f) = intent {
         if (state.isRecording) {
             throw AppException.InvalidStateException("Recording is already in progress")
         }
@@ -55,7 +66,19 @@ class RecordingViewModel : ViewModel(), ContainerHost<RecordingState, RecordingS
                     accuracy = 0f
                 )
             }
-            currentPitchArray = pitchArray
+
+            // 피치 시프트 비율 저장
+            pitchShiftRatio = pitchRatio
+
+            // 원본 피치 배열에 피치 시프트 적용
+            currentPitchArray = if (pitchRatio != 1.0f) {
+                pitchArray.map { pitch ->
+                    if (pitch > 0) pitch * pitchRatio else pitch
+                }.toFloatArray()
+            } else {
+                pitchArray
+            }
+
             startTimeMillis = System.currentTimeMillis()
             pausedTimeTotal = 0
             pauseStartTime = 0

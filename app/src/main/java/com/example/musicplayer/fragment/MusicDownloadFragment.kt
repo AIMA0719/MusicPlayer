@@ -28,6 +28,7 @@ import com.example.musicplayer.adapter.DownloadedFileAdapter
 import com.example.musicplayer.adapter.MusicDownloadAdapter
 import com.example.musicplayer.data.MusicDownloadItem
 import com.example.musicplayer.data.MusicFile
+import com.example.musicplayer.data.SingingMode
 import com.example.musicplayer.databinding.FragmentMusicDownloadBinding
 import com.example.musicplayer.factory.MusicFileDispatcherFactory
 import com.example.musicplayer.manager.FileDownloadManager
@@ -685,6 +686,7 @@ class MusicDownloadFragment : Fragment() {
                     putParcelable("music", music)
                     putFloatArray("pitchArray", pitchList.toFloatArray())
                     putLong("durationMillis", music.duration)
+                    putString("singingMode", SingingMode.PRACTICE.name)  // 기본값: 연습 모드
                 }
                 findNavController().navigate(R.id.action_search_to_recording, bundle)
 

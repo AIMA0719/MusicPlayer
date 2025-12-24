@@ -2,9 +2,9 @@ package com.example.musicplayer.fragment
 
 import android.annotation.SuppressLint
 import android.app.Dialog
+import android.media.MediaPlayer
 import android.os.Build
 import android.os.Bundle
-import android.os.SystemClock
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,9 +19,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.musicplayer.R
 import com.example.musicplayer.data.MusicFile
+import com.example.musicplayer.data.SingingMode
 import com.example.musicplayer.databinding.FragmentRecordingBinding
 import com.example.musicplayer.entity.RecordingHistoryEntity
 import com.example.musicplayer.manager.GameManager
+import com.example.musicplayer.manager.LogManager
+import com.example.musicplayer.manager.PitchShiftManager
 import com.example.musicplayer.manager.ScoreFeedbackDialogManager
 import com.example.musicplayer.manager.ToastManager
 import com.example.musicplayer.viewModel.ScoreViewModel
@@ -43,9 +46,14 @@ class RecordingFragment : Fragment() {
     private lateinit var music: MusicFile
     private lateinit var pitchArray: FloatArray
     private var durationMillis: Long = 0
+    private var singingMode: SingingMode = SingingMode.PRACTICE  // 기본값: 연습 모드
 
     private var _binding: FragmentRecordingBinding? = null
     private val binding get() = _binding!!
+
+    // 가이드 음성 재생용 MediaPlayer
+    private var guidePlayer: MediaPlayer? = null
+    private var isGuidePlayerPrepared = false
 
     private var wasRecording = false
     private var lastUserX = -1f
@@ -61,6 +69,9 @@ class RecordingFragment : Fragment() {
     private lateinit var gameManager: GameManager
     private var gameManagerInitJob: Job? = null
 
+    // 키 변경 (반음 단위: -6 ~ +6)
+    private var currentPitchSemitones: Int = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
@@ -72,6 +83,14 @@ class RecordingFragment : Fragment() {
             }
             pitchArray = it.getFloatArray("pitchArray")!!
             durationMillis = it.getLong("durationMillis", 0L)
+
+            // SingingMode 받기 (기본값: PRACTICE)
+            val modeName = it.getString("singingMode", SingingMode.PRACTICE.name)
+            singingMode = try {
+                SingingMode.valueOf(modeName)
+            } catch (e: Exception) {
+                SingingMode.PRACTICE
+            }
         }
 
         // GameManager 초기화 - Job 저장하여 나중에 완료 대기
@@ -79,6 +98,36 @@ class RecordingFragment : Fragment() {
         gameManager = GameManager(requireContext(), userId)
         gameManagerInitJob = lifecycleScope.launch {
             gameManager.initialize()
+        }
+
+        // 가이드 플레이어 초기화
+        initGuidePlayer()
+    }
+
+    /**
+     * 가이드 음성 재생용 MediaPlayer 초기화
+     */
+    private fun initGuidePlayer() {
+        try {
+            guidePlayer = MediaPlayer().apply {
+                setDataSource(requireContext(), music.uri)
+                setOnPreparedListener {
+                    isGuidePlayerPrepared = true
+                    LogManager.d("Guide player prepared for: ${music.title}")
+                }
+                setOnCompletionListener {
+                    LogManager.d("Guide audio completed")
+                }
+                setOnErrorListener { _, what, extra ->
+                    LogManager.e("Guide player error: what=$what, extra=$extra")
+                    isGuidePlayerPrepared = false
+                    true
+                }
+                prepareAsync()
+            }
+        } catch (e: Exception) {
+            LogManager.e("Failed to initialize guide player: ${e.message}")
+            isGuidePlayerPrepared = false
         }
     }
 
@@ -98,6 +147,12 @@ class RecordingFragment : Fragment() {
         // 노래 제목 설정
         binding.songTitle.text = music.title
 
+        // 모드 표시 설정
+        setupModeIndicator()
+
+        // 키 조절 설정
+        setupKeyControl()
+
         // 시작 버튼 - 난이도 선택 후 녹음 시작
         binding.btnStart.setOnClickListener {
             showDifficultySelectAndStartRecording()
@@ -106,15 +161,237 @@ class RecordingFragment : Fragment() {
         // 일시정지/재개 버튼
         binding.btnPause.setOnClickListener {
             if (viewModel.container.stateFlow.value.isPaused) {
-                viewModel.resumeRecording()
+                resumeRecordingWithGuide()
             } else {
-                viewModel.pauseRecording()
+                pauseRecordingWithGuide()
             }
         }
 
         // 정지 버튼
         binding.btnStop.setOnClickListener {
-            viewModel.stopRecording()
+            stopRecordingWithGuide()
+        }
+    }
+
+    /**
+     * 모드 표시 UI 설정
+     */
+    @SuppressLint("SetTextI18n")
+    private fun setupModeIndicator() {
+        // 모드 텍스트뷰가 있으면 설정 (없으면 recordingStatus 활용)
+        val modeText = when (singingMode) {
+            SingingMode.PRACTICE -> "🎵 연습 모드 (가이드 ON)"
+            SingingMode.CHALLENGE -> "🏆 도전 모드 (가이드 OFF)"
+        }
+
+        // recordingStatus 초기 텍스트에 모드 표시
+        binding.recordingStatus.text = modeText
+    }
+
+    /**
+     * 가이드 음성과 함께 일시정지
+     */
+    private fun pauseRecordingWithGuide() {
+        viewModel.pauseRecording()
+        pauseGuideAudio()
+    }
+
+    /**
+     * 가이드 음성과 함께 재개
+     */
+    private fun resumeRecordingWithGuide() {
+        viewModel.resumeRecording()
+        resumeGuideAudio()
+    }
+
+    /**
+     * 가이드 음성과 함께 정지
+     */
+    private fun stopRecordingWithGuide() {
+        viewModel.stopRecording()
+        stopGuideAudio()
+    }
+
+    /**
+     * 가이드 오디오 시작
+     */
+    private fun startGuideAudio() {
+        if (!singingMode.isGuideEnabled) {
+            LogManager.d("Guide audio disabled in ${singingMode.displayName}")
+            return
+        }
+
+        if (!isGuidePlayerPrepared) {
+            LogManager.w("Guide player not prepared yet")
+            return
+        }
+
+        try {
+            guidePlayer?.let { player ->
+                player.seekTo(0)
+
+                // 피치 시프트 적용 (API 23+)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && currentPitchSemitones != 0) {
+                    val pitchRatio = PitchShiftManager.semitonesToPitchRatio(currentPitchSemitones)
+                    val params = player.playbackParams
+                    params.pitch = pitchRatio
+                    params.speed = 1.0f  // 속도는 유지
+                    player.playbackParams = params
+                    LogManager.d("Guide audio pitch shifted: $pitchRatio (${currentPitchSemitones} semitones)")
+                }
+
+                player.start()
+                LogManager.d("Guide audio started")
+            }
+        } catch (e: Exception) {
+            LogManager.e("Failed to start guide audio: ${e.message}")
+        }
+    }
+
+    /**
+     * 가이드 오디오 일시정지
+     */
+    private fun pauseGuideAudio() {
+        try {
+            guidePlayer?.let { player ->
+                if (player.isPlaying) {
+                    player.pause()
+                    LogManager.d("Guide audio paused")
+                }
+            }
+        } catch (e: Exception) {
+            LogManager.e("Failed to pause guide audio: ${e.message}")
+        }
+    }
+
+    /**
+     * 가이드 오디오 재개
+     */
+    private fun resumeGuideAudio() {
+        if (!singingMode.isGuideEnabled) return
+
+        try {
+            guidePlayer?.let { player ->
+                player.start()
+                LogManager.d("Guide audio resumed")
+            }
+        } catch (e: Exception) {
+            LogManager.e("Failed to resume guide audio: ${e.message}")
+        }
+    }
+
+    /**
+     * 가이드 오디오 정지
+     */
+    private fun stopGuideAudio() {
+        try {
+            guidePlayer?.let { player ->
+                if (player.isPlaying) {
+                    player.stop()
+                }
+                // 다시 재생할 수 있도록 prepare
+                player.prepare()
+                player.seekTo(0)
+                LogManager.d("Guide audio stopped and reset")
+            }
+        } catch (e: Exception) {
+            LogManager.e("Failed to stop guide audio: ${e.message}")
+        }
+    }
+
+    /**
+     * 가이드 플레이어 해제
+     */
+    private fun releaseGuidePlayer() {
+        try {
+            guidePlayer?.let { player ->
+                if (player.isPlaying) {
+                    player.stop()
+                }
+                player.release()
+            }
+            guidePlayer = null
+            isGuidePlayerPrepared = false
+            LogManager.d("Guide player released")
+        } catch (e: Exception) {
+            LogManager.e("Failed to release guide player: ${e.message}")
+        }
+    }
+
+    /**
+     * 키 조절 컨트롤 설정
+     */
+    private fun setupKeyControl() {
+        updateKeyDisplay()
+
+        // 키 내리기
+        binding.btnKeyDown.setOnClickListener {
+            if (currentPitchSemitones > PitchShiftManager.MIN_PITCH_SEMITONES) {
+                currentPitchSemitones--
+                updateKeyDisplay()
+                applyPitchToOriginal()
+            }
+        }
+
+        // 키 올리기
+        binding.btnKeyUp.setOnClickListener {
+            if (currentPitchSemitones < PitchShiftManager.MAX_PITCH_SEMITONES) {
+                currentPitchSemitones++
+                updateKeyDisplay()
+                applyPitchToOriginal()
+            }
+        }
+
+        // 원키 리셋
+        binding.btnKeyReset.setOnClickListener {
+            currentPitchSemitones = 0
+            updateKeyDisplay()
+            applyPitchToOriginal()
+        }
+    }
+
+    /**
+     * 키 표시 업데이트
+     */
+    @SuppressLint("SetTextI18n")
+    private fun updateKeyDisplay() {
+        binding.tvCurrentKey.text = PitchShiftManager.semitonesToKeyString(currentPitchSemitones)
+
+        // 리셋 버튼 표시 여부
+        binding.btnKeyReset.visibility = if (currentPitchSemitones != 0) View.VISIBLE else View.GONE
+
+        // 버튼 활성화/비활성화
+        binding.btnKeyDown.isEnabled = currentPitchSemitones > PitchShiftManager.MIN_PITCH_SEMITONES
+        binding.btnKeyUp.isEnabled = currentPitchSemitones < PitchShiftManager.MAX_PITCH_SEMITONES
+
+        binding.btnKeyDown.alpha = if (binding.btnKeyDown.isEnabled) 1.0f else 0.3f
+        binding.btnKeyUp.alpha = if (binding.btnKeyUp.isEnabled) 1.0f else 0.3f
+    }
+
+    /**
+     * 키 변경을 가이드 오디오에 적용
+     * - 녹음 시작 시 변경된 키가 적용됨
+     * - 재생 중일 때도 실시간 반영
+     */
+    private fun applyPitchToOriginal() {
+        // 토스트 메시지
+        val keyString = PitchShiftManager.semitonesToKeyString(currentPitchSemitones)
+        ToastManager.showToast("키 ${keyString}로 변경됨")
+
+        // 현재 재생 중인 가이드 오디오가 있으면 피치 업데이트
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && isGuidePlayerPrepared) {
+            try {
+                guidePlayer?.let { player ->
+                    val pitchRatio = PitchShiftManager.semitonesToPitchRatio(currentPitchSemitones)
+                    val params = player.playbackParams
+                    params.pitch = pitchRatio
+                    params.speed = 1.0f  // 속도는 유지
+                    player.playbackParams = params
+                    LogManager.d("Guide audio pitch updated: $pitchRatio")
+                }
+            } catch (e: Exception) {
+                LogManager.e("Failed to update guide audio pitch: ${e.message}")
+            }
         }
     }
 
@@ -168,8 +445,12 @@ class RecordingFragment : Fragment() {
             delay(1000)
             dialog.dismiss()
 
-            // 녹음 시작
-            viewModel.startRecording(pitchArray)
+            // 녹음 시작 (키 변경 적용)
+            val pitchRatio = PitchShiftManager.semitonesToPitchRatio(currentPitchSemitones)
+            viewModel.startRecording(pitchArray, pitchRatio)
+
+            // 가이드 오디오 시작 (연습 모드일 때만)
+            startGuideAudio()
         }
     }
 
@@ -292,11 +573,12 @@ class RecordingFragment : Fragment() {
 
                                 // 피드백 다이얼로그 표시 (게임 보상 포함)
                                 ScoreFeedbackDialogManager.showScoreFeedbackDialog(
-                                    requireContext(),
-                                    analyzer,
-                                    adjustedScore,
-                                    difficulty,
-                                    gameReward
+                                    context = requireContext(),
+                                    analyzer = analyzer,
+                                    finalScore = adjustedScore,
+                                    difficulty = difficulty,
+                                    songTitle = music.title,
+                                    gameReward = gameReward
                                 )
                             }
 
@@ -545,17 +827,24 @@ class RecordingFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         viewModel.stopRecording()
+        releaseGuidePlayer()
         gameManager.release()
         _binding = null
     }
 
     companion object {
-        fun newInstance(music: MusicFile, originalPitch: FloatArray, durationMillis: Long): RecordingFragment {
+        fun newInstance(
+            music: MusicFile,
+            originalPitch: FloatArray,
+            durationMillis: Long,
+            singingMode: SingingMode = SingingMode.PRACTICE
+        ): RecordingFragment {
             return RecordingFragment().apply {
                 arguments = bundleOf(
                     "music" to music,
                     "pitchArray" to originalPitch,
-                    "durationMillis" to durationMillis
+                    "durationMillis" to durationMillis,
+                    "singingMode" to singingMode.name
                 )
             }
         }

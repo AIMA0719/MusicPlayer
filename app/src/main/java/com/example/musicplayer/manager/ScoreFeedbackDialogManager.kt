@@ -3,6 +3,7 @@ package com.example.musicplayer.manager
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
+import android.content.Intent
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -55,6 +56,7 @@ object ScoreFeedbackDialogManager {
      * @param analyzer ScoreAnalyzer 인스턴스
      * @param finalScore 최종 선택된 점수
      * @param difficulty 선택한 채점 난이도
+     * @param songTitle 노래 제목 (공유 시 사용)
      * @param gameReward 게임 보상 정보 (선택)
      * @param onDismiss 다이얼로그 닫힘 콜백
      */
@@ -64,6 +66,7 @@ object ScoreFeedbackDialogManager {
         analyzer: ScoreAnalyzer,
         finalScore: Int,
         difficulty: ScoringDifficulty,
+        songTitle: String = "",
         gameReward: GameReward? = null,
         onDismiss: (() -> Unit)? = null
     ) {
@@ -155,6 +158,11 @@ object ScoreFeedbackDialogManager {
                     text = feedback
                 }
             }
+        }
+
+        // 공유 버튼
+        dialog.findViewById<TextView>(R.id.btn_share).setOnClickListener {
+            shareScore(context, songTitle, finalScore, detailedScores, grade)
         }
 
         // 확인 버튼
@@ -254,5 +262,47 @@ object ScoreFeedbackDialogManager {
         }
 
         return feedback.toString().trim()
+    }
+
+    /**
+     * 점수 결과 공유
+     */
+    private fun shareScore(
+        context: Context,
+        songTitle: String,
+        finalScore: Int,
+        detailedScores: Map<String, Double>,
+        grade: ScoreGrade
+    ) {
+        val pitchScore = String.format("%.1f", detailedScores["pitch_accuracy"]!! * 100)
+        val rhythmScore = String.format("%.1f", detailedScores["rhythm_score"]!! * 100)
+        val volumeScore = String.format("%.1f", detailedScores["volume_stability"]!! * 100)
+
+        val shareText = buildString {
+            append("🎤 노래방 점수 결과\n\n")
+            if (songTitle.isNotEmpty()) {
+                append("🎵 노래: $songTitle\n\n")
+            }
+            append("📊 등급: ${grade.grade}\n")
+            append("🏆 총점: ${finalScore}점\n\n")
+            append("📈 상세 점수\n")
+            append("• 음정 정확도: $pitchScore%\n")
+            append("• 리듬 정확도: $rhythmScore%\n")
+            append("• 볼륨 안정성: $volumeScore%\n\n")
+            append("${getScoreMessage(finalScore)}\n\n")
+            append("#노래방 #MusicPlayer")
+        }
+
+        val shareIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, shareText)
+        }
+
+        try {
+            context.startActivity(Intent.createChooser(shareIntent, "결과 공유"))
+        } catch (e: Exception) {
+            ToastManager.showToast("공유할 수 없습니다")
+        }
     }
 }

@@ -22,7 +22,9 @@ import androidx.navigation.fragment.findNavController
 import com.example.musicplayer.R
 import com.example.musicplayer.activity.LoginActivity
 import com.example.musicplayer.database.entity.LoginType
+import com.example.musicplayer.manager.AudioEffectManager
 import com.example.musicplayer.manager.AuthManager
+import com.example.musicplayer.manager.PitchShiftManager
 import com.example.musicplayer.manager.ScoreFeedbackDialogManager
 import com.example.musicplayer.manager.ToastManager
 import com.example.musicplayer.repository.UserRepository
@@ -63,6 +65,11 @@ class SettingsFragment : Fragment() {
         // Notifications - 초기값 설정
         val isNotificationsEnabled = sharedPrefs.getBoolean("notifications", true)
         view.findViewById<SwitchCompat>(R.id.switchNotifications).isChecked = isNotificationsEnabled
+
+        // Reverb - 초기값 설정
+        val audioPrefs = requireContext().getSharedPreferences("audio_effect_settings", Context.MODE_PRIVATE)
+        val isReverbEnabled = audioPrefs.getBoolean("reverb_enabled", false)
+        view.findViewById<SwitchCompat>(R.id.switchReverb).isChecked = isReverbEnabled
     }
 
     private fun setupViews(view: View) {
@@ -76,6 +83,28 @@ class SettingsFragment : Fragment() {
         view.findViewById<SwitchCompat>(R.id.switchNotifications).setOnCheckedChangeListener { _, isChecked ->
             sharedPrefs.edit { putBoolean("notifications", isChecked) }
             ToastManager.showToast(if (isChecked) "알림이 켜졌습니다" else "알림이 꺼졌습니다")
+        }
+
+        // Reverb Switch
+        view.findViewById<SwitchCompat>(R.id.switchReverb).setOnCheckedChangeListener { _, isChecked ->
+            val audioPrefs = requireContext().getSharedPreferences("audio_effect_settings", Context.MODE_PRIVATE)
+            audioPrefs.edit { putBoolean("reverb_enabled", isChecked) }
+            ToastManager.showToast(if (isChecked) "리버브가 켜졌습니다" else "리버브가 꺼졌습니다")
+        }
+
+        // Reverb Preset
+        view.findViewById<TextView>(R.id.btnReverbPreset).setOnClickListener {
+            showReverbPresetDialog()
+        }
+
+        // Default Key
+        view.findViewById<TextView>(R.id.btnDefaultKey).setOnClickListener {
+            showDefaultKeyDialog()
+        }
+
+        // Mic Test
+        view.findViewById<TextView>(R.id.btnMicTest).setOnClickListener {
+            findNavController().navigate(R.id.action_settings_to_mic_test)
         }
 
         // Logout
@@ -328,6 +357,55 @@ class SettingsFragment : Fragment() {
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         requireActivity().finish()
+    }
+
+    private fun showReverbPresetDialog() {
+        val presets = AudioEffectManager.Companion.ReverbPreset.entries.toTypedArray()
+        val presetNames = presets.map { it.displayName }.toTypedArray()
+
+        val audioPrefs = requireContext().getSharedPreferences("audio_effect_settings", Context.MODE_PRIVATE)
+        val currentPresetIndex = audioPrefs.getInt("reverb_preset", 0)
+
+        android.app.AlertDialog.Builder(requireContext())
+            .setTitle("리버브 프리셋")
+            .setSingleChoiceItems(presetNames, currentPresetIndex) { dialog, which ->
+                audioPrefs.edit { putInt("reverb_preset", which) }
+                ToastManager.showToast("${presetNames[which]} 선택됨")
+                dialog.dismiss()
+            }
+            .setNegativeButton("취소", null)
+            .show()
+    }
+
+    private fun showDefaultKeyDialog() {
+        val keyOptions = arrayOf(
+            "-6 (낮음)",
+            "-5",
+            "-4",
+            "-3",
+            "-2",
+            "-1",
+            "0 (원키)",
+            "+1",
+            "+2",
+            "+3",
+            "+4",
+            "+5",
+            "+6 (높음)"
+        )
+
+        val currentKeyIndex = sharedPrefs.getInt("default_key", 6) // 0이 기본값, 인덱스 6
+
+        android.app.AlertDialog.Builder(requireContext())
+            .setTitle("기본 키 설정")
+            .setSingleChoiceItems(keyOptions, currentKeyIndex) { dialog, which ->
+                sharedPrefs.edit { putInt("default_key", which) }
+                val semitones = which - 6 // 인덱스를 반음 단위로 변환
+                ToastManager.showToast("기본 키: ${PitchShiftManager.semitonesToKeyString(semitones)}")
+                dialog.dismiss()
+            }
+            .setNegativeButton("취소", null)
+            .show()
     }
 
     companion object {

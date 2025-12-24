@@ -11,6 +11,7 @@ import com.example.musicplayer.database.dao.PlaylistDao
 import com.example.musicplayer.database.dao.RecordingHistoryDao
 import com.example.musicplayer.database.dao.UserDao
 import com.example.musicplayer.database.dao.UserLevelDao
+import com.example.musicplayer.data.local.database.dao.WeeklyChallengeDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -69,6 +70,17 @@ object DatabaseModule {
     @Provides
     fun provideRecordingHistoryDao(database: AppDatabase): RecordingHistoryDao {
         return database.recordingHistoryDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideNewAppDatabase(@ApplicationContext context: Context): com.example.musicplayer.data.local.database.AppDatabase {
+        return com.example.musicplayer.data.local.database.AppDatabase.getDatabase(context)
+    }
+
+    @Provides
+    fun provideWeeklyChallengeDao(database: com.example.musicplayer.data.local.database.AppDatabase): WeeklyChallengeDao {
+        return database.weeklyChallengeDao()
     }
 
     @Provides

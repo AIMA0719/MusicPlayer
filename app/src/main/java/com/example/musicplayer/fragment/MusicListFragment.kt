@@ -20,6 +20,7 @@ import androidx.navigation.fragment.findNavController
 import com.example.musicplayer.R
 import com.example.musicplayer.adapter.MusicListAdapter
 import com.example.musicplayer.data.MusicFile
+import com.example.musicplayer.data.SingingMode
 import com.example.musicplayer.manager.IOSStyleProgressDialog
 import com.example.musicplayer.manager.LogManager
 import com.example.musicplayer.manager.ToastManager
@@ -89,7 +90,8 @@ class MusicListFragment : Fragment() {
                             val bundle = bundleOf(
                                 "music" to state.selectedMusic,
                                 "pitchArray" to state.originalPitch.toFloatArray(),
-                                "durationMillis" to state.selectedMusic.duration
+                                "durationMillis" to state.selectedMusic.duration,
+                                "singingMode" to SingingMode.PRACTICE.name  // 기본값: 연습 모드
                             )
                             findNavController().navigate(R.id.action_musicList_to_recording, bundle)
                             // 이동 완료 플래그 설정

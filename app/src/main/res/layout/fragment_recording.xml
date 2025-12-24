@@ -30,6 +30,100 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <!-- 키 조절 컨트롤 -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardKeyControl"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="#F5F5F5"
+            app:strokeWidth="0dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/songTitle">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingVertical="4dp"
+                android:paddingHorizontal="8dp">
+
+                <!-- 키 내리기 버튼 -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnKeyDown"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:text="-"
+                    android:textSize="20sp"
+                    android:textColor="#3182F6"
+                    app:rippleColor="#E3F0FF" />
+
+                <!-- 현재 키 표시 -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:minWidth="80dp"
+                    android:paddingHorizontal="8dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="키"
+                        android:textColor="#8B95A1"
+                        android:textSize="10sp" />
+
+                    <TextView
+                        android:id="@+id/tvCurrentKey"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0 (원키)"
+                        android:textColor="#191F28"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <!-- 키 올리기 버튼 -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnKeyUp"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:text="+"
+                    android:textSize="20sp"
+                    android:textColor="#3182F6"
+                    app:rippleColor="#E3F0FF" />
+
+                <!-- 리셋 버튼 -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnKeyReset"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:text="원키"
+                    android:textSize="12sp"
+                    android:textColor="#8B95A1"
+                    app:rippleColor="#E0E0E0"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- 시간 표시 -->
         <TextView
             android:id="@+id/timeDisplay"
@@ -43,7 +137,7 @@
             android:fontFamily="sans-serif-light"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/songTitle" />
+            app:layout_constraintTop_toBottomOf="@id/cardKeyControl" />
 
         <!-- 녹음 상태 -->
         <TextView
