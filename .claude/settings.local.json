@@ -6,7 +6,9 @@
       "WebFetch(domain:api.jamendo.com)",
       "Bash(adb logcat:*)",
       "Bash(adb install:*)",
-      "Bash(adb shell:*)"
+      "Bash(adb shell:*)",
+      "Bash(keytool:*)",
+      "Bash(cat:*)"
     ],
     "deny": []
   }

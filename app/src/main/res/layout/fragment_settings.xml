@@ -12,6 +12,130 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <!-- Account Section (at top) -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="@android:color/white">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="계정"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#8B95A1"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:paddingTop="16dp"
+                    android:paddingBottom="8dp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#F2F4F6" />
+
+                <!-- 로그인된 사용자 정보 (Google 로그인 시) -->
+                <LinearLayout
+                    android:id="@+id/layoutAccountInfo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:paddingTop="16dp"
+                    android:paddingBottom="16dp"
+                    android:gravity="center_vertical"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:id="@+id/ivProfileImage"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_person"
+                        android:background="@drawable/bg_circle_gray"
+                        android:padding="8dp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="12dp">
+
+                        <TextView
+                            android:id="@+id/tvUserName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="사용자"
+                            android:textSize="16sp"
+                            android:textColor="#191F28"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvUserEmail"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="email@example.com"
+                            android:textSize="12sp"
+                            android:textColor="#8B95A1"
+                            android:layout_marginTop="2dp" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- 로그인하기 버튼 (게스트 상태) -->
+                <TextView
+                    android:id="@+id/btnLogin"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Google 계정으로 로그인"
+                    android:textSize="16sp"
+                    android:textColor="#4285F4"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:paddingTop="16dp"
+                    android:paddingBottom="16dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawableStart="@drawable/ic_google"
+                    android:drawablePadding="12dp"
+                    android:visibility="gone" />
+
+                <View
+                    android:id="@+id/dividerAccount"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#F2F4F6"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    android:visibility="gone" />
+
+                <!-- 로그아웃 버튼 (Google 로그인 상태) -->
+                <TextView
+                    android:id="@+id/btnLogout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="로그아웃"
+                    android:textSize="16sp"
+                    android:textColor="#F04452"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:paddingTop="16dp"
+                    android:paddingBottom="16dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Game Section -->
         <com.google.android.material.card.MaterialCardView
@@ -650,53 +774,6 @@
                     android:paddingBottom="16dp"
                     android:background="?attr/selectableItemBackground"
                     android:drawableEnd="@android:drawable/ic_menu_send" />
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Logout Section (at bottom) -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="2dp"
-            app:cardBackgroundColor="@android:color/white">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="계정"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="#8B95A1"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp"
-                    android:paddingTop="16dp"
-                    android:paddingBottom="8dp" />
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="#F2F4F6" />
-
-                <TextView
-                    android:id="@+id/btnLogout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="로그아웃"
-                    android:textSize="16sp"
-                    android:textColor="#F04452"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp"
-                    android:paddingTop="16dp"
-                    android:paddingBottom="16dp"
-                    android:background="?attr/selectableItemBackground" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>

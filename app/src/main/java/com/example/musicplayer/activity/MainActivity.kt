@@ -5,18 +5,24 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.example.musicplayer.R
+import com.example.musicplayer.manager.AuthManager
 import com.example.musicplayer.manager.ContextManager
+import com.example.musicplayer.manager.GoogleAuthManager
 import com.example.musicplayer.manager.PermissionManager
 import com.example.musicplayer.manager.ProgressDialogManager
 import com.example.musicplayer.manager.ScoreDialogManager
 import com.example.musicplayer.databinding.MusicPlayerMainActivityBinding
 import com.example.musicplayer.manager.ToastManager
+import com.example.musicplayer.repository.UserRepository
 import com.example.musicplayer.viewModel.MainActivityViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -25,7 +31,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var navController: NavController
     private lateinit var permissionManager: PermissionManager
 
+    @Inject
+    lateinit var userRepository: UserRepository
+
     private var startTime: Long = 0
+    private var isInitialized = false
 
     private val permissionLauncher = registerForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
@@ -38,11 +48,16 @@ class MainActivity : AppCompatActivity() {
 
         startTime = System.currentTimeMillis()
 
+        // 스플래시 화면을 초기화 완료까지 유지
         splashScreen.setKeepOnScreenCondition {
-            System.currentTimeMillis() - startTime < 500
+            !isInitialized || System.currentTimeMillis() - startTime < 500
         }
 
         super.onCreate(savedInstanceState)
+
+        // 인증 매니저 초기화
+        AuthManager.init(this)
+        GoogleAuthManager.init(this)
 
         binding = MusicPlayerMainActivityBinding.inflate(layoutInflater)
         viewModel = ViewModelProvider(this)[MainActivityViewModel::class.java]
@@ -61,6 +76,34 @@ class MainActivity : AppCompatActivity() {
                 // 모든 권한 허용된 경우의 처리
             }
         )
+
+        // 자동 게스트 로그인 처리
+        ensureUserLoggedIn()
+
+        // 앱 시작 시 권한 요청 (최초 실행 시 설명 다이얼로그 포함)
+        permissionManager.requestPermissionsOnFirstLaunch()
+    }
+
+    private fun ensureUserLoggedIn() {
+        lifecycleScope.launch {
+            if (!AuthManager.isLoggedIn()) {
+                // 로그인되어 있지 않으면 자동으로 게스트 생성
+                val guestUser = userRepository.createGuestUser()
+                AuthManager.saveCurrentUser(guestUser.userId)
+            } else {
+                // 기존 로그인 사용자 확인
+                val userId = AuthManager.getCurrentUserId()
+                if (userId != null) {
+                    val user = userRepository.getUserById(userId)
+                    if (user == null) {
+                        // 사용자 데이터가 없으면 새 게스트 생성
+                        val guestUser = userRepository.createGuestUser()
+                        AuthManager.saveCurrentUser(guestUser.userId)
+                    }
+                }
+            }
+            isInitialized = true
+        }
     }
 
     private fun setupNavigation() {
@@ -125,7 +168,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        permissionManager.checkAndRequestPermissions()
+        // 설정에서 돌아왔을 때 권한 상태 확인
+        if (permissionManager.areAllPermissionsGranted()) {
+            // 권한이 모두 허용됨
+        }
     }
 
     private fun setOnBackPressed() {

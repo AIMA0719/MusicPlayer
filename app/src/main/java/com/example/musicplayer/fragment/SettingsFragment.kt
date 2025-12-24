@@ -9,25 +9,31 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.edit
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.graphics.toColorInt
 import androidx.core.net.toUri
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.Glide
 import com.example.musicplayer.R
 import com.example.musicplayer.activity.LoginActivity
 import com.example.musicplayer.database.entity.LoginType
 import com.example.musicplayer.manager.AudioEffectManager
 import com.example.musicplayer.manager.AuthManager
+import com.example.musicplayer.manager.GoogleAuthManager
 import com.example.musicplayer.manager.PitchShiftManager
 import com.example.musicplayer.manager.ScoreFeedbackDialogManager
 import com.example.musicplayer.manager.ToastManager
 import com.example.musicplayer.repository.UserRepository
+import com.google.android.gms.auth.api.signin.GoogleSignIn
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.io.File
@@ -39,6 +45,14 @@ class SettingsFragment : Fragment() {
     @Inject
     lateinit var userRepository: UserRepository
     private lateinit var sharedPrefs: android.content.SharedPreferences
+
+    // Google Sign-In 런처
+    private val signInLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        handleGoogleSignInResult(task)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -55,6 +69,13 @@ class SettingsFragment : Fragment() {
         // 순서 중요: 값을 먼저 설정하고 리스너를 나중에 설정
         loadSettings(view)
         setupViews(view)
+        setupAccountSection(view)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // 화면 복귀 시 계정 상태 업데이트
+        view?.let { setupAccountSection(it) }
     }
 
     private fun loadSettings(view: View) {
@@ -105,11 +126,6 @@ class SettingsFragment : Fragment() {
         // Mic Test
         view.findViewById<TextView>(R.id.btnMicTest).setOnClickListener {
             findNavController().navigate(R.id.action_settings_to_mic_test)
-        }
-
-        // Logout
-        view.findViewById<TextView>(R.id.btnLogout).setOnClickListener {
-            showLogoutConfirmDialog()
         }
 
         // Achievements
@@ -338,25 +354,122 @@ class SettingsFragment : Fragment() {
     }
 
     private fun performLogout() {
-        // Google 로그아웃
         lifecycleScope.launch {
             val userId = AuthManager.getCurrentUserId()
             if (userId != null) {
                 val userEntity = userRepository.getUserById(userId)
                 if (userEntity != null && userEntity.loginType == LoginType.GOOGLE) {
-                    com.example.musicplayer.manager.GoogleAuthManager.signOut {
-                        // Google 로그아웃 완료 후 처리
+                    GoogleAuthManager.signOut {
+                        // Google 로그아웃 완료
                     }
                 }
             }
+
+            // 로그아웃 후 새 게스트 계정 생성
+            AuthManager.logout()
+            val guestUser = userRepository.createGuestUser()
+            AuthManager.saveCurrentUser(guestUser.userId)
+
+            ToastManager.showToast("로그아웃되었습니다")
+
+            // UI 업데이트
+            view?.let { setupAccountSection(it) }
+        }
+    }
+
+    private fun setupAccountSection(view: View) {
+        val layoutAccountInfo = view.findViewById<LinearLayout>(R.id.layoutAccountInfo)
+        val btnLogin = view.findViewById<TextView>(R.id.btnLogin)
+        val btnLogout = view.findViewById<TextView>(R.id.btnLogout)
+        val dividerAccount = view.findViewById<View>(R.id.dividerAccount)
+        val tvUserName = view.findViewById<TextView>(R.id.tvUserName)
+        val tvUserEmail = view.findViewById<TextView>(R.id.tvUserEmail)
+        val ivProfileImage = view.findViewById<ImageView>(R.id.ivProfileImage)
+
+        lifecycleScope.launch {
+            val userId = AuthManager.getCurrentUserId()
+            val user = userId?.let { userRepository.getUserById(it) }
+
+            if (user != null && user.loginType == LoginType.GOOGLE) {
+                // Google 로그인 상태 - 계정 정보와 로그아웃 표시
+                layoutAccountInfo.isVisible = true
+                btnLogin.isVisible = false
+                dividerAccount.isVisible = true
+                btnLogout.isVisible = true
+
+                tvUserName.text = user.displayName
+                tvUserEmail.text = user.email ?: ""
+
+                // 프로필 이미지 로드
+                user.profileImageUrl?.let { url ->
+                    Glide.with(requireContext())
+                        .load(url)
+                        .circleCrop()
+                        .placeholder(R.drawable.ic_person)
+                        .into(ivProfileImage)
+                }
+            } else {
+                // 게스트 상태 - 로그인 버튼만 표시
+                layoutAccountInfo.isVisible = false
+                btnLogin.isVisible = true
+                dividerAccount.isVisible = false
+                btnLogout.isVisible = false
+            }
         }
 
-        AuthManager.logout()
+        // 로그인 버튼 클릭
+        btnLogin.setOnClickListener {
+            signInWithGoogle()
+        }
 
-        val intent = Intent(requireContext(), LoginActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
-        requireActivity().finish()
+        // 로그아웃 버튼 클릭
+        btnLogout.setOnClickListener {
+            showLogoutConfirmDialog()
+        }
+    }
+
+    private fun signInWithGoogle() {
+        val signInIntent = GoogleAuthManager.getSignInIntent()
+        signInLauncher.launch(signInIntent)
+    }
+
+    private fun handleGoogleSignInResult(task: com.google.android.gms.tasks.Task<com.google.android.gms.auth.api.signin.GoogleSignInAccount>) {
+        try {
+            val account = GoogleAuthManager.handleSignInResult(task)
+            if (account != null) {
+                lifecycleScope.launch {
+                    try {
+                        // Google 계정으로 사용자 생성 또는 업데이트
+                        val existingUser = userRepository.getUserById(account.id ?: "")
+                        val user = if (existingUser != null) {
+                            userRepository.updateLastLogin(existingUser.userId)
+                            existingUser
+                        } else {
+                            userRepository.createGoogleUser(
+                                userId = account.id ?: "",
+                                email = account.email,
+                                displayName = account.displayName ?: "Unknown",
+                                profileImageUrl = account.photoUrl?.toString()
+                            )
+                        }
+
+                        // 현재 사용자로 저장
+                        AuthManager.saveCurrentUser(user.userId)
+
+                        ToastManager.showToast("${user.displayName}님으로 로그인했습니다")
+
+                        // UI 업데이트
+                        view?.let { setupAccountSection(it) }
+                    } catch (e: Exception) {
+                        ToastManager.showToast("로그인 처리 중 오류가 발생했습니다")
+                    }
+                }
+            } else {
+                ToastManager.showToast("Google 로그인에 실패했습니다")
+            }
+        } catch (e: Exception) {
+            ToastManager.showToast("로그인 오류가 발생했습니다")
+        }
     }
 
     private fun showReverbPresetDialog() {
