@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Legacy Colors (유지) -->
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
@@ -19,24 +20,91 @@
     <color name="primaryColor">#2196F3</color>
     <color name="gray">#808080</color>
 
-    <!-- Music Download UI Colors -->
-    <color name="primary">#FF6B35</color>
-    <color name="primary_dark">#E85A24</color>
-    <color name="primary_light">#FF8559</color>
+    <!-- ================================================== -->
+    <!-- Glass Morphism Design System -->
+    <!-- ================================================== -->
+
+    <!-- Primary Colors (Blue) -->
+    <color name="glass_primary">#3182F6</color>
+    <color name="glass_primary_light">#5B9DF9</color>
+    <color name="glass_primary_dark">#1A6AD4</color>
+    <color name="glass_primary_10">#1A3182F6</color>
+    <color name="glass_primary_20">#333182F6</color>
+
+    <!-- Secondary / Accent -->
+    <color name="glass_accent">#4ECDC4</color>
+    <color name="glass_accent_light">#7EDDD6</color>
+
+    <!-- Glass Surface (반투명 레이어) -->
+    <color name="glass_surface">#B3FFFFFF</color>
+    <color name="glass_surface_light">#E6FFFFFF</color>
+    <color name="glass_surface_elevated">#CCFFFFFF</color>
+    <color name="glass_surface_dim">#80FFFFFF</color>
+
+    <!-- Glass Border -->
+    <color name="glass_border">#40FFFFFF</color>
+    <color name="glass_border_strong">#66FFFFFF</color>
+    <color name="glass_border_subtle">#26FFFFFF</color>
+
+    <!-- Background Gradient Colors -->
+    <color name="glass_bg_start">#E8F3FF</color>
+    <color name="glass_bg_center">#F0F4FF</color>
+    <color name="glass_bg_end">#F5F0FF</color>
+
+    <!-- Text Colors -->
+    <color name="glass_text_primary">#191F28</color>
+    <color name="glass_text_secondary">#6B7684</color>
+    <color name="glass_text_tertiary">#8B95A1</color>
+    <color name="glass_text_disabled">#B0B8C1</color>
+    <color name="glass_text_inverse">#FFFFFF</color>
+
+    <!-- Semantic Colors -->
+    <color name="glass_success">#00C853</color>
+    <color name="glass_warning">#FFB300</color>
+    <color name="glass_error">#FF5252</color>
+    <color name="glass_info">#3182F6</color>
+
+    <!-- Score Grade Colors -->
+    <color name="grade_s">#FFD700</color>
+    <color name="grade_a_plus">#FF6B35</color>
+    <color name="grade_a">#FF8559</color>
+    <color name="grade_b_plus">#4ECDC4</color>
+    <color name="grade_b">#95E1D3</color>
+    <color name="grade_c_plus">#9C88FF</color>
+    <color name="grade_c">#C3AEF0</color>
+    <color name="grade_d">#A8A8A8</color>
+
+    <!-- Chip Colors -->
+    <color name="glass_chip_selected">#3182F6</color>
+    <color name="glass_chip_unselected">#F5F6F8</color>
+    <color name="glass_chip_text_selected">#FFFFFF</color>
+    <color name="glass_chip_text_unselected">#6B7684</color>
+
+    <!-- Divider -->
+    <color name="glass_divider">#E5E8EB</color>
+
+    <!-- Bottom Navigation -->
+    <color name="glass_nav_active">#3182F6</color>
+    <color name="glass_nav_inactive">#8B95A1</color>
+
+    <!-- Legacy Mapping (기존 코드 호환) -->
+    <color name="primary">#3182F6</color>
+    <color name="primary_dark">#1A6AD4</color>
+    <color name="primary_light">#5B9DF9</color>
     <color name="accent">#4ECDC4</color>
     <color name="accent_dark">#3DB8B0</color>
     <color name="background">#F5F5F5</color>
     <color name="surface">#FFFFFF</color>
-    <color name="text_primary">#222222</color>
-    <color name="text_secondary">#666666</color>
-    <color name="text_hint">#999999</color>
-    <color name="chip_selected">#FF6B35</color>
-    <color name="chip_unselected">#E0E0E0</color>
+    <color name="text_primary">#191F28</color>
+    <color name="text_secondary">#6B7684</color>
+    <color name="text_hint">#8B95A1</color>
+    <color name="chip_selected">#3182F6</color>
+    <color name="chip_unselected">#F5F6F8</color>
     <color name="chip_text_selected">#FFFFFF</color>
-    <color name="chip_text_unselected">#666666</color>
+    <color name="chip_text_unselected">#6B7684</color>
 
-    <!-- 앱 전체 배경 색상 -->
-    <color name="app_background">#F2F4F6</color>
+    <!-- App Background -->
+    <color name="app_background">#F5F7FA</color>
     <color name="card_background">#FFFFFF</color>
-    <color name="divider_color">#F2F4F6</color>
+    <color name="divider_color">#E5E8EB</color>
 </resources>

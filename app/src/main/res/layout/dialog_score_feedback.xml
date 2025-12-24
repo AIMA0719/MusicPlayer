@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_gravity="center"
-    android:background="@drawable/bg_dialog_rounded"
+    android:background="@drawable/bg_glass_dialog"
     android:fillViewport="true">
 
     <LinearLayout
@@ -19,7 +19,7 @@
             android:text="노래 분석 결과"
             android:textSize="22sp"
             android:textStyle="bold"
-            android:textColor="#212121"
+            android:textColor="@color/glass_text_primary"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="8dp" />
 
@@ -43,7 +43,7 @@
             android:text="85점"
             android:textSize="40sp"
             android:textStyle="bold"
-            android:textColor="#2196F3"
+            android:textColor="@color/glass_primary"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="4dp" />
 
@@ -54,7 +54,7 @@
             android:layout_height="wrap_content"
             android:text="훌륭합니다!"
             android:textSize="16sp"
-            android:textColor="#757575"
+            android:textColor="@color/glass_text_tertiary"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="16dp" />
 
@@ -64,7 +64,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="#F5F5F5"
+            android:background="@color/glass_surface_dim"
             android:padding="12dp"
             android:layout_marginBottom="16dp"
             android:visibility="gone">
@@ -112,7 +112,7 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#E0E0E0"
+            android:background="@color/glass_divider"
             android:layout_marginBottom="16dp" />
 
         <!-- 상세 점수 섹션 -->
@@ -122,7 +122,7 @@
             android:text="상세 점수"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="#212121"
+            android:textColor="@color/glass_text_primary"
             android:layout_marginBottom="12dp" />
 
         <!-- 음정 정확도 -->
@@ -138,7 +138,7 @@
                 android:layout_weight="1"
                 android:text="🎵 음정 정확도"
                 android:textSize="14sp"
-                android:textColor="#424242" />
+                android:textColor="@color/glass_text_secondary" />
 
             <TextView
                 android:id="@+id/tv_pitch_score"
@@ -147,7 +147,7 @@
                 android:text="87%"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="#2196F3" />
+                android:textColor="@color/glass_primary" />
         </LinearLayout>
 
         <!-- 리듬 정확도 -->
@@ -163,7 +163,7 @@
                 android:layout_weight="1"
                 android:text="⏱ 리듬 정확도"
                 android:textSize="14sp"
-                android:textColor="#424242" />
+                android:textColor="@color/glass_text_secondary" />
 
             <TextView
                 android:id="@+id/tv_rhythm_score"
@@ -172,7 +172,7 @@
                 android:text="92%"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="#2196F3" />
+                android:textColor="@color/glass_primary" />
         </LinearLayout>
 
         <!-- 볼륨 안정성 -->
@@ -188,7 +188,7 @@
                 android:layout_weight="1"
                 android:text="🔊 볼륨 안정성"
                 android:textSize="14sp"
-                android:textColor="#424242" />
+                android:textColor="@color/glass_text_secondary" />
 
             <TextView
                 android:id="@+id/tv_volume_score"
@@ -197,7 +197,7 @@
                 android:text="78%"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="#2196F3" />
+                android:textColor="@color/glass_primary" />
         </LinearLayout>
 
         <!-- 길이 매칭 -->
@@ -213,7 +213,7 @@
                 android:layout_weight="1"
                 android:text="⏳ 길이 매칭"
                 android:textSize="14sp"
-                android:textColor="#424242" />
+                android:textColor="@color/glass_text_secondary" />
 
             <TextView
                 android:id="@+id/tv_duration_score"
@@ -222,14 +222,14 @@
                 android:text="100%"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="#2196F3" />
+                android:textColor="@color/glass_primary" />
         </LinearLayout>
 
         <!-- 구분선 -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#E0E0E0"
+            android:background="@color/glass_divider"
             android:layout_marginBottom="16dp" />
 
         <!-- 추가 정보 섹션 -->
@@ -239,7 +239,7 @@
             android:text="추가 정보"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="#212121"
+            android:textColor="@color/glass_text_primary"
             android:layout_marginBottom="12dp" />
 
         <!-- 난이도 정보 -->
@@ -257,7 +257,7 @@
                 android:layout_weight="1"
                 android:text="🎯 곡 난이도"
                 android:textSize="14sp"
-                android:textColor="#424242" />
+                android:textColor="@color/glass_text_secondary" />
 
             <TextView
                 android:id="@+id/tv_difficulty"
@@ -284,7 +284,7 @@
                 android:layout_weight="1"
                 android:text="🎼 비브라토"
                 android:textSize="14sp"
-                android:textColor="#424242" />
+                android:textColor="@color/glass_text_secondary" />
 
             <TextView
                 android:id="@+id/tv_vibrato"
@@ -301,7 +301,7 @@
             android:id="@+id/feedback_divider"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#E0E0E0"
+            android:background="@color/glass_divider"
             android:layout_marginBottom="16dp"
             android:visibility="gone" />
 
@@ -313,7 +313,7 @@
             android:text="개선점"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="#212121"
+            android:textColor="@color/glass_text_primary"
             android:layout_marginBottom="12dp"
             android:visibility="gone" />
 
@@ -324,7 +324,7 @@
             android:layout_height="wrap_content"
             android:text=""
             android:textSize="14sp"
-            android:textColor="#424242"
+            android:textColor="@color/glass_text_secondary"
             android:lineSpacingMultiplier="1.3"
             android:layout_marginBottom="16dp"
             android:visibility="gone" />
@@ -348,7 +348,7 @@
                 android:textColor="@color/primary"
                 android:gravity="center"
                 android:padding="14dp"
-                android:background="@drawable/bg_button_secondary"
+                android:background="@drawable/bg_glass_button_secondary"
                 android:clickable="true"
                 android:focusable="true"
                 android:layout_marginEnd="8dp" />
@@ -365,7 +365,7 @@
                 android:textColor="@android:color/white"
                 android:gravity="center"
                 android:padding="14dp"
-                android:background="@drawable/bg_button_primary"
+                android:background="@drawable/bg_glass_button_primary"
                 android:clickable="true"
                 android:focusable="true" />
 

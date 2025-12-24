@@ -1,21 +1,55 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+
+    <!-- Dark Theme with Glassmorphism -->
     <style name="Theme.MusicPlayer" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/purple_200</item>
-        <item name="colorPrimaryVariant">@color/purple_700</item>
-        <item name="colorOnPrimary">@color/black</item>
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorSecondaryVariant">@color/teal_200</item>
-        <item name="colorOnSecondary">@color/black</item>
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
-        <!-- Customize your theme here. -->
+        <!-- Primary Colors -->
+        <item name="colorPrimary">@color/glass_primary</item>
+        <item name="colorPrimaryVariant">@color/glass_primary_dark</item>
+        <item name="colorOnPrimary">@color/white</item>
+
+        <!-- Secondary Colors -->
+        <item name="colorSecondary">@color/glass_accent</item>
+        <item name="colorSecondaryVariant">@color/glass_accent_light</item>
+        <item name="colorOnSecondary">@color/white</item>
+
+        <!-- Surface Colors -->
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/glass_text_primary</item>
+
+        <!-- Background -->
+        <item name="android:colorBackground">@color/app_background</item>
+        <item name="colorOnBackground">@color/glass_text_primary</item>
+
+        <!-- Status Bar (Dark) -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+
+        <!-- Navigation Bar (Dark) -->
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
+
+        <!-- Text Colors -->
+        <item name="android:textColorPrimary">@color/glass_text_primary</item>
+        <item name="android:textColorSecondary">@color/glass_text_secondary</item>
+        <item name="android:textColorHint">@color/glass_text_tertiary</item>
+
+        <!-- Typography - Pretendard (폰트 파일 추가 후 활성화)
+        <item name="android:fontFamily">@font/pretendard</item>
+        <item name="fontFamily">@font/pretendard</item>
+        -->
+
+        <!-- Shape Appearance -->
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.Glass.Small</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Glass.Medium</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Glass.Large</item>
+
+        <!-- Bottom Sheet -->
+        <item name="bottomSheetDialogTheme">@style/GlassBottomSheetDialogTheme</item>
     </style>
 
     <style name="ThemeOverlay.MusicPlayer.FullscreenContainer" parent="">
-        <item name="fullscreenBackgroundColor">@color/light_blue_900</item>
-        <item name="fullscreenTextColor">@color/light_blue_A400</item>
+        <item name="fullscreenBackgroundColor">@color/glass_primary_dark</item>
+        <item name="fullscreenTextColor">@color/white</item>
     </style>
+
 </resources>

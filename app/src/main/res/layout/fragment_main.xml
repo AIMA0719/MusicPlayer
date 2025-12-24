@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F2F4F6"
+    android:background="@drawable/bg_gradient_main"
     android:fillViewport="true">
 
     <LinearLayout
@@ -16,9 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="2dp"
-            app:cardBackgroundColor="@android:color/white">
+            style="@style/GlassCardStyle">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -37,7 +35,7 @@
                         android:layout_width="64dp"
                         android:layout_height="64dp"
                         android:src="@drawable/ic_mic"
-                        app:tint="#3182F6"
+                        app:tint="@color/glass_primary"
                         android:background="@drawable/bg_circle_blue_light"
                         android:padding="16dp" />
 
@@ -55,7 +53,7 @@
                             android:text="사용자님"
                             android:textSize="22sp"
                             android:textStyle="bold"
-                            android:textColor="#191F28" />
+                            android:textColor="@color/glass_text_primary" />
 
                         <TextView
                             android:id="@+id/tvUserEmail"
@@ -63,7 +61,7 @@
                             android:layout_height="wrap_content"
                             android:text="로그인이 필요합니다"
                             android:textSize="14sp"
-                            android:textColor="#8B95A1"
+                            android:textColor="@color/glass_text_tertiary"
                             android:layout_marginTop="4dp" />
                     </LinearLayout>
 
@@ -72,7 +70,7 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="#F2F4F6"
+                    android:background="@color/glass_divider"
                     android:layout_marginTop="20dp"
                     android:layout_marginBottom="16dp" />
 
@@ -91,7 +89,7 @@
                         android:text="🎤 초보 가수"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="#191F28" />
+                        android:textColor="@color/glass_text_primary" />
 
                     <TextView
                         android:id="@+id/tvLevel"
@@ -100,7 +98,7 @@
                         android:text="Lv.1"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="#3182F6"
+                        android:textColor="@color/glass_primary"
                         android:layout_marginStart="8dp" />
 
                     <View
@@ -114,7 +112,7 @@
                         android:layout_height="wrap_content"
                         android:text="0 / 100"
                         android:textSize="12sp"
-                        android:textColor="#8B95A1" />
+                        android:textColor="@color/glass_text_tertiary" />
                 </LinearLayout>
 
                 <!-- Experience Bar -->
@@ -145,9 +143,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="@android:color/white">
+                style="@style/GlassCardStyle.Small">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -169,7 +165,7 @@
                         android:text="0"
                         android:textSize="24sp"
                         android:textStyle="bold"
-                        android:textColor="#191F28"
+                        android:textColor="@color/glass_text_primary"
                         android:layout_marginTop="4dp" />
 
                     <TextView
@@ -177,7 +173,7 @@
                         android:layout_height="wrap_content"
                         android:text="총 녹음"
                         android:textSize="12sp"
-                        android:textColor="#8B95A1"
+                        android:textColor="@color/glass_text_tertiary"
                         android:layout_marginTop="2dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -188,9 +184,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="@android:color/white">
+                style="@style/GlassCardStyle.Small">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -220,7 +214,7 @@
                         android:layout_height="wrap_content"
                         android:text="최고 점수"
                         android:textSize="12sp"
-                        android:textColor="#8B95A1"
+                        android:textColor="@color/glass_text_tertiary"
                         android:layout_marginTop="2dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -233,9 +227,7 @@
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="2dp"
-            app:cardBackgroundColor="@android:color/white">
+            style="@style/GlassCardStyle">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -262,7 +254,7 @@
                         android:layout_height="wrap_content"
                         android:text="연속 녹음"
                         android:textSize="14sp"
-                        android:textColor="#8B95A1" />
+                        android:textColor="@color/glass_text_tertiary" />
 
                     <TextView
                         android:id="@+id/tvConsecutiveDays"
@@ -284,9 +276,7 @@
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="2dp"
-            app:cardBackgroundColor="@android:color/white">
+            style="@style/GlassCardStyle">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -307,7 +297,7 @@
                         android:text="최근 도전과제"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="#191F28" />
+                        android:textColor="@color/glass_text_primary" />
 
                     <TextView
                         android:id="@+id/tvAchievementProgress"
@@ -315,7 +305,7 @@
                         android:layout_height="wrap_content"
                         android:text="0 / 11"
                         android:textSize="14sp"
-                        android:textColor="#8B95A1" />
+                        android:textColor="@color/glass_text_tertiary" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -332,7 +322,7 @@
                         android:layout_height="wrap_content"
                         android:text="아직 달성한 도전과제가 없습니다"
                         android:textSize="14sp"
-                        android:textColor="#8B95A1"
+                        android:textColor="@color/glass_text_tertiary"
                         android:layout_gravity="center"
                         android:layout_marginTop="24dp"
                         android:layout_marginBottom="24dp" />
@@ -344,7 +334,7 @@
                     android:layout_height="wrap_content"
                     android:text="전체 도전과제 보기 >"
                     android:textSize="14sp"
-                    android:textColor="#3182F6"
+                    android:textColor="@color/glass_primary"
                     android:textStyle="bold"
                     android:gravity="center"
                     android:padding="12dp"
@@ -360,9 +350,7 @@
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="2dp"
-            app:cardBackgroundColor="@android:color/white">
+            style="@style/GlassCardStyle">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -376,7 +364,7 @@
                     android:text="이번 달 평균 점수"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="#191F28" />
+                    android:textColor="@color/glass_text_primary" />
 
                 <TextView
                     android:id="@+id/tvMonthlyAverage"
@@ -385,7 +373,7 @@
                     android:text="0점"
                     android:textSize="36sp"
                     android:textStyle="bold"
-                    android:textColor="#3182F6"
+                    android:textColor="@color/glass_primary"
                     android:layout_marginTop="8dp" />
 
                 <TextView
@@ -394,7 +382,7 @@
                     android:layout_height="wrap_content"
                     android:text="노래를 녹음하고 점수를 받아보세요!"
                     android:textSize="12sp"
-                    android:textColor="#8B95A1"
+                    android:textColor="@color/glass_text_tertiary"
                     android:layout_marginTop="4dp" />
 
             </LinearLayout>
@@ -407,9 +395,7 @@
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="2dp"
-            app:cardBackgroundColor="@android:color/white">
+            style="@style/GlassCardStyle">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -423,7 +409,7 @@
                     android:text="이번 달 TOP 3"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="#191F28" />
+                    android:textColor="@color/glass_text_primary" />
 
                 <LinearLayout
                     android:id="@+id/llTop3Container"
@@ -439,7 +425,7 @@
                         android:layout_height="wrap_content"
                         android:text="아직 기록이 없습니다"
                         android:textSize="14sp"
-                        android:textColor="#8B95A1"
+                        android:textColor="@color/glass_text_tertiary"
                         android:layout_gravity="center"
                         android:layout_marginTop="24dp"
                         android:layout_marginBottom="24dp" />

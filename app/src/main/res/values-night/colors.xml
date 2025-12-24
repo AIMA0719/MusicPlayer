@@ -1,18 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 다크 모드 색상 -->
-    <color name="background">#121212</color>
-    <color name="surface">#1E1E1E</color>
-    <color name="text_primary">#EEEEEE</color>
-    <color name="text_secondary">#AAAAAA</color>
-    <color name="text_hint">#777777</color>
-    <color name="chip_selected">#FF6B35</color>
-    <color name="chip_unselected">#333333</color>
-    <color name="chip_text_selected">#FFFFFF</color>
-    <color name="chip_text_unselected">#AAAAAA</color>
+    <!-- ================================================== -->
+    <!-- Glass Morphism Design System (Dark Mode) -->
+    <!-- ================================================== -->
 
-    <!-- 앱 전체 배경 색상 -->
-    <color name="app_background">#121212</color>
-    <color name="card_background">#1E1E1E</color>
-    <color name="divider_color">#333333</color>
+    <!-- Primary Colors (Blue) - 다크모드에서도 동일 -->
+    <color name="glass_primary">#3182F6</color>
+    <color name="glass_primary_light">#5B9DF9</color>
+    <color name="glass_primary_dark">#1A6AD4</color>
+    <color name="glass_primary_10">#1A3182F6</color>
+    <color name="glass_primary_20">#333182F6</color>
+
+    <!-- Glass Surface (다크 반투명) -->
+    <color name="glass_surface">#331E1E1E</color>
+    <color name="glass_surface_light">#662A2A2A</color>
+    <color name="glass_surface_elevated">#4D2D2D2D</color>
+    <color name="glass_surface_dim">#1A1A1A1A</color>
+
+    <!-- Glass Border (다크) -->
+    <color name="glass_border">#26FFFFFF</color>
+    <color name="glass_border_strong">#40FFFFFF</color>
+    <color name="glass_border_subtle">#1AFFFFFF</color>
+
+    <!-- Background Gradient (다크) -->
+    <color name="glass_bg_start">#0D1117</color>
+    <color name="glass_bg_center">#161B22</color>
+    <color name="glass_bg_end">#21262D</color>
+
+    <!-- Text Colors (다크모드) -->
+    <color name="glass_text_primary">#F0F6FC</color>
+    <color name="glass_text_secondary">#8B949E</color>
+    <color name="glass_text_tertiary">#6E7681</color>
+    <color name="glass_text_disabled">#484F58</color>
+    <color name="glass_text_inverse">#0D1117</color>
+
+    <!-- Chip Colors (다크) -->
+    <color name="glass_chip_selected">#3182F6</color>
+    <color name="glass_chip_unselected">#21262D</color>
+    <color name="glass_chip_text_selected">#FFFFFF</color>
+    <color name="glass_chip_text_unselected">#8B949E</color>
+
+    <!-- Divider (다크) -->
+    <color name="glass_divider">#30363D</color>
+
+    <!-- Bottom Navigation -->
+    <color name="glass_nav_active">#3182F6</color>
+    <color name="glass_nav_inactive">#6E7681</color>
+
+    <!-- Legacy Mapping (기존 코드 호환) -->
+    <color name="primary">#3182F6</color>
+    <color name="primary_dark">#1A6AD4</color>
+    <color name="primary_light">#5B9DF9</color>
+    <color name="background">#0D1117</color>
+    <color name="surface">#161B22</color>
+    <color name="text_primary">#F0F6FC</color>
+    <color name="text_secondary">#8B949E</color>
+    <color name="text_hint">#6E7681</color>
+    <color name="chip_selected">#3182F6</color>
+    <color name="chip_unselected">#21262D</color>
+    <color name="chip_text_selected">#FFFFFF</color>
+    <color name="chip_text_unselected">#8B949E</color>
+
+    <!-- App Background (다크모드) -->
+    <color name="app_background">#0D1117</color>
+    <color name="card_background">#161B22</color>
+    <color name="divider_color">#30363D</color>
 </resources>
