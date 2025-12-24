@@ -122,13 +122,13 @@ object ScoreFeedbackDialogManager {
 
         // 상세 점수
         dialog.findViewById<TextView>(R.id.tv_pitch_score).text =
-            String.format("%.1f%%", detailedScores["pitch_accuracy"]!! * 100)
+            String.format("%.1f%%", (detailedScores["pitch_accuracy"] ?: 0.0) * 100)
         dialog.findViewById<TextView>(R.id.tv_rhythm_score).text =
-            String.format("%.1f%%", detailedScores["rhythm_score"]!! * 100)
+            String.format("%.1f%%", (detailedScores["rhythm_score"] ?: 0.0) * 100)
         dialog.findViewById<TextView>(R.id.tv_volume_score).text =
-            String.format("%.1f%%", detailedScores["volume_stability"]!! * 100)
+            String.format("%.1f%%", (detailedScores["volume_stability"] ?: 0.0) * 100)
         dialog.findViewById<TextView>(R.id.tv_duration_score).text =
-            String.format("%.1f%%", detailedScores["duration_match"]!! * 100)
+            String.format("%.1f%%", (detailedScores["duration_match"] ?: 0.0) * 100)
 
         // 채점 난이도 정보 표시
         if (difficulty != ScoringDifficulty.NORMAL) {
@@ -235,9 +235,9 @@ object ScoreFeedbackDialogManager {
      */
     private fun generateFeedback(detailedScores: Map<String, Double>): String {
         val feedback = StringBuilder()
-        val pitchScore = detailedScores["pitch_accuracy"]!! * 100
-        val rhythmScore = detailedScores["rhythm_score"]!! * 100
-        val volumeScore = detailedScores["volume_stability"]!! * 100
+        val pitchScore = (detailedScores["pitch_accuracy"] ?: 0.0) * 100
+        val rhythmScore = (detailedScores["rhythm_score"] ?: 0.0) * 100
+        val volumeScore = (detailedScores["volume_stability"] ?: 0.0) * 100
 
         // 가장 낮은 점수 찾기
         val lowestMetric = listOf(
@@ -274,9 +274,9 @@ object ScoreFeedbackDialogManager {
         detailedScores: Map<String, Double>,
         grade: ScoreGrade
     ) {
-        val pitchScore = String.format("%.1f", detailedScores["pitch_accuracy"]!! * 100)
-        val rhythmScore = String.format("%.1f", detailedScores["rhythm_score"]!! * 100)
-        val volumeScore = String.format("%.1f", detailedScores["volume_stability"]!! * 100)
+        val pitchScore = String.format("%.1f", (detailedScores["pitch_accuracy"] ?: 0.0) * 100)
+        val rhythmScore = String.format("%.1f", (detailedScores["rhythm_score"] ?: 0.0) * 100)
+        val volumeScore = String.format("%.1f", (detailedScores["volume_stability"] ?: 0.0) * 100)
 
         val shareText = buildString {
             append("🎤 노래방 점수 결과\n\n")

@@ -15,30 +15,19 @@ import android.widget.TextView
 import androidx.core.graphics.drawable.toDrawable
 import com.example.musicplayer.R
 
-class ToastManager private constructor() {
+object ToastManager {
 
     private var popupWindow: PopupWindow? = null
     private val mainHandler = Handler(Looper.getMainLooper())
 
-    companion object {
-        private var instance: ToastManager? = null
+    @JvmStatic
+    fun showToast(message: Any) {
+        show(message)
+    }
 
-        fun getInstance(): ToastManager {
-            if (instance == null) {
-                instance = ToastManager()
-            }
-            return instance!!
-        }
-
-        @JvmStatic
-        fun showToast(message: Any) {
-            getInstance().show(message)
-        }
-
-        @JvmStatic
-        fun closeToast() {
-            getInstance().dismiss()
-        }
+    @JvmStatic
+    fun closeToast() {
+        dismiss()
     }
 
     @SuppressLint("InflateParams")

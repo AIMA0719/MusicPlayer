@@ -338,8 +338,9 @@ class KaraokeFragment : Fragment() {
                 val musicList = withContext(Dispatchers.IO) {
                     try {
                         val response = jamendoRepository.searchTracks(query = query, limit = PAGE_SIZE, offset = 0)
-                        if (response.isSuccessful && response.body() != null) {
-                            val (results, apiCount) = parseJamendoResponse(response.body()!!)
+                        val body = response.body()
+                        if (response.isSuccessful && body != null) {
+                            val (results, apiCount) = parseJamendoResponse(body)
                             hasMoreData = apiCount >= PAGE_SIZE
                             currentOffset = apiCount
                             results
@@ -402,8 +403,9 @@ class KaraokeFragment : Fragment() {
                             jamendoRepository.getTracksByTags(tags = filter, limit = PAGE_SIZE, offset = 0)
                         }
 
-                        if (response.isSuccessful && response.body() != null) {
-                            val (results, apiCount) = parseJamendoResponse(response.body()!!)
+                        val body = response.body()
+                        if (response.isSuccessful && body != null) {
+                            val (results, apiCount) = parseJamendoResponse(body)
                             hasMoreData = apiCount >= PAGE_SIZE
                             currentOffset = apiCount
                             results
@@ -458,10 +460,11 @@ class KaraokeFragment : Fragment() {
             try {
                 val newMusicList = withContext(Dispatchers.IO) {
                     try {
+                        val searchQuery = currentSearchQuery
                         val response = when {
-                            currentSearchQuery != null -> {
+                            searchQuery != null -> {
                                 jamendoRepository.searchTracks(
-                                    query = currentSearchQuery!!,
+                                    query = searchQuery,
                                     limit = PAGE_SIZE,
                                     offset = currentOffset
                                 )
@@ -481,8 +484,9 @@ class KaraokeFragment : Fragment() {
                             }
                         }
 
-                        if (response.isSuccessful && response.body() != null) {
-                            val (results, apiCount) = parseJamendoResponse(response.body()!!)
+                        val body = response.body()
+                        if (response.isSuccessful && body != null) {
+                            val (results, apiCount) = parseJamendoResponse(body)
                             if (apiCount < PAGE_SIZE) {
                                 hasMoreData = false
                             }

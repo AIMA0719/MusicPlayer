@@ -3,10 +3,9 @@ package com.example.musicplayer.viewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.musicplayer.fragment.MainFragment
 import com.example.musicplayer.manager.FragmentMoveManager
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -32,7 +31,7 @@ class MainActivityViewModel : ViewModel() {
     fun triggerDoubleBackToExit() {
         doubleBackToExit = true
         _toastMessage.value = "앱을 종료하려면 다시 한 번 눌러 주세요"
-        CoroutineScope(Dispatchers.Main).launch {
+        viewModelScope.launch {
             delay(2000L)
             doubleBackToExit = false
         }

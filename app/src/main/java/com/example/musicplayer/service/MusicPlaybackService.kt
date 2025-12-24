@@ -28,6 +28,7 @@ class MusicPlaybackService : MediaSessionService() {
     lateinit var exoPlayer: ExoPlayer
 
     private var mediaSession: MediaSession? = null
+    private var playerListener: Player.Listener? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -38,8 +39,8 @@ class MusicPlaybackService : MediaSessionService() {
             .setSessionActivity(createPendingIntent())
             .build()
 
-        // Player 리스너 추가
-        exoPlayer.addListener(object : Player.Listener {
+        // Player 리스너 추가 (참조 저장하여 나중에 제거)
+        playerListener = object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
                 when (playbackState) {
                     Player.STATE_IDLE -> Timber.d("Player State: IDLE")
@@ -52,7 +53,8 @@ class MusicPlaybackService : MediaSessionService() {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 Timber.d("Is Playing: $isPlaying")
             }
-        })
+        }
+        playerListener?.let { exoPlayer.addListener(it) }
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
@@ -60,6 +62,10 @@ class MusicPlaybackService : MediaSessionService() {
     }
 
     override fun onDestroy() {
+        // Player 리스너 제거
+        playerListener?.let { exoPlayer.removeListener(it) }
+        playerListener = null
+
         mediaSession?.run {
             player.release()
             release()

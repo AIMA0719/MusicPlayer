@@ -6,7 +6,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.musicplayer.R
@@ -67,9 +69,9 @@ class MyRoomFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         // 화면이 다시 보일 때 데이터 갱신
+        // loadAchievements는 Flow로 자동 갱신되므로 제외
         loadStatistics()
         loadRecentRecordings()
-        loadAchievements()
     }
 
     private fun setupViews() {
@@ -192,18 +194,20 @@ class MyRoomFragment : Fragment() {
     private fun loadAchievements() {
         val userId = AuthManager.getCurrentUserId() ?: return
 
-        lifecycleScope.launch {
-            try {
-                database.achievementDao().getAllByUser(userId).collect { achievements ->
-                    val unlockedCount = achievements.count { it.isUnlocked }
-                    val totalCount = Achievement.entries.size
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                try {
+                    database.achievementDao().getAllByUser(userId).collect { achievements ->
+                        val unlockedCount = achievements.count { it.isUnlocked }
+                        val totalCount = Achievement.entries.size
 
-                    binding.tvAchievementProgress.text = "$unlockedCount / $totalCount"
-                    binding.progressAchievements.max = totalCount
-                    binding.progressAchievements.progress = unlockedCount
+                        binding.tvAchievementProgress.text = "$unlockedCount / $totalCount"
+                        binding.progressAchievements.max = totalCount
+                        binding.progressAchievements.progress = unlockedCount
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
             }
         }
     }

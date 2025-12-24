@@ -80,12 +80,15 @@ class RecordingFragment : Fragment() {
         super.onCreate(savedInstanceState)
         arguments?.let {
             music = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                it.getParcelable("music", MusicFile::class.java)!!
+                it.getParcelable("music", MusicFile::class.java)
             } else {
                 @Suppress("DEPRECATION")
-                it.getParcelable("music")!!
+                it.getParcelable("music")
+            } ?: run {
+                LogManager.e("RecordingFragment: music is null, finishing")
+                return
             }
-            pitchArray = it.getFloatArray("pitchArray")!!
+            pitchArray = it.getFloatArray("pitchArray") ?: floatArrayOf()
             durationMillis = it.getLong("durationMillis", 0L)
 
             // SingingMode 받기 (기본값: PRACTICE)
