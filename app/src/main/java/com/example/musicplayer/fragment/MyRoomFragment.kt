@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.musicplayer.R
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.example.musicplayer.adapter.RecentRecordingAdapter
 import com.example.musicplayer.database.AppDatabase
 import com.example.musicplayer.databinding.FragmentMyroomBinding
@@ -72,9 +73,9 @@ class MyRoomFragment : Fragment() {
     }
 
     private fun setupViews() {
-        // 설정 버튼
+        // 설정 버튼 - Bottom Navigation 탭 전환 방식으로 이동
         binding.btnEditProfile.setOnClickListener {
-            findNavController().navigate(R.id.navigation_settings)
+            activity?.findViewById<BottomNavigationView>(R.id.bottom_navigation)?.selectedItemId = R.id.navigation_settings
         }
 
         // 녹음 기록 전체보기

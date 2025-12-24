@@ -8,7 +8,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.ui.setupWithNavController
 import com.example.musicplayer.R
 import com.example.musicplayer.manager.AuthManager
 import com.example.musicplayer.manager.ContextManager
@@ -106,24 +105,57 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 탭 메뉴 아이템 ID를 네비게이션 destination ID로 변환
+     */
+    private fun getDestinationId(itemId: Int): Int? = when (itemId) {
+        R.id.navigation_home -> R.id.navigation_home
+        R.id.navigation_karaoke -> R.id.navigation_karaoke
+        R.id.navigation_myroom -> R.id.navigation_myroom
+        R.id.navigation_settings -> R.id.navigation_settings
+        else -> null
+    }
+
+    /**
+     * 화면 ID를 해당하는 탭 메뉴 아이템 ID로 변환
+     */
+    private fun getTabItemId(destinationId: Int): Int? = when (destinationId) {
+        R.id.navigation_home -> R.id.navigation_home
+        R.id.navigation_karaoke, R.id.recordingFragment -> R.id.navigation_karaoke
+        R.id.navigation_myroom, R.id.recordingHistoryFragment -> R.id.navigation_myroom
+        R.id.navigation_settings, R.id.achievementsFragment,
+        R.id.versionInfoFragment, R.id.libraryInfoFragment,
+        R.id.statisticsFragment, R.id.micTestFragment -> R.id.navigation_settings
+        else -> null
+    }
+
     private fun setupNavigation() {
         // NavHostFragment 가져오기
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
 
-        // BottomNavigationView와 NavController 연결 (기본 동작 사용)
-        binding.bottomNavigation.setupWithNavController(navController)
+        // 하단 네비게이션 아이템 선택 시 - 백스택 초기화 후 해당 탭으로 이동
+        binding.bottomNavigation.setOnItemSelectedListener { item ->
+            val destinationId = getDestinationId(item.itemId)
+                ?: return@setOnItemSelectedListener false
+
+            // 현재 위치가 이미 해당 탭이면 백스택만 정리
+            if (navController.currentDestination?.id == destinationId) {
+                navController.popBackStack(destinationId, inclusive = false)
+            } else {
+                // 다른 탭으로 이동: 백스택 정리 후 navigate
+                navController.popBackStack(R.id.navigation_home, inclusive = false)
+                if (destinationId != R.id.navigation_home) {
+                    navController.navigate(destinationId)
+                }
+            }
+            true
+        }
 
         // 하단 네비게이션 아이템 재선택 시 - 해당 탭의 루트로 이동
         binding.bottomNavigation.setOnItemReselectedListener { item ->
-            val destinationId = when (item.itemId) {
-                R.id.navigation_home -> R.id.navigation_home
-                R.id.navigation_karaoke -> R.id.navigation_karaoke
-                R.id.navigation_myroom -> R.id.navigation_myroom
-                R.id.navigation_settings -> R.id.navigation_settings
-                else -> return@setOnItemReselectedListener
-            }
+            val destinationId = getDestinationId(item.itemId) ?: return@setOnItemReselectedListener
             navController.popBackStack(destinationId, inclusive = false)
         }
 
@@ -161,6 +193,13 @@ class MainActivity : AppCompatActivity() {
                 binding.ivBackButton.visibility = android.view.View.VISIBLE
                 binding.ivBackButton.setOnClickListener {
                     navController.navigateUp()
+                }
+            }
+
+            // BottomNavigation 선택 상태 동기화 (하위 화면에서도 올바른 탭 선택 유지)
+            getTabItemId(destination.id)?.let { tabItemId ->
+                if (binding.bottomNavigation.selectedItemId != tabItemId) {
+                    binding.bottomNavigation.menu.findItem(tabItemId)?.isChecked = true
                 }
             }
         }

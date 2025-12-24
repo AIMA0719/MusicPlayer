@@ -72,6 +72,10 @@ class RecordingFragment : Fragment() {
     // 키 변경 (반음 단위: -6 ~ +6)
     private var currentPitchSemitones: Int = 0
 
+    // 카운트다운 다이얼로그 참조 (탭 전환 시 정리용)
+    private var countdownDialog: Dialog? = null
+    private var countdownJob: Job? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
@@ -425,25 +429,32 @@ class RecordingFragment : Fragment() {
      * 3-2-1 카운트다운 후 녹음 시작
      */
     private fun showCountdownAndStartRecording() {
-        val dialog = Dialog(requireContext())
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        dialog.setContentView(R.layout.dialog_countdown)
-        dialog.setCancelable(false)
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        // 기존 다이얼로그와 코루틴 정리
+        countdownJob?.cancel()
+        countdownDialog?.dismiss()
 
-        val tvCountdown = dialog.findViewById<TextView>(R.id.tv_countdown)
+        countdownDialog = Dialog(requireContext()).apply {
+            requestWindowFeature(Window.FEATURE_NO_TITLE)
+            setContentView(R.layout.dialog_countdown)
+            setCancelable(false)
+            window?.setBackgroundDrawableResource(android.R.color.transparent)
+        }
 
-        dialog.show()
+        val tvCountdown = countdownDialog?.findViewById<TextView>(R.id.tv_countdown)
+
+        countdownDialog?.show()
 
         // 카운트다운: 3 -> 2 -> 1
-        lifecycleScope.launch {
-            tvCountdown.text = "3"
+        countdownJob = lifecycleScope.launch {
+            tvCountdown?.text = "3"
             delay(1000)
-            tvCountdown.text = "2"
+            tvCountdown?.text = "2"
             delay(1000)
-            tvCountdown.text = "1"
+            tvCountdown?.text = "1"
             delay(1000)
-            dialog.dismiss()
+            countdownDialog?.dismiss()
+            countdownDialog = null
+            countdownJob = null
 
             // 녹음 시작 (키 변경 적용)
             val pitchRatio = PitchShiftManager.semitonesToPitchRatio(currentPitchSemitones)
@@ -824,8 +835,23 @@ class RecordingFragment : Fragment() {
         return String.format("%02d:%02d", minutes, seconds)
     }
 
+    override fun onPause() {
+        super.onPause()
+        // 화면이 중지될 때 다이얼로그 및 코루틴 정리 (탭 전환 시)
+        countdownJob?.cancel()
+        countdownJob = null
+        countdownDialog?.dismiss()
+        countdownDialog = null
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
+        // 다이얼로그 및 코루틴 정리
+        countdownJob?.cancel()
+        countdownJob = null
+        countdownDialog?.dismiss()
+        countdownDialog = null
+
         viewModel.stopRecording()
         releaseGuidePlayer()
         gameManager.release()
