@@ -6,9 +6,11 @@ import com.example.musicplayer.entity.RecordingHistoryEntity
 import com.example.musicplayer.manager.AuthManager
 import com.example.musicplayer.repository.RecordingHistoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -27,6 +29,8 @@ class RecordingHistoryViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(RecordingHistoryUiState())
     val uiState: StateFlow<RecordingHistoryUiState> = _uiState.asStateFlow()
 
+    private var collectionJob: Job? = null
+
     init {
         loadRecordingHistory()
     }
@@ -35,10 +39,12 @@ class RecordingHistoryViewModel @Inject constructor(
         val userId = AuthManager.getCurrentUserId() ?: "guest"
         android.util.Log.d("RecordingHistoryVM", "Loading history for userId: $userId")
 
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+        _uiState.update { it.copy(isLoading = true) }
 
-            recordingHistoryRepository.getAllByUser(userId).collect { recordings ->
+        // 기존 수집 작업 취소 후 새로 시작
+        collectionJob?.cancel()
+        collectionJob = viewModelScope.launch {
+            recordingHistoryRepository.getAllByUser(userId).collectLatest { recordings ->
                 android.util.Log.d("RecordingHistoryVM", "Found ${recordings.size} recordings for userId: $userId")
                 // 날짜별로 그룹화
                 val grouped = recordings.groupBy { recording ->

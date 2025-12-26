@@ -20,6 +20,9 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        // Jamendo API Key
+        buildConfigField "String", "JAMENDO_CLIENT_ID", "\"544328bb\""
     }
 
     buildTypes {

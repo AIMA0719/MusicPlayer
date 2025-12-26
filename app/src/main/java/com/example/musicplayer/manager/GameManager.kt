@@ -58,7 +58,7 @@ class GameManager(
         val existingIds = existingAchievements.map { it.achievementId }.toSet()
 
         // 새로운 도전과제만 추가 (기존 것은 유지)
-        val newAchievements = Achievement.values()
+        val newAchievements = Achievement.entries
             .filter { it.id !in existingIds }
             .map { achievement ->
                 AchievementEntity(

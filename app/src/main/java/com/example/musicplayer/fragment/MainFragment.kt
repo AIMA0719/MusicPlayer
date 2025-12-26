@@ -19,7 +19,9 @@ import com.example.musicplayer.entity.LevelSystem
 import com.example.musicplayer.entity.ScoreEntity
 import com.example.musicplayer.manager.AuthManager
 import com.example.musicplayer.repository.UserRepository
+import androidx.core.content.ContextCompat
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import javax.inject.Inject
@@ -130,27 +132,25 @@ class MainFragment : Fragment() {
                 }
 
                 // Load achievements
-                val allAchievements = database.achievementDao().getAllByUser(userId)
-                allAchievements.collect { achievements ->
-                    val unlockedCount = achievements.count { it.isUnlocked }
-                    val totalCount = Achievement.entries.size
-                    tvAchievementProgress.text = "$unlockedCount / $totalCount"
+                val achievements = database.achievementDao().getAllByUser(userId).first()
+                val unlockedCount = achievements.count { it.isUnlocked }
+                val totalCount = Achievement.entries.size
+                tvAchievementProgress.text = "$unlockedCount / $totalCount"
 
-                    // Show recent unlocked achievements
-                    val recentUnlocked = achievements.filter { it.isUnlocked }
-                        .sortedByDescending { it.unlockedAt }
-                        .take(3)
+                // Show recent unlocked achievements
+                val recentUnlocked = achievements.filter { it.isUnlocked }
+                    .sortedByDescending { it.unlockedAt }
+                    .take(3)
 
-                    llRecentAchievements.removeAllViews()
-                    if (recentUnlocked.isEmpty()) {
-                        llRecentAchievements.addView(tvNoAchievements)
-                    } else {
-                        recentUnlocked.forEach { entity ->
-                            val achievement = Achievement.entries.find { it.id == entity.achievementId }
-                            if (achievement != null) {
-                                val itemView = createAchievementItemView(achievement)
-                                llRecentAchievements.addView(itemView)
-                            }
+                llRecentAchievements.removeAllViews()
+                if (recentUnlocked.isEmpty()) {
+                    llRecentAchievements.addView(tvNoAchievements)
+                } else {
+                    recentUnlocked.forEach { entity ->
+                        val achievement = Achievement.entries.find { it.id == entity.achievementId }
+                        if (achievement != null) {
+                            val itemView = createAchievementItemView(achievement)
+                            llRecentAchievements.addView(itemView)
                         }
                     }
                 }
@@ -199,14 +199,14 @@ class MainFragment : Fragment() {
         val titleText = TextView(requireContext()).apply {
             text = achievement.title
             textSize = 14f
-            setTextColor(resources.getColor(android.R.color.black, null))
+            setTextColor(ContextCompat.getColor(requireContext(), android.R.color.black))
         }
 
         // Description
         val descText = TextView(requireContext()).apply {
             text = achievement.description
             textSize = 12f
-            setTextColor(resources.getColor(android.R.color.darker_gray, null))
+            setTextColor(ContextCompat.getColor(requireContext(), android.R.color.darker_gray))
         }
 
         infoLayout.addView(titleText)
@@ -216,7 +216,7 @@ class MainFragment : Fragment() {
         val badgeText = TextView(requireContext()).apply {
             text = "✓"
             textSize = 18f
-            setTextColor(resources.getColor(android.R.color.holo_green_dark, null))
+            setTextColor(ContextCompat.getColor(requireContext(), android.R.color.holo_green_dark))
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -330,7 +330,7 @@ class MainFragment : Fragment() {
         val songNameText = TextView(requireContext()).apply {
             text = score.songName
             textSize = 14f
-            setTextColor(resources.getColor(android.R.color.black, null))
+            setTextColor(ContextCompat.getColor(requireContext(), android.R.color.black))
         }
 
         infoLayout.addView(songNameText)
@@ -341,7 +341,7 @@ class MainFragment : Fragment() {
             val artistText = TextView(requireContext()).apply {
                 text = artistName
                 textSize = 12f
-                setTextColor(resources.getColor(android.R.color.darker_gray, null))
+                setTextColor(ContextCompat.getColor(requireContext(), android.R.color.darker_gray))
             }
             infoLayout.addView(artistText)
         }
@@ -350,7 +350,7 @@ class MainFragment : Fragment() {
         val scoreText = TextView(requireContext()).apply {
             text = "${score.score}점"
             textSize = 18f
-            setTextColor(resources.getColor(android.R.color.holo_blue_dark, null))
+            setTextColor(ContextCompat.getColor(requireContext(), android.R.color.holo_blue_dark))
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT

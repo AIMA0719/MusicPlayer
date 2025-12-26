@@ -7,9 +7,11 @@ import com.example.musicplayer.entity.AchievementEntity
 import com.example.musicplayer.manager.AuthManager
 import com.example.musicplayer.repository.AchievementRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -25,6 +27,8 @@ class AchievementsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(AchievementsUiState())
     val uiState: StateFlow<AchievementsUiState> = _uiState.asStateFlow()
 
+    private var collectionJob: Job? = null
+
     init {
         loadAchievements()
     }
@@ -32,8 +36,10 @@ class AchievementsViewModel @Inject constructor(
     fun loadAchievements() {
         val userId = AuthManager.getCurrentUserId() ?: "guest"
 
-        viewModelScope.launch {
-            achievementRepository.getAllByUser(userId).collect { entities ->
+        // 기존 수집 작업 취소 후 새로 시작
+        collectionJob?.cancel()
+        collectionJob = viewModelScope.launch {
+            achievementRepository.getAllByUser(userId).collectLatest { entities ->
                 val unlockedCount = entities.count { it.isUnlocked }
                 val totalCount = Achievement.entries.size
 

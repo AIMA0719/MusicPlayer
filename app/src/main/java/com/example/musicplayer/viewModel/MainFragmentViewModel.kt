@@ -13,9 +13,11 @@ import com.example.musicplayer.repository.ScoreRepository
 import com.example.musicplayer.repository.UserLevelRepository
 import com.example.musicplayer.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -35,6 +37,8 @@ class MainFragmentViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
+    private var achievementCollectionJob: Job? = null
+
     init {
         loadUserData()
     }
@@ -42,17 +46,19 @@ class MainFragmentViewModel @Inject constructor(
     fun loadUserData() {
         val userId = AuthManager.getCurrentUserId() ?: "guest"
 
+        // 사용자 및 레벨 정보 로드
         viewModelScope.launch {
-            // 사용자 정보 로드
             val user = userRepository.getUserById(userId)
             _uiState.update { it.copy(user = user) }
 
-            // 레벨 정보 로드
             val userLevel = userLevelRepository.getByUserIdSync(userId)
             _uiState.update { it.copy(userLevel = userLevel) }
+        }
 
-            // 도전과제 정보 로드
-            achievementRepository.getAllByUser(userId).collect { achievements ->
+        // 도전과제 정보 로드 (별도 Job으로 관리하여 중복 수집 방지)
+        achievementCollectionJob?.cancel()
+        achievementCollectionJob = viewModelScope.launch {
+            achievementRepository.getAllByUser(userId).collectLatest { achievements ->
                 val unlockedCount = achievements.count { it.isUnlocked }
                 val totalCount = Achievement.entries.size
                 val recentUnlocked = achievements
@@ -71,6 +77,7 @@ class MainFragmentViewModel @Inject constructor(
             }
         }
 
+        // 점수 데이터 로드
         viewModelScope.launch {
             loadScoreData(userId)
         }

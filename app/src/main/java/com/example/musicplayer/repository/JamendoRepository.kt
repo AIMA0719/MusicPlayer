@@ -1,5 +1,6 @@
 package com.example.musicplayer.repository
 
+import com.example.musicplayer.BuildConfig
 import com.example.musicplayer.server.JamendoApiService
 import com.example.musicplayer.server.data.JamendoResponse
 import kotlinx.coroutines.Dispatchers
@@ -12,8 +13,8 @@ import javax.inject.Singleton
 class JamendoRepository @Inject constructor(
     private val jamendoApiService: JamendoApiService
 ) {
-    // Jamendo API Client ID
-    private val clientId = "544328bb"
+    // Jamendo API Client ID (from BuildConfig)
+    private val clientId = BuildConfig.JAMENDO_CLIENT_ID
 
     /**
      * Search for tracks with a query string

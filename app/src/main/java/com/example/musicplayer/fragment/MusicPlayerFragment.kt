@@ -182,12 +182,21 @@ class MusicPlayerFragment : Fragment() {
      * MediaPlayer 리소스 해제
      */
     private fun releaseMediaPlayer() {
+        stopProgressUpdate()
         mediaPlayer?.let { player ->
-            stopProgressUpdate()
-            if (player.isPlaying) {
-                player.stop()
+            try {
+                if (player.isPlaying) {
+                    player.stop()
+                }
+            } catch (e: IllegalStateException) {
+                // MediaPlayer가 잘못된 상태일 수 있음 - 무시하고 release 진행
+            } finally {
+                try {
+                    player.release()
+                } catch (e: Exception) {
+                    // release 실패도 무시
+                }
             }
-            player.release()
         }
         mediaPlayer = null
     }

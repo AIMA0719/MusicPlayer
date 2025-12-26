@@ -9,15 +9,19 @@ object AuthManager {
     private const val KEY_CURRENT_USER_ID = "current_user_id"
     private const val KEY_IS_LOGGED_IN = "is_logged_in"
 
-    private lateinit var prefs: SharedPreferences
+    private var prefs: SharedPreferences? = null
     private var cachedUser: User? = null
 
     fun init(context: Context) {
         prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
     }
 
+    private fun requirePrefs(): SharedPreferences {
+        return prefs ?: throw IllegalStateException("AuthManager not initialized. Call init() first.")
+    }
+
     fun saveCurrentUser(userId: String) {
-        prefs.edit().apply {
+        requirePrefs().edit().apply {
             putString(KEY_CURRENT_USER_ID, userId)
             putBoolean(KEY_IS_LOGGED_IN, true)
             apply()
@@ -26,7 +30,7 @@ object AuthManager {
     }
 
     fun getCurrentUserId(): String? {
-        return prefs.getString(KEY_CURRENT_USER_ID, null)
+        return prefs?.getString(KEY_CURRENT_USER_ID, null)
     }
 
     fun setCachedUser(user: User?) {
@@ -42,11 +46,11 @@ object AuthManager {
     }
 
     fun isLoggedIn(): Boolean {
-        return prefs.getBoolean(KEY_IS_LOGGED_IN, false)
+        return prefs?.getBoolean(KEY_IS_LOGGED_IN, false) ?: false
     }
 
     fun logout() {
-        prefs.edit().apply {
+        prefs?.edit()?.apply {
             remove(KEY_CURRENT_USER_ID)
             putBoolean(KEY_IS_LOGGED_IN, false)
             apply()
@@ -55,7 +59,7 @@ object AuthManager {
     }
 
     fun clearAll() {
-        prefs.edit().clear().apply()
+        prefs?.edit()?.clear()?.apply()
         cachedUser = null
     }
 }

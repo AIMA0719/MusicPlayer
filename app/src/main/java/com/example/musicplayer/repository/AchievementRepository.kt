@@ -4,6 +4,7 @@ import com.example.musicplayer.database.dao.AchievementDao
 import com.example.musicplayer.entity.Achievement
 import com.example.musicplayer.entity.AchievementEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -70,14 +71,9 @@ class AchievementRepository @Inject constructor(
      * 도전과제 초기화 (새 사용자 또는 새 도전과제 추가 시)
      */
     suspend fun initializeAchievements(userId: String) {
-        val existingAchievements = achievementDao.getAllByUser(userId)
-        // Flow를 한번만 수집
-        var existingIds = emptySet<String>()
-        existingAchievements.collect { list ->
-            existingIds = list.map { it.achievementId }.toSet()
-            // collect는 계속 실행되므로 한번만 수집하고 종료
-            return@collect
-        }
+        // Flow에서 현재 값 한 번만 가져오기
+        val existingAchievements = achievementDao.getAllByUser(userId).first()
+        val existingIds = existingAchievements.map { it.achievementId }.toSet()
 
         // 새로운 도전과제만 추가
         val newAchievements = Achievement.entries

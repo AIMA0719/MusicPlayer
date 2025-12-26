@@ -100,15 +100,6 @@ class RecordingFragment : Fragment() {
             }
         }
 
-        // GameManager 초기화 - Job 저장하여 나중에 완료 대기
-        val userId = com.example.musicplayer.manager.AuthManager.getCurrentUserId() ?: "guest"
-        gameManager = GameManager(requireContext(), userId)
-        gameManagerInitJob = lifecycleScope.launch {
-            gameManager.initialize()
-        }
-
-        // 가이드 플레이어 초기화
-        initGuidePlayer()
     }
 
     /**
@@ -143,11 +134,25 @@ class RecordingFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentRecordingBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // GameManager 초기화 - Job 저장하여 나중에 완료 대기
+        val userId = com.example.musicplayer.manager.AuthManager.getCurrentUserId() ?: "guest"
+        gameManager = GameManager(requireContext(), userId)
+        gameManagerInitJob = lifecycleScope.launch {
+            gameManager.initialize()
+        }
+
+        // 가이드 플레이어 초기화
+        initGuidePlayer()
+
         initPitchChart()
         setupViews()
         setObserver()
-
-        return binding.root
     }
 
     private fun setupViews() {
