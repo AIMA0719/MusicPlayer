@@ -103,4 +103,12 @@ interface RecordingHistoryDao {
         AND difficulty != 'NONE'
     """)
     suspend fun getTriedDifficultyCount(userId: String): Int
+
+    @Query("""
+        SELECT COUNT(*) FROM recording_history
+        WHERE userId = :userId
+        AND timestamp >= :startTime
+        AND timestamp < :endTime
+    """)
+    suspend fun getRecordingCountByDateRange(userId: String, startTime: Long, endTime: Long): Int
 }

@@ -5,6 +5,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -22,11 +25,14 @@ import com.example.musicplayer.manager.AuthManager
 import com.example.musicplayer.repository.UserRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 /**
- * 마이룸 탭 - 프로필, 통계, 녹음 기록, 도전과제
+ * 마이룸 탭 - 개인 기록실 (프로필, 누적 통계, 녹음 기록, 도전과제)
  */
 @AndroidEntryPoint
 class MyRoomFragment : Fragment() {
@@ -60,23 +66,17 @@ class MyRoomFragment : Fragment() {
 
         setupViews()
         setupRecyclerView()
-        loadUserProfile()
-        loadStatistics()
-        loadRecentRecordings()
-        loadAchievements()
+        loadAllData()
     }
 
     override fun onResume() {
         super.onResume()
-        // 화면이 다시 보일 때 데이터 갱신
-        // loadAchievements는 Flow로 자동 갱신되므로 제외
-        loadStatistics()
-        loadRecentRecordings()
+        loadAllData()
     }
 
     private fun setupViews() {
-        // 설정 버튼 - Bottom Navigation 탭 전환 방식으로 이동
-        binding.btnEditProfile.setOnClickListener {
+        // 설정 버튼
+        binding.btnSettings.setOnClickListener {
             activity?.findViewById<BottomNavigationView>(R.id.bottom_navigation)?.selectedItemId = R.id.navigation_settings
         }
 
@@ -91,14 +91,14 @@ class MyRoomFragment : Fragment() {
         }
 
         // 통계 상세보기
-        binding.cardStatistics.setOnClickListener {
+        binding.btnViewStatistics.setOnClickListener {
             findNavController().navigate(R.id.statisticsFragment)
         }
     }
 
     private fun setupRecyclerView() {
-        recordingAdapter = RecentRecordingAdapter { recording ->
-            // 녹음 기록 클릭 시 (추후 상세 보기 구현)
+        recordingAdapter = RecentRecordingAdapter { _ ->
+            // 녹음 기록 클릭 시
         }
 
         binding.rvRecentRecordings.apply {
@@ -108,92 +108,140 @@ class MyRoomFragment : Fragment() {
         }
     }
 
-    @SuppressLint("SetTextI18n")
-    private fun loadUserProfile() {
+    private fun loadAllData() {
         val userId = AuthManager.getCurrentUserId() ?: "guest"
 
         lifecycleScope.launch {
-            try {
-                // 사용자 정보
-                val user = userRepository.getUserById(userId)
-                if (user != null) {
-                    binding.tvUserName.text = "${user.displayName}님"
-                }
+            loadUserProfile(userId)
+            loadCumulativeStats(userId)
+            loadRecentRecordings(userId)
+            loadMonthlyReport(userId)
+        }
 
-                // 레벨 정보
-                val userLevel = database.userLevelDao().getByUserIdSync(userId)
-                if (userLevel != null) {
-                    binding.tvLevelTitle.text = LevelSystem.getLevelTitle(userLevel.level)
-                    binding.tvLevel.text = "Lv.${userLevel.level}"
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
+        // 도전과제는 Flow로 관찰
+        observeAchievements(userId)
+    }
+
+    @SuppressLint("SetTextI18n")
+    private suspend fun loadUserProfile(userId: String) {
+        try {
+            // 사용자 정보
+            val user = userRepository.getUserById(userId)
+            if (user != null) {
+                binding.tvUserName.text = "${user.displayName}님"
+
+                // 가입일 포맷
+                val joinDate = SimpleDateFormat("yyyy.MM", Locale.KOREA).format(Date(user.createdAt))
+                binding.tvJoinDate.text = joinDate
             }
+
+            // 레벨 정보
+            val userLevel = database.userLevelDao().getByUserIdSync(userId)
+            if (userLevel != null) {
+                binding.tvLevelBadge.text = "Lv.${userLevel.level}"
+                binding.tvLevelTitle.text = LevelSystem.getLevelTitle(userLevel.level)
+
+                val requiredExp = LevelSystem.getRequiredExp(userLevel.level)
+                binding.tvExpProgress.text = "${userLevel.experience} / $requiredExp"
+                binding.progressExp.max = requiredExp
+                binding.progressExp.progress = userLevel.experience
+
+                // 활동일 계산 (녹음 기록이 있는 날짜 수)
+                val calendar = Calendar.getInstance()
+                calendar.add(Calendar.YEAR, -1) // 최근 1년
+                val oneYearAgo = calendar.timeInMillis
+                val activeDays = database.recordingHistoryDao().getRecordingDaysInPeriod(userId, oneYearAgo)
+                binding.tvTotalDays.text = activeDays.toString()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
     @SuppressLint("SetTextI18n")
-    private fun loadStatistics() {
-        val userId = AuthManager.getCurrentUserId() ?: return
+    private suspend fun loadCumulativeStats(userId: String) {
+        try {
+            // 총 녹음 수
+            val totalRecordings = database.recordingHistoryDao().getTotalRecordingCount(userId)
+            binding.tvTotalRecordings.text = totalRecordings.toString()
 
-        lifecycleScope.launch {
-            try {
-                // 총 녹음 수
-                val userLevel = database.userLevelDao().getByUserIdSync(userId)
-                binding.tvTotalRecordings.text = (userLevel?.totalRecordings ?: 0).toString()
+            // 전체 평균 점수
+            val avgScore = database.recordingHistoryDao().getAverageScore(userId)
+            binding.tvAverageScore.text = if (avgScore > 0) avgScore.toInt().toString() else "0"
 
-                // 평균 점수 (이번 달)
-                val calendar = Calendar.getInstance()
-                calendar.set(Calendar.DAY_OF_MONTH, 1)
-                calendar.set(Calendar.HOUR_OF_DAY, 0)
-                calendar.set(Calendar.MINUTE, 0)
-                calendar.set(Calendar.SECOND, 0)
-                calendar.set(Calendar.MILLISECOND, 0)
-                val startOfMonth = calendar.timeInMillis
-
-                calendar.add(Calendar.MONTH, 1)
-                val endOfMonth = calendar.timeInMillis
-
-                val averageScore = database.scoreDao().getMonthlyAverageScore(userId, startOfMonth, endOfMonth)
-                binding.tvAverageScore.text = if (averageScore != null && averageScore > 0) {
-                    "${averageScore.toInt()}점"
-                } else {
-                    "0점"
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+            // 최고 점수
+            val highestScore = database.scoreDao().getHighestScore(userId)
+            binding.tvHighestScore.text = (highestScore ?: 0).toString()
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
-    private fun loadRecentRecordings() {
-        val userId = AuthManager.getCurrentUserId() ?: return
+    private suspend fun loadRecentRecordings(userId: String) {
+        try {
+            val recordings = database.recordingHistoryDao().getRecentRecordings(userId, 5)
 
-        lifecycleScope.launch {
-            try {
-                val recordings = database.recordingHistoryDao()
-                    .getRecentRecordings(userId, 5)
-
-                if (recordings.isEmpty()) {
-                    binding.rvRecentRecordings.visibility = View.GONE
-                    binding.tvNoRecordings.visibility = View.VISIBLE
-                } else {
-                    binding.rvRecentRecordings.visibility = View.VISIBLE
-                    binding.tvNoRecordings.visibility = View.GONE
-                    recordingAdapter.submitList(recordings)
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
+            if (recordings.isEmpty()) {
                 binding.rvRecentRecordings.visibility = View.GONE
                 binding.tvNoRecordings.visibility = View.VISIBLE
+            } else {
+                binding.rvRecentRecordings.visibility = View.VISIBLE
+                binding.tvNoRecordings.visibility = View.GONE
+                recordingAdapter.submitList(recordings)
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            binding.rvRecentRecordings.visibility = View.GONE
+            binding.tvNoRecordings.visibility = View.VISIBLE
         }
     }
 
     @SuppressLint("SetTextI18n")
-    private fun loadAchievements() {
-        val userId = AuthManager.getCurrentUserId() ?: return
+    private suspend fun loadMonthlyReport(userId: String) {
+        try {
+            // 현재 월
+            val calendar = Calendar.getInstance()
+            val monthName = SimpleDateFormat("M월", Locale.KOREA).format(calendar.time)
+            binding.tvMonthlyReportTitle.text = "${monthName} 리포트"
 
+            // 이번 달 시작/끝
+            calendar.set(Calendar.DAY_OF_MONTH, 1)
+            calendar.set(Calendar.HOUR_OF_DAY, 0)
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
+            val startOfMonth = calendar.timeInMillis
+
+            calendar.add(Calendar.MONTH, 1)
+            val endOfMonth = calendar.timeInMillis
+
+            // 이번 달 녹음 수
+            val monthlyRecordings = database.recordingHistoryDao()
+                .getRecordingCountByDateRange(userId, startOfMonth, endOfMonth)
+            binding.tvMonthlyRecordings.text = "${monthlyRecordings}회"
+
+            // 이번 달 평균 점수
+            val monthlyAvg = database.scoreDao().getMonthlyAverageScore(userId, startOfMonth, endOfMonth)
+            binding.tvMonthlyAverage.text = if (monthlyAvg != null && monthlyAvg > 0) {
+                "${monthlyAvg.toInt()}점"
+            } else {
+                "0점"
+            }
+
+            // 이번 달 최고 점수
+            val monthlyBest = database.scoreDao().getBestScoreByDateRange(userId, startOfMonth, endOfMonth)
+            binding.tvMonthlyBest.text = if (monthlyBest != null && monthlyBest > 0) {
+                "${monthlyBest}점"
+            } else {
+                "0점"
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun observeAchievements(userId: String) {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 try {
@@ -204,12 +252,80 @@ class MyRoomFragment : Fragment() {
                         binding.tvAchievementProgress.text = "$unlockedCount / $totalCount"
                         binding.progressAchievements.max = totalCount
                         binding.progressAchievements.progress = unlockedCount
+
+                        // 최근 달성 도전과제 3개
+                        val recentUnlocked = achievements
+                            .filter { it.isUnlocked }
+                            .sortedByDescending { it.unlockedAt }
+                            .take(3)
+
+                        binding.layoutRecentAchievements.removeAllViews()
+
+                        if (recentUnlocked.isEmpty()) {
+                            binding.tvNoAchievements.visibility = View.VISIBLE
+                            binding.layoutRecentAchievements.visibility = View.GONE
+                        } else {
+                            binding.tvNoAchievements.visibility = View.GONE
+                            binding.layoutRecentAchievements.visibility = View.VISIBLE
+
+                            recentUnlocked.forEach { entity ->
+                                val achievement = Achievement.entries.find { it.id == entity.achievementId }
+                                if (achievement != null) {
+                                    val itemView = createAchievementItem(achievement)
+                                    binding.layoutRecentAchievements.addView(itemView)
+                                }
+                            }
+                        }
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
             }
         }
+    }
+
+    private fun createAchievementItem(achievement: Achievement): View {
+        val itemLayout = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = 12
+            }
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_rounded_item)
+            setPadding(12, 12, 12, 12)
+        }
+
+        // 아이콘
+        val iconText = TextView(requireContext()).apply {
+            text = achievement.icon
+            textSize = 20f
+        }
+
+        // 제목
+        val titleText = TextView(requireContext()).apply {
+            text = achievement.title
+            textSize = 14f
+            setTextColor(ContextCompat.getColor(requireContext(), R.color.glass_text_primary))
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                marginStart = 12
+            }
+        }
+
+        // 달성 뱃지
+        val badgeText = TextView(requireContext()).apply {
+            text = "✓"
+            textSize = 16f
+            setTextColor(ContextCompat.getColor(requireContext(), R.color.glass_success))
+        }
+
+        itemLayout.addView(iconText)
+        itemLayout.addView(titleText)
+        itemLayout.addView(badgeText)
+
+        return itemLayout
     }
 
     override fun onDestroyView() {

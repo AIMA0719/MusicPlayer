@@ -24,4 +24,16 @@ interface ScoreDao {
 
     @Query("SELECT * FROM scores WHERE userId = :userId ORDER BY score DESC LIMIT 3")
     suspend fun getTop3Scores(userId: String): List<ScoreEntity>
+
+    @Query("SELECT MAX(score) FROM scores WHERE userId = :userId AND timestamp >= :startTime AND timestamp < :endTime")
+    suspend fun getBestScoreByDateRange(userId: String, startTime: Long, endTime: Long): Int?
+
+    @Query("SELECT AVG(score) FROM scores WHERE userId = :userId AND timestamp >= :startTime AND timestamp < :endTime")
+    suspend fun getAverageScoreByDateRange(userId: String, startTime: Long, endTime: Long): Double?
+
+    @Query("SELECT COUNT(*) FROM scores WHERE userId = :userId AND timestamp >= :startTime AND timestamp < :endTime")
+    suspend fun getScoreCountByDateRange(userId: String, startTime: Long, endTime: Long): Int
+
+    @Query("SELECT MAX(score) FROM scores WHERE userId = :userId")
+    suspend fun getHighestScore(userId: String): Int?
 }

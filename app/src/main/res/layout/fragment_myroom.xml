@@ -13,7 +13,7 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- 프로필 카드 -->
+        <!-- 프로필 카드 (확장) -->
         <com.google.android.material.card.MaterialCardView
             style="@style/GlassCardStyle"
             android:layout_width="match_parent"
@@ -22,84 +22,212 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="20dp"
-                android:gravity="center_vertical">
-
-                <ImageView
-                    android:id="@+id/ivProfile"
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    android:src="@drawable/ic_person"
-                    app:tint="@color/glass_primary"
-                    android:background="@drawable/bg_circle_blue_light"
-                    android:padding="14dp" />
+                android:orientation="vertical"
+                android:padding="24dp">
 
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:layout_marginStart="16dp">
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
-                    <TextView
-                        android:id="@+id/tvUserName"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="사용자님"
-                        style="@style/TextAppearance.Glass.Title" />
+                    <ImageView
+                        android:id="@+id/ivProfile"
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"
+                        android:src="@drawable/ic_person"
+                        app:tint="@color/glass_primary"
+                        android:background="@drawable/bg_circle_blue_light"
+                        android:padding="18dp" />
 
                     <LinearLayout
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginTop="4dp">
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="16dp">
 
                         <TextView
-                            android:id="@+id/tvLevelTitle"
+                            android:id="@+id/tvUserName"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="초보 가수"
-                            style="@style/TextAppearance.Glass.Body.Secondary" />
-
-                        <TextView
-                            android:id="@+id/tvLevel"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Lv.1"
-                            android:textSize="14sp"
+                            android:text="사용자님"
+                            android:textSize="22sp"
                             android:textStyle="bold"
-                            android:textColor="@color/glass_primary"
-                            android:layout_marginStart="8dp" />
+                            android:textColor="@color/glass_text_primary" />
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginTop="4dp">
+
+                            <TextView
+                                android:id="@+id/tvLevelBadge"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Lv.1"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:textColor="@android:color/white"
+                                android:background="@drawable/bg_level_badge"
+                                android:paddingStart="8dp"
+                                android:paddingEnd="8dp"
+                                android:paddingTop="2dp"
+                                android:paddingBottom="2dp" />
+
+                            <TextView
+                                android:id="@+id/tvLevelTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="초보 가수"
+                                android:textSize="14sp"
+                                android:textColor="@color/glass_text_secondary"
+                                android:layout_marginStart="8dp" />
+                        </LinearLayout>
                     </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/btnSettings"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_settings"
+                        app:tint="@color/glass_text_tertiary"
+                        android:padding="8dp"
+                        android:background="?attr/selectableItemBackgroundBorderless" />
                 </LinearLayout>
 
-                <TextView
-                    android:id="@+id/btnEditProfile"
-                    android:layout_width="wrap_content"
+                <!-- 경험치 바 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="설정"
-                    android:textSize="14sp"
-                    android:textColor="@color/glass_primary"
-                    android:padding="8dp"
-                    android:background="?attr/selectableItemBackground" />
+                    android:orientation="vertical"
+                    android:layout_marginTop="20dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="경험치"
+                            android:textSize="12sp"
+                            android:textColor="@color/glass_text_tertiary" />
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_weight="1" />
+
+                        <TextView
+                            android:id="@+id/tvExpProgress"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0 / 100"
+                            android:textSize="12sp"
+                            android:textColor="@color/glass_text_tertiary" />
+                    </LinearLayout>
+
+                    <ProgressBar
+                        android:id="@+id/progressExp"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:layout_marginTop="6dp"
+                        android:max="100"
+                        android:progress="0"
+                        android:progressDrawable="@drawable/bg_progress_bar" />
+                </LinearLayout>
+
+                <!-- 활동 요약 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="20dp"
+                    android:gravity="center">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/tvTotalDays"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/glass_text_primary" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="활동일"
+                            android:textSize="11sp"
+                            android:textColor="@color/glass_text_tertiary" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="32dp"
+                        android:background="@color/glass_divider" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/tvJoinDate"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="2024.01"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/glass_text_primary" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="가입일"
+                            android:textSize="11sp"
+                            android:textColor="@color/glass_text_tertiary" />
+                    </LinearLayout>
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- 통계 요약 -->
+        <!-- 누적 통계 그리드 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="누적 통계"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/glass_text_primary"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="12dp" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="16dp">
+            android:orientation="horizontal">
 
             <com.google.android.material.card.MaterialCardView
                 style="@style/GlassCardStyle.Small"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginEnd="8dp">
+                android:layout_marginEnd="6dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -107,6 +235,12 @@
                     android:orientation="vertical"
                     android:padding="16dp"
                     android:gravity="center">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🎙️"
+                        android:textSize="20sp" />
 
                     <TextView
                         android:id="@+id/tvTotalRecordings"
@@ -121,8 +255,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="총 녹음"
-                        style="@style/TextAppearance.Glass.Caption"
-                        android:layout_marginTop="4dp" />
+                        android:textSize="11sp"
+                        android:textColor="@color/glass_text_tertiary" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -131,7 +265,8 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="8dp">
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -141,10 +276,16 @@
                     android:gravity="center">
 
                     <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📊"
+                        android:textSize="20sp" />
+
+                    <TextView
                         android:id="@+id/tvAverageScore"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="0점"
+                        android:text="0"
                         android:textSize="24sp"
                         android:textStyle="bold"
                         android:textColor="@color/glass_warning" />
@@ -153,13 +294,51 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="평균 점수"
-                        style="@style/TextAppearance.Glass.Caption"
-                        android:layout_marginTop="4dp" />
+                        android:textSize="11sp"
+                        android:textColor="@color/glass_text_tertiary" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/GlassCardStyle.Small"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:gravity="center">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="👑"
+                        android:textSize="20sp" />
+
+                    <TextView
+                        android:id="@+id/tvHighestScore"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textSize="24sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/highlight_orange" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="최고 점수"
+                        android:textSize="11sp"
+                        android:textColor="@color/glass_text_tertiary" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
 
-        <!-- 최근 녹음 -->
+        <!-- 최근 녹음 기록 -->
         <com.google.android.material.card.MaterialCardView
             style="@style/GlassCardStyle"
             android:layout_width="match_parent"
@@ -179,20 +358,29 @@
                     android:gravity="center_vertical">
 
                     <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📝"
+                        android:textSize="18sp" />
+
+                    <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="최근 녹음"
-                        style="@style/TextAppearance.Glass.Subtitle" />
+                        android:text="녹음 기록"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/glass_text_primary"
+                        android:layout_marginStart="8dp" />
 
                     <TextView
                         android:id="@+id/btnViewAllRecordings"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="전체보기 >"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
                         android:textColor="@color/glass_primary"
-                        android:padding="8dp"
+                        android:padding="4dp"
                         android:background="?attr/selectableItemBackground" />
                 </LinearLayout>
 
@@ -211,14 +399,15 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:text="아직 녹음 기록이 없습니다"
-                    style="@style/TextAppearance.Glass.Body.Secondary"
+                    android:textSize="14sp"
+                    android:textColor="@color/glass_text_tertiary"
                     android:paddingTop="24dp"
                     android:paddingBottom="24dp"
                     android:visibility="gone" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- 도전과제 -->
+        <!-- 도전과제 상세 -->
         <com.google.android.material.card.MaterialCardView
             style="@style/GlassCardStyle"
             android:layout_width="match_parent"
@@ -238,29 +427,62 @@
                     android:gravity="center_vertical">
 
                     <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🏆"
+                        android:textSize="18sp" />
+
+                    <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="도전과제"
-                        style="@style/TextAppearance.Glass.Subtitle" />
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/glass_text_primary"
+                        android:layout_marginStart="8dp" />
 
                     <TextView
                         android:id="@+id/tvAchievementProgress"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="0 / 11"
-                        style="@style/TextAppearance.Glass.Caption" />
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/glass_primary" />
                 </LinearLayout>
 
                 <ProgressBar
                     android:id="@+id/progressAchievements"
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
-                    android:layout_height="8dp"
+                    android:layout_height="10dp"
                     android:layout_marginTop="12dp"
                     android:max="11"
                     android:progress="0"
                     android:progressDrawable="@drawable/bg_progress_bar" />
+
+                <!-- 최근 달성 도전과제 미리보기 -->
+                <LinearLayout
+                    android:id="@+id/layoutRecentAchievements"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="16dp">
+                    <!-- 동적으로 추가됨 -->
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvNoAchievements"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="아직 달성한 도전과제가 없습니다"
+                    android:textSize="14sp"
+                    android:textColor="@color/glass_text_tertiary"
+                    android:gravity="center"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
+                    android:visibility="gone" />
 
                 <TextView
                     android:id="@+id/btnViewAllAchievements"
@@ -277,9 +499,9 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- 통계 상세 보기 -->
+        <!-- 이번 달 리포트 -->
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardStatistics"
+            android:id="@+id/cardMonthlyReport"
             style="@style/GlassCardStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -289,30 +511,134 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="20dp"
-                android:gravity="center_vertical">
+                android:orientation="vertical"
+                android:padding="20dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="📊"
-                    android:textSize="24sp" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="16dp"
-                    android:text="상세 통계 보기"
-                    style="@style/TextAppearance.Glass.Body" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📅"
+                        android:textSize="18sp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
+                    <TextView
+                        android:id="@+id/tvMonthlyReportTitle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="12월 리포트"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/glass_text_primary"
+                        android:layout_marginStart="8dp" />
+
+                    <TextView
+                        android:id="@+id/btnViewStatistics"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="상세보기 >"
+                        android:textSize="13sp"
+                        android:textColor="@color/glass_primary"
+                        android:padding="4dp"
+                        android:background="?attr/selectableItemBackground" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text=">"
-                    android:textSize="18sp"
-                    android:textColor="@color/glass_text_tertiary" />
+                    android:orientation="horizontal"
+                    android:layout_marginTop="16dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/tvMonthlyRecordings"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0회"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/glass_text_primary" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="녹음 횟수"
+                            android:textSize="11sp"
+                            android:textColor="@color/glass_text_tertiary"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="40dp"
+                        android:background="@color/glass_divider" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/tvMonthlyAverage"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0점"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/glass_text_primary" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="평균 점수"
+                            android:textSize="11sp"
+                            android:textColor="@color/glass_text_tertiary"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="40dp"
+                        android:background="@color/glass_divider" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/tvMonthlyBest"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0점"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/highlight_orange" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="최고 점수"
+                            android:textSize="11sp"
+                            android:textColor="@color/glass_text_tertiary"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
