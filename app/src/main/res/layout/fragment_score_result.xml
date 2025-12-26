@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F2F4F6"
+    android:background="@color/nav_container_background"
     android:fillViewport="true">
 
     <LinearLayout
@@ -18,7 +18,7 @@
             android:layout_height="wrap_content"
             app:cardCornerRadius="20dp"
             app:cardElevation="4dp"
-            app:cardBackgroundColor="@android:color/white">
+            app:cardBackgroundColor="@color/card_surface">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -32,7 +32,7 @@
                     android:layout_height="wrap_content"
                     android:text="총점"
                     android:textSize="16sp"
-                    android:textColor="#8B95A1" />
+                    android:textColor="@color/glass_text_tertiary" />
 
                 <TextView
                     android:id="@+id/tvTotalScore"
@@ -41,7 +41,7 @@
                     android:text="87"
                     android:textSize="72sp"
                     android:textStyle="bold"
-                    android:textColor="#3182F6"
+                    android:textColor="@color/glass_primary"
                     android:layout_marginTop="8dp" />
 
                 <!-- 별점 -->
@@ -61,7 +61,7 @@
                     android:text="훌륭해요!"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:textColor="#191F28"
+                    android:textColor="@color/glass_text_primary"
                     android:layout_marginTop="12dp" />
 
                 <TextView
@@ -70,7 +70,7 @@
                     android:layout_height="wrap_content"
                     android:text="노래 제목 - 아티스트"
                     android:textSize="14sp"
-                    android:textColor="#8B95A1"
+                    android:textColor="@color/glass_text_tertiary"
                     android:layout_marginTop="8dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -82,7 +82,7 @@
             android:layout_marginTop="16dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="2dp"
-            app:cardBackgroundColor="@android:color/white">
+            app:cardBackgroundColor="@color/card_surface">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -96,7 +96,7 @@
                     android:text="세부 점수"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="#191F28" />
+                    android:textColor="@color/glass_text_primary" />
 
                 <com.github.mikephil.charting.charts.RadarChart
                     android:id="@+id/radarChart"
@@ -113,7 +113,7 @@
             android:layout_marginTop="16dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="2dp"
-            app:cardBackgroundColor="@android:color/white">
+            app:cardBackgroundColor="@color/card_surface">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -127,7 +127,7 @@
                     android:text="분석 결과"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="#191F28"
+                    android:textColor="@color/glass_text_primary"
                     android:layout_marginBottom="16dp" />
 
                 <!-- 음정 정확도 -->
@@ -151,7 +151,7 @@
                         android:layout_marginStart="12dp"
                         android:text="음정 정확도"
                         android:textSize="14sp"
-                        android:textColor="#191F28" />
+                        android:textColor="@color/glass_text_primary" />
 
                     <TextView
                         android:id="@+id/tvPitchScore"
@@ -160,7 +160,7 @@
                         android:text="92.5%"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="#3182F6" />
+                        android:textColor="@color/glass_primary" />
                 </LinearLayout>
 
                 <!-- 리듬 점수 -->
@@ -184,7 +184,7 @@
                         android:layout_marginStart="12dp"
                         android:text="리듬 점수"
                         android:textSize="14sp"
-                        android:textColor="#191F28" />
+                        android:textColor="@color/glass_text_primary" />
 
                     <TextView
                         android:id="@+id/tvRhythmScore"
@@ -193,7 +193,7 @@
                         android:text="88.0%"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="#FF9800" />
+                        android:textColor="@color/highlight_orange" />
                 </LinearLayout>
 
                 <!-- 비브라토 점수 -->
@@ -217,7 +217,7 @@
                         android:layout_marginStart="12dp"
                         android:text="비브라토"
                         android:textSize="14sp"
-                        android:textColor="#191F28" />
+                        android:textColor="@color/glass_text_primary" />
 
                     <TextView
                         android:id="@+id/tvVibratoScore"
@@ -226,7 +226,7 @@
                         android:text="75.0%"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="#9C27B0" />
+                        android:textColor="@color/color_purple" />
                 </LinearLayout>
 
                 <!-- 볼륨 안정성 -->
@@ -250,7 +250,7 @@
                         android:layout_marginStart="12dp"
                         android:text="볼륨 안정성"
                         android:textSize="14sp"
-                        android:textColor="#191F28" />
+                        android:textColor="@color/glass_text_primary" />
 
                     <TextView
                         android:id="@+id/tvVolumeScore"
@@ -259,7 +259,7 @@
                         android:text="85.0%"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="#4CAF50" />
+                        android:textColor="@color/color_success" />
                 </LinearLayout>
 
                 <!-- 롱톤 -->
@@ -282,7 +282,7 @@
                         android:layout_marginStart="12dp"
                         android:text="롱톤"
                         android:textSize="14sp"
-                        android:textColor="#191F28" />
+                        android:textColor="@color/glass_text_primary" />
 
                     <TextView
                         android:id="@+id/tvLongToneScore"
@@ -291,7 +291,7 @@
                         android:text="80.0%"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="#E91E63" />
+                        android:textColor="@color/color_pink" />
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -304,7 +304,7 @@
             android:layout_marginTop="16dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="2dp"
-            app:cardBackgroundColor="#F0F7FF">
+            app:cardBackgroundColor="@color/card_highlight">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -333,7 +333,7 @@
                         android:text="+25 EXP 획득!"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="#3182F6" />
+                        android:textColor="@color/glass_primary" />
 
                     <TextView
                         android:id="@+id/tvExpRemaining"
@@ -341,7 +341,7 @@
                         android:layout_height="wrap_content"
                         android:text="다음 레벨까지 75 EXP"
                         android:textSize="12sp"
-                        android:textColor="#8B95A1"
+                        android:textColor="@color/glass_text_tertiary"
                         android:layout_marginTop="4dp" />
                 </LinearLayout>
             </LinearLayout>
@@ -365,8 +365,8 @@
                 android:textSize="16sp"
                 app:cornerRadius="12dp"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                app:strokeColor="#3182F6"
-                android:textColor="#3182F6" />
+                app:strokeColor="@color/glass_primary"
+                android:textColor="@color/glass_primary" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDone"
@@ -377,7 +377,7 @@
                 android:text="완료"
                 android:textSize="16sp"
                 app:cornerRadius="12dp"
-                android:backgroundTint="#3182F6" />
+                android:backgroundTint="@color/glass_primary" />
         </LinearLayout>
 
     </LinearLayout>

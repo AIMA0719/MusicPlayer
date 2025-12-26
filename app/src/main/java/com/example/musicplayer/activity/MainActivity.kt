@@ -1,8 +1,10 @@
 package com.example.musicplayer.activity
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -43,6 +45,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // 다크모드 설정 적용 (스플래시 전에 적용해야 깜빡임 방지)
+        applyDarkModeSetting()
+
         val splashScreen = installSplashScreen()
 
         startTime = System.currentTimeMillis()
@@ -242,6 +247,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setBaseSetting() {
+    }
+
+    private fun applyDarkModeSetting() {
+        val sharedPrefs = getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+        val isDarkMode = sharedPrefs.getBoolean("dark_mode", false)
+        if (isDarkMode) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        }
     }
 
     private fun hideActionBar() {

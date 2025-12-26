@@ -65,4 +65,72 @@
     <color name="app_background">#0D1117</color>
     <color name="card_background">#161B22</color>
     <color name="divider_color">#30363D</color>
+
+    <!-- Status Bar / Navigation (다크모드) -->
+    <color name="status_bar_background">#0D1117</color>
+    <color name="status_bar_text">#F0F6FC</color>
+    <color name="nav_container_background">#161B22</color>
+    <color name="bottom_nav_background">#0D1117</color>
+
+    <!-- Highlight Colors (다크모드에서도 동일하게 강조) -->
+    <color name="highlight_orange">#FFB74D</color>
+    <color name="highlight_red_orange">#FF8A65</color>
+
+    <!-- Google Color -->
+    <color name="google_blue">#4285F4</color>
+
+    <!-- Logout Color -->
+    <color name="logout_red">#FF6B6B</color>
+
+    <!-- Player Colors (다크모드) -->
+    <color name="player_background">#0D1117</color>
+    <color name="player_title">#F0F6FC</color>
+    <color name="player_time">#8B949E</color>
+    <color name="player_accent">#58A6FF</color>
+
+    <!-- Legacy Colors (다크모드 오버라이드) -->
+    <color name="white">#F0F6FC</color>
+    <color name="black">#0D1117</color>
+
+    <!-- Common UI Colors (다크모드) -->
+    <color name="text_dark">#F0F6FC</color>
+    <color name="text_medium">#C9D1D9</color>
+    <color name="text_light">#8B949E</color>
+    <color name="text_hint_color">#6E7681</color>
+    <color name="text_disabled">#484F58</color>
+
+    <!-- Border/Stroke Colors (다크모드) -->
+    <color name="border_light">#30363D</color>
+    <color name="border_medium">#21262D</color>
+
+    <!-- Card/Surface Colors (다크모드) -->
+    <color name="card_surface">#161B22</color>
+    <color name="card_elevated">#21262D</color>
+    <color name="card_highlight">#1A2332</color>
+    <color name="card_icon_background">#2D1F1A</color>
+
+    <!-- Semantic Colors (다크모드 - 밝게 조정) -->
+    <color name="color_success">#56D364</color>
+    <color name="color_warning">#FFB74D</color>
+    <color name="color_error">#F85149</color>
+    <color name="color_info">#58A6FF</color>
+    <color name="color_purple">#BC8CF2</color>
+    <color name="color_pink">#F778BA</color>
+    <color name="color_gold">#FFD93D</color>
+
+    <!-- Ripple Colors (다크모드) -->
+    <color name="ripple_primary">#30FF8A65</color>
+    <color name="ripple_blue">#1A58A6FF</color>
+    <color name="ripple_gray">#30363D</color>
+
+    <!-- Tab/Indicator Colors (다크모드) -->
+    <color name="tab_selected">#FF8A65</color>
+    <color name="tab_unselected">#6E7681</color>
+
+    <!-- Recording Colors (다크모드) -->
+    <color name="recording_background">#0D1117</color>
+    <color name="recording_title">#F0F6FC</color>
+
+    <!-- Handle Bar (다크모드) -->
+    <color name="handle_bar">#30363D</color>
 </resources>

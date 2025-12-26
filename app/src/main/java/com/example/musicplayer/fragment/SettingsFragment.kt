@@ -13,6 +13,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.edit
 import androidx.core.graphics.drawable.toDrawable
@@ -94,10 +95,16 @@ class SettingsFragment : Fragment() {
     }
 
     private fun setupViews(view: View) {
-        // Dark Mode Switch (현재 미지원)
+        // Dark Mode Switch
         view.findViewById<SwitchCompat>(R.id.switchDarkMode).setOnCheckedChangeListener { _, isChecked ->
             sharedPrefs.edit { putBoolean("dark_mode", isChecked) }
-            ToastManager.showToast("다크 모드는 추후 업데이트 예정입니다")
+            if (isChecked) {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                ToastManager.showToast("다크 모드가 켜졌습니다")
+            } else {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                ToastManager.showToast("다크 모드가 꺼졌습니다")
+            }
         }
 
         // Notifications Switch

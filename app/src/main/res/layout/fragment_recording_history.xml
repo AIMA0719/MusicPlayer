@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F2F4F6"
+    android:background="@color/nav_container_background"
     android:orientation="vertical">
 
     <!-- Stats Header -->
@@ -13,7 +13,7 @@
         android:layout_margin="16dp"
         app:cardCornerRadius="16dp"
         app:cardElevation="2dp"
-        app:cardBackgroundColor="@android:color/white">
+        app:cardBackgroundColor="@color/card_surface">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -27,7 +27,7 @@
                 android:text="녹음 기록 통계"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="#191F28" />
+                android:textColor="@color/glass_text_primary" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -50,14 +50,14 @@
                         android:text="0"
                         android:textSize="24sp"
                         android:textStyle="bold"
-                        android:textColor="#2196F3" />
+                        android:textColor="@color/color_info" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="총 녹음"
                         android:textSize="12sp"
-                        android:textColor="#8B95A1"
+                        android:textColor="@color/glass_text_tertiary"
                         android:layout_marginTop="4dp" />
 
                 </LinearLayout>
@@ -77,14 +77,14 @@
                         android:text="0.0"
                         android:textSize="24sp"
                         android:textStyle="bold"
-                        android:textColor="#4CAF50" />
+                        android:textColor="@color/color_success" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="평균 점수"
                         android:textSize="12sp"
-                        android:textColor="#8B95A1"
+                        android:textColor="@color/glass_text_tertiary"
                         android:layout_marginTop="4dp" />
 
                 </LinearLayout>
@@ -104,14 +104,14 @@
                         android:text="0"
                         android:textSize="24sp"
                         android:textStyle="bold"
-                        android:textColor="#FF9800" />
+                        android:textColor="@color/highlight_orange" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="최고 점수"
                         android:textSize="12sp"
-                        android:textColor="#8B95A1"
+                        android:textColor="@color/glass_text_tertiary"
                         android:layout_marginTop="4dp" />
 
                 </LinearLayout>
@@ -131,14 +131,14 @@
                         android:text="0"
                         android:textSize="24sp"
                         android:textStyle="bold"
-                        android:textColor="#9C27B0" />
+                        android:textColor="@color/color_purple" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="곡 수"
                         android:textSize="12sp"
-                        android:textColor="#8B95A1"
+                        android:textColor="@color/glass_text_tertiary"
                         android:layout_marginTop="4dp" />
 
                 </LinearLayout>
@@ -184,7 +184,7 @@
                 android:text="아직 녹음 기록이 없습니다"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="#191F28"
+                android:textColor="@color/glass_text_primary"
                 android:layout_marginTop="16dp" />
 
             <TextView
@@ -192,7 +192,7 @@
                 android:layout_height="wrap_content"
                 android:text="노래를 부르고 점수를 확인해보세요!"
                 android:textSize="14sp"
-                android:textColor="#8B95A1"
+                android:textColor="@color/glass_text_tertiary"
                 android:layout_marginTop="8dp" />
 
         </LinearLayout>

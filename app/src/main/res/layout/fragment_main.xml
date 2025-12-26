@@ -206,7 +206,7 @@
                         android:text="0"
                         android:textSize="24sp"
                         android:textStyle="bold"
-                        android:textColor="#FF9800"
+                        android:textColor="@color/highlight_orange"
                         android:layout_marginTop="4dp" />
 
                     <TextView
@@ -263,7 +263,7 @@
                         android:text="0일 연속"
                         android:textSize="20sp"
                         android:textStyle="bold"
-                        android:textColor="#FF6B35"
+                        android:textColor="@color/highlight_red_orange"
                         android:layout_marginTop="4dp" />
                 </LinearLayout>
             </LinearLayout>

@@ -107,4 +107,68 @@
     <color name="app_background">#F5F7FA</color>
     <color name="card_background">#FFFFFF</color>
     <color name="divider_color">#E5E8EB</color>
+
+    <!-- Status Bar / Navigation -->
+    <color name="status_bar_background">#FFFFFF</color>
+    <color name="status_bar_text">#000000</color>
+    <color name="nav_container_background">#F2F4F6</color>
+    <color name="bottom_nav_background">#FFFFFF</color>
+
+    <!-- Highlight Colors -->
+    <color name="highlight_orange">#FF9800</color>
+    <color name="highlight_red_orange">#FF6B35</color>
+
+    <!-- Google Color -->
+    <color name="google_blue">#4285F4</color>
+
+    <!-- Logout Color -->
+    <color name="logout_red">#F04452</color>
+
+    <!-- Player Colors -->
+    <color name="player_background">#F5F5F5</color>
+    <color name="player_title">#212121</color>
+    <color name="player_time">#757575</color>
+    <color name="player_accent">#2196F3</color>
+
+    <!-- Common UI Colors -->
+    <color name="text_dark">#212121</color>
+    <color name="text_medium">#666666</color>
+    <color name="text_light">#888888</color>
+    <color name="text_hint_color">#999999</color>
+    <color name="text_disabled">#AAAAAA</color>
+
+    <!-- Border/Stroke Colors -->
+    <color name="border_light">#CCCCCC</color>
+    <color name="border_medium">#E0E0E0</color>
+
+    <!-- Card/Surface Colors -->
+    <color name="card_surface">#FFFFFF</color>
+    <color name="card_elevated">#F5F5F5</color>
+    <color name="card_highlight">#F0F7FF</color>
+    <color name="card_icon_background">#FFF0E8</color>
+
+    <!-- Semantic Colors -->
+    <color name="color_success">#4CAF50</color>
+    <color name="color_warning">#FFA726</color>
+    <color name="color_error">#F44336</color>
+    <color name="color_info">#2196F3</color>
+    <color name="color_purple">#9C27B0</color>
+    <color name="color_pink">#E91E63</color>
+    <color name="color_gold">#FFD700</color>
+
+    <!-- Ripple Colors -->
+    <color name="ripple_primary">#20FF6B35</color>
+    <color name="ripple_blue">#E3F0FF</color>
+    <color name="ripple_gray">#E0E0E0</color>
+
+    <!-- Tab/Indicator Colors -->
+    <color name="tab_selected">#FF6B35</color>
+    <color name="tab_unselected">#999999</color>
+
+    <!-- Recording Colors -->
+    <color name="recording_background">#FAFAFA</color>
+    <color name="recording_title">#333333</color>
+
+    <!-- Handle Bar -->
+    <color name="handle_bar">#E0E0E0</color>
 </resources>
